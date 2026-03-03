@@ -1,13 +1,15 @@
-Rust Tensor Library for ML
+# Rust Tensor Library for ML
 
-Core
-    - Tensor, any shape - [x]
-    - Create new tensor from data - [ ]
-Addition
-    - Addition of two tensors - [x]
-    - Addition tensor float - [x]
-    - Addition self tensor - [ ]
-    - Addition self float - [x]
-Multiplication
-    - Multiply by scalar - [x]
-    - Multiply self by sclar - [x]
+- Core
+  - [x] Tensor, any shape
+  - [ ] Create new tensor from data
+
+- Addition
+  - [x] Addition of two tensors
+  - [x] Addition tensor float
+  - [ ] Addition self tensor
+  - [x] Addition self float
+
+- Multiplication
+  - [x] Multiply by scalar
+  - [x] Multiply self by scalar
