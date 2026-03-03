@@ -1,5 +1,5 @@
 use crate::Tensor;
-use std::ops::Mul;
+use std::ops::{Mul, MulAssign};
 
 impl Mul<f64> for &Tensor {
     type Output = Tensor;
@@ -15,5 +15,13 @@ impl Mul<&Tensor> for f64 {
 
     fn mul(self, other: &Tensor) -> Tensor {
         other * self
+    }
+}
+
+impl MulAssign<f64> for Tensor {
+    fn mul_assign(&mut self, other: f64) {
+        for a in self.data.iter_mut() {
+            *a *= other;
+        }
     }
 }
