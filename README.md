@@ -1,6 +1,6 @@
-## Rust Tensor Library for ML
+# Rust Tensor Library for ML
 
-# To do
+## To do
     - change reductions (n -> n - 1)
     - gradients
 
