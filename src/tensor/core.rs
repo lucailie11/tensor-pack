@@ -28,13 +28,13 @@ impl Tensor {
     pub fn linspace(start: f64, end: f64, n: usize) -> Tensor {
         assert!(n > 1, "n must be at least 2");
 
-        let lin_data: Vec<f64> = (0..n)
+        let data: Vec<f64> = (0..n)
             .map(|i| start + i as f64 * (end - start) / (n - 1) as f64)
             .collect();
 
         Tensor {
             shape: vec![n].into_boxed_slice(),
-            data: lin_data.into_boxed_slice(),
+            data: data.into_boxed_slice(),
         }
     }
 
