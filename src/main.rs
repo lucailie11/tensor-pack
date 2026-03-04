@@ -7,5 +7,10 @@ fn main() {
     let d: Tensor = Tensor::linspace(15.0, 20.0, 4);
     let mut c = &b + &a;
     c += &a;
+    c = c.exp().ln();
+    c *= -1.0;
+    c = c.abs();
+    c.exp_self();
+    c.ln_self();
     println!("{:?} {:?}{:?}{:?}", a.data, b.data, c.data, d.data);
 }

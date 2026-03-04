@@ -14,24 +14,10 @@ impl Add for &Tensor {
             .map(|(a, b)| a + b)
             .collect();
 
-        Tensor::new(&self.shape, &new_data)
-    }
-}
-
-impl Add<f64> for &Tensor {
-    type Output = Tensor;
-
-    fn add(self, other: f64) -> Tensor {
-        let new_data: Vec<f64> = self.data.iter().map(|a| a + other).collect();
-        Tensor::new(&self.shape, &new_data)
-    }
-}
-
-impl Add<&Tensor> for f64 {
-    type Output = Tensor;
-
-    fn add(self, other: &Tensor) -> Tensor {
-        other + self
+        Tensor {
+            shape: self.shape.to_vec(),
+            data: new_data,
+        }
     }
 }
 
@@ -42,5 +28,33 @@ impl AddAssign<&Tensor> for Tensor {
         for (a, b) in self.data.iter_mut().zip(other.data.iter()) {
             *a += b;
         }
+    }
+}
+
+impl Add<f64> for &Tensor {
+    type Output = Tensor;
+
+    fn add(self, other: f64) -> Tensor {
+        let new_data: Vec<f64> = self.data.iter().map(|a| a + other).collect();
+        Tensor {
+            shape: self.shape.to_vec(),
+            data: new_data,
+        }
+    }
+}
+
+impl AddAssign<f64> for Tensor {
+    fn add_assign(&mut self, other: f64) {
+        for a in self.data.iter_mut() {
+            *a += other;
+        }
+    }
+}
+
+impl Add<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn add(self, other: &Tensor) -> Tensor {
+        other + self
     }
 }
