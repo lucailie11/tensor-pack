@@ -1,3 +1,6 @@
+use rand::thread_rng;
+use rand_distr::{Distribution, Normal};
+
 pub struct Tensor {
     pub shape: Vec<usize>,
     pub data: Vec<f64>,
@@ -44,5 +47,26 @@ impl Tensor {
             shape: shape.to_vec(),
             data: data.to_vec(),
         }
+    }
+
+    pub fn randn(shape: &[usize], mean: f64, variance: f64) -> Tensor {
+        let len: usize = shape.iter().product();
+        let mut rng = thread_rng();
+        let normal = Normal::new(mean, variance).unwrap();
+        let data: Vec<f64> = (0..len).map(|_| normal.sample(&mut rng)).collect();
+
+        Tensor {
+            shape: shape.to_vec(),
+            data,
+        }
+    }
+
+    pub fn reshape(&mut self, new_shape: &[usize]) {
+        assert_eq!(
+            new_shape.iter().product::<usize>(),
+            self.data.len(),
+            "New shape doesn't match old data length"
+        );
+        self.shape = new_shape.to_vec();
     }
 }

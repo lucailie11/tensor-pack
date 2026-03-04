@@ -7,8 +7,8 @@
     - [x] Same value constructor
     - [x] Linspace constructor
     - [x] Constructor tensor from slice
-    - [ ] Change shape
-    - [ ] Random, normal distribution
+    - [x] Change shape
+    - [x] Random, normal distribution
 
 - Addition
      - [x] Tensor + Tensor
@@ -31,8 +31,8 @@
     - [ ] Tensor \* Tensor (only for matrices)
 
 - Division
-    - [ ] Tensor \ Scalar
-    - [ ] Tensor \= Scalar 
+    - [x] Tensor \ Scalar
+    - [x] Tensor \= Scalar 
 
 
 - Unary ops
