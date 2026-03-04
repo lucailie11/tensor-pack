@@ -34,7 +34,6 @@
     - [x] Tensor \ Scalar
     - [x] Tensor \= Scalar 
 
-
 - Unary ops
     - [x] exp
     - [x] ln
@@ -42,14 +41,14 @@
     - [x] abs
 
 - Reduction ops
-    - [ ] sum
-    - [ ] mean
-    - [ ] max
-    - [ ] min
+    - [x] sum
+    - [x] mean
+    - [x] variance
+    - [x] standard deviation
 
 - Activation functions
+    - [ ] relu
     - [ ] softmax
     - [ ] sigmoid
-    - [ ] relu
     - [ ] tanh
 

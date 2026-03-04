@@ -12,9 +12,11 @@ fn main() {
     let mut f = -&a;
     f.reshape(&[4]);
     let mut g = &f / 0.2;
-    g.exp_self();
+    g.exp_inplace();
     let mut h = &g / 1.0;
     h /= 2.0;
 
-    println!("{:?}\n{:?}\n{:?}\n{:?}\n", e.data, f.data, g.data, h.data);
+    let x: Tensor = Tensor::randn(&[100], 0.0, 10.0);
+    println!("{:?}\n{:?}\n{:?}\n{:?}\n", e, f, g, h);
+    println!("{} {} {:?}", x.mean(), x.variance(), x.std_dev());
 }
