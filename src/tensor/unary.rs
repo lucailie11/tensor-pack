@@ -2,66 +2,41 @@ use crate::Tensor;
 use std::ops::Neg;
 
 impl Tensor {
+    fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
+        Tensor {
+            shape: self.shape.clone(),
+            data: self.data.iter().map(|&x| f(x)).collect(),
+        }
+    }
+
+    fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
+        self.data.iter_mut().for_each(|x| *x = f(*x));
+    }
+
     pub fn exp(&self) -> Tensor {
-        let new_data: Vec<f64> = self.data.iter().map(|a| a.exp()).collect();
-        Tensor {
-            shape: self.shape.to_vec(),
-            data: new_data,
-        }
+        self.map(f64::exp)
     }
-
-    pub fn exp_self(&mut self) {
-        for a in self.data.iter_mut() {
-            *a = a.exp();
-        }
-    }
-}
-
-impl Tensor {
     pub fn ln(&self) -> Tensor {
-        let new_data: Vec<f64> = self.data.iter().map(|a| a.ln()).collect();
-        Tensor {
-            shape: self.shape.to_vec(),
-            data: new_data,
-        }
+        self.map(f64::ln)
     }
-
-    pub fn ln_self(&mut self) {
-        for a in self.data.iter_mut() {
-            *a = a.ln();
-        }
-    }
-}
-
-impl Tensor {
     pub fn sqrt(&self) -> Tensor {
-        let new_data: Vec<f64> = self.data.iter().map(|a| a.sqrt()).collect();
-        Tensor {
-            shape: self.shape.to_vec(),
-            data: new_data,
-        }
+        self.map(f64::sqrt)
     }
-
-    pub fn sqrt_self(&mut self) {
-        for a in self.data.iter_mut() {
-            *a = a.sqrt();
-        }
-    }
-}
-
-impl Tensor {
     pub fn abs(&self) -> Tensor {
-        let new_data: Vec<f64> = self.data.iter().map(|a| a.abs()).collect();
-        Tensor {
-            shape: self.shape.to_vec(),
-            data: new_data,
-        }
+        self.map(f64::abs)
     }
 
-    pub fn abs_self(&mut self) {
-        for a in self.data.iter_mut() {
-            *a = a.abs();
-        }
+    pub fn exp_inplace(&mut self) {
+        self.map_inplace(f64::exp)
+    }
+    pub fn ln_inplace(&mut self) {
+        self.map_inplace(f64::ln)
+    }
+    pub fn sqrt_inplace(&mut self) {
+        self.map_inplace(f64::sqrt)
+    }
+    pub fn abs_inplace(&mut self) {
+        self.map_inplace(f64::abs)
     }
 }
 

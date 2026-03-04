@@ -1,17 +1,19 @@
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal};
+use std::fmt;
 
+#[derive(Debug)]
 pub struct Tensor {
-    pub shape: Vec<usize>,
-    pub data: Vec<f64>,
+    pub shape: Box<[usize]>,
+    pub data: Box<[f64]>,
 }
 
 impl Tensor {
     pub fn full(shape: &[usize], value: f64) -> Tensor {
         let len: usize = shape.iter().product();
         Tensor {
-            shape: shape.to_vec(),
-            data: vec![value; len],
+            shape: Box::from(shape),
+            data: vec![value; len].into_boxed_slice(),
         }
     }
 
@@ -31,8 +33,8 @@ impl Tensor {
             .collect();
 
         Tensor {
-            shape: vec![n],
-            data: lin_data,
+            shape: vec![n].into_boxed_slice(),
+            data: lin_data.into_boxed_slice(),
         }
     }
 
@@ -44,20 +46,20 @@ impl Tensor {
         );
 
         Tensor {
-            shape: shape.to_vec(),
-            data: data.to_vec(),
+            shape: Box::from(shape),
+            data: Box::from(data),
         }
     }
 
     pub fn randn(shape: &[usize], mean: f64, variance: f64) -> Tensor {
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
-        let normal = Normal::new(mean, variance).unwrap();
+        let normal = Normal::new(mean, variance.sqrt()).unwrap();
         let data: Vec<f64> = (0..len).map(|_| normal.sample(&mut rng)).collect();
 
         Tensor {
-            shape: shape.to_vec(),
-            data,
+            shape: Box::from(shape),
+            data: data.into_boxed_slice(),
         }
     }
 
@@ -67,6 +69,25 @@ impl Tensor {
             self.data.len(),
             "New shape doesn't match old data length"
         );
-        self.shape = new_shape.to_vec();
+        self.shape = Box::from(new_shape);
+    }
+}
+
+impl fmt::Display for Tensor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Tensor {{")?;
+        writeln!(f, "    shape: {:?}", self.shape)?;
+        writeln!(f, "    data: ")?;
+        if self.shape.len() == 2 {
+            let cols = self.shape[1];
+            for row in self.data.chunks(cols) {
+                let formatted: Vec<String> = row.iter().map(|x| format!("{:.4}", x)).collect();
+                writeln!(f, "           [{}]", formatted.join(", "))?;
+            }
+        } else {
+            write!(f, "{:.4?}", self.data)?;
+        }
+        writeln!(f, "}}")?;
+        Ok(())
     }
 }

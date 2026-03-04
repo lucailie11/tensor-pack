@@ -15,8 +15,8 @@ impl Sub for &Tensor {
             .collect();
 
         Tensor {
-            shape: self.shape.to_vec(),
-            data: new_data,
+            shape: self.shape.clone(),
+            data: new_data.into_boxed_slice(),
         }
     }
 }
@@ -52,8 +52,8 @@ impl Sub<&Tensor> for f64 {
         let new_data: Vec<f64> = other.data.iter().map(|a| self - a).collect();
 
         Tensor {
-            shape: other.shape.to_vec(),
-            data: new_data,
+            shape: other.shape.clone(),
+            data: new_data.into_boxed_slice(),
         }
     }
 }

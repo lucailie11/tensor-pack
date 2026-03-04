@@ -15,8 +15,8 @@ impl Add for &Tensor {
             .collect();
 
         Tensor {
-            shape: self.shape.to_vec(),
-            data: new_data,
+            shape: self.shape.clone(),
+            data: new_data.into_boxed_slice(),
         }
     }
 }
@@ -37,8 +37,8 @@ impl Add<f64> for &Tensor {
     fn add(self, other: f64) -> Tensor {
         let new_data: Vec<f64> = self.data.iter().map(|a| a + other).collect();
         Tensor {
-            shape: self.shape.to_vec(),
-            data: new_data,
+            shape: self.shape.clone(),
+            data: new_data.into_boxed_slice(),
         }
     }
 }

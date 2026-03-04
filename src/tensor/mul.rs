@@ -5,8 +5,11 @@ impl Mul<f64> for &Tensor {
     type Output = Tensor;
 
     fn mul(self, other: f64) -> Tensor {
-        let new_data: Vec<f64> = self.data.iter().map(|a| a * other).collect();
-        Tensor::new(&self.shape, &new_data)
+        let data: Vec<f64> = self.data.iter().map(|a| a * other).collect();
+        Tensor {
+            shape: self.shape.clone(),
+            data: data.into_boxed_slice(),
+        }
     }
 }
 
