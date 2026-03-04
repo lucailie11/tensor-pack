@@ -47,8 +47,8 @@
     - [x] standard deviation
 
 - Activation functions
-    - [ ] relu
+    - [x] relu
+    - [x] sigmoid
+    - [x] tanh
     - [ ] softmax
-    - [ ] sigmoid
-    - [ ] tanh
 
