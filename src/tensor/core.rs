@@ -9,6 +9,9 @@ pub struct Tensor {
 }
 
 impl Tensor {
+    // All functions take the shape of the new Tensor unless specified otherwise
+
+    // Creates a Tensor filled with the same value
     pub fn full(shape: &[usize], value: f64) -> Tensor {
         let len: usize = shape.iter().product();
         Tensor {
@@ -17,14 +20,17 @@ impl Tensor {
         }
     }
 
+    // Creates a Tensor filled with 0
     pub fn zeros(shape: &[usize]) -> Tensor {
         Tensor::full(shape, 0.0)
     }
 
+    // Creates a Tensor filled with 1
     pub fn ones(shape: &[usize]) -> Tensor {
         Tensor::full(shape, 1.0)
     }
 
+    // Creates an 1D Tensor with n values in progression from start to end
     pub fn linspace(start: f64, end: f64, n: usize) -> Tensor {
         assert!(n > 1, "n must be at least 2");
 
@@ -38,6 +44,7 @@ impl Tensor {
         }
     }
 
+    // Creates a Tensor with values from a slice (by copying them)
     pub fn new(shape: &[usize], data: &[f64]) -> Tensor {
         assert_eq!(
             shape.iter().product::<usize>(),
@@ -51,6 +58,7 @@ impl Tensor {
         }
     }
 
+    // Creates a Tensor with random values from a normal distribution
     pub fn randn(shape: &[usize], mean: f64, variance: f64) -> Tensor {
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
@@ -63,6 +71,7 @@ impl Tensor {
         }
     }
 
+    // Reshapes a Tensor
     pub fn reshape(&mut self, new_shape: &[usize]) {
         assert_eq!(
             new_shape.iter().product::<usize>(),

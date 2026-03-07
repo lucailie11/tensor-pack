@@ -1,16 +1,22 @@
 use crate::Tensor;
 use std::ops::Neg;
 
+/*
+ * Allows application of a certain function to all elements of a Tensor
+ * May be done inplace on the Tensor
+ * Supported functions: exp, ln, sqrt, abs, tah, sigmoid, relu
+*/
+
+/*
+ * Implements the operator - on a Tensor
+*/
+
 fn sigmoid(x: f64) -> f64 {
     1.0 / ((-x).exp() + 1.0)
 }
 
 fn relu(x: f64) -> f64 {
-    if x >= 0.0 {
-        x
-    } else {
-        0.0
-    }
+    if x >= 0.0 { x } else { 0.0 }
 }
 
 impl Tensor {

@@ -1,6 +1,25 @@
 use crate::Tensor;
 use std::ops::{Add, AddAssign};
 
+/*
+ * Addition between two &Tensor requires them to have the same total length
+ * (not the same shape) and adds them pointwise
+*/
+
+/*
+ * Addition between a &Tensor and a f64 adds the scalar to
+ * all elements of the Tensor
+*/
+
+/*
+ * Defined operations
+ * &Tensor + &Tensor -> Tensor
+ * Tensor += &Tensor
+ * &Tensor + f64
+ * &Tensor += f64
+ * f64 + &Tensor
+*/
+
 impl Add for &Tensor {
     type Output = Tensor;
 
