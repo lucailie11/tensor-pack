@@ -2,6 +2,7 @@
 
 ## To do
     - change reductions (n -> n - 1)
+    - add comments before functions
     - gradients
 
 - Core
@@ -31,8 +32,8 @@
 - Multiplication
     - [x] Tensor * Scalar
     - [x] Tensor \*= Scalar 
-    - [ ] Tensor * Tensor (only for matrices)
-    - [ ] Tensor \* Tensor (only for matrices)
+    - [x] Tensor * Tensor (only for matrices)
+    - [x] Tensor \* Tensor (only for matrices)
 
 - Division
     - [x] Tensor \ Scalar

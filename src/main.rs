@@ -16,7 +16,12 @@ fn main() {
     let mut h = &g / 1.0;
     h /= 2.0;
 
-    let x: Tensor = Tensor::randn(&[100], 0.0, 10.0);
     println!("{:?}\n{:?}\n{:?}\n{:?}\n", e, f, g, h);
-    println!("{} {} {:?}", x.mean(), x.variance(), x.std_dev());
+
+    let mut x: Tensor = Tensor::randn(&[2, 2], 0.0, 10.0);
+    let y: Tensor = Tensor::randn(&[2, 2], 0.0, 10.0);
+    let z = &x * &y;
+    println!("{}\n {}\n {}\n", x, y, z);
+    x *= &y;
+    println!("{}\n", x);
 }
