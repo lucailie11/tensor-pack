@@ -4,7 +4,6 @@ A tensor library written in Rust from scratch. Tensors store data in a flat arra
 Inspired by NumPy and PyTorch, built in Rust as a learning project with a focus on execution speed.
 
 ## To do
-- implement full reductions (sum, mean, variance, std-dev over the whole tensor)
 - gradients
 
 ## Features
@@ -46,10 +45,10 @@ Inspired by NumPy and PyTorch, built in Rust as a learning project with a focus 
 
 ### Reduction ops (`red.rs`)
 - [x] `sum_axis(axis)` — sum along one axis
-- [ ] `sum` — sum of all elements
-- [ ] `mean` / `mean_axis(axis)`
-- [ ] `variance` / `variance_axis(axis)`
-- [ ] `std_dev` / `std_axis(axis)`
+- [x] `sum` — sum of all elements
+- [x] `mean` / `mean_axis(axis)` — arithmetic mean
+- [x] `var` / `var_axis(axis)` — population variance (σ²), via Welford's algorithm
+- [x] `std_dev` / `std_dev_axis(axis)` — population standard deviation (σ)
 
 ### Activation functions
 - [x] `relu`, `sigmoid`, `tanh` (covered under unary ops)
