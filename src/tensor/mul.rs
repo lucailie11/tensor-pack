@@ -4,7 +4,7 @@ use std::ops::{Mul, MulAssign};
 // Tensor * Tensor: matrix multiplication (both tensors must be 2D, shapes [m,k] and [k,n] → [m,n]).
 // This is NOT element-wise; use scalar multiplication for scaling.
 //
-// Tensor * f64  f64 * Tensor: scales every element by the scalar.
+// Tensor * f64 or f64 * Tensor: scales every element by the scalar.
 //
 // Defined operations:
 //   &Tensor * &Tensor  -> Tensor   (matrix multiply)

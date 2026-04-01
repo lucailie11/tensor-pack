@@ -1,10 +1,10 @@
 # Rust Tensor Library for ML
 
-A tensor library written in Rust from scratch. Tensors store data in a flat array using row-major (C) order. All arithmetic operators are overloaded so you can write `&a + &b`, `&a * 2.0`, etc. naturally.
+A tensor library written in Rust from scratch. Tensors store data in a flat array using row-major order. All arithmetic operators are overloaded so you can write `&a + &b`, `&a * 2.0`, etc. naturally.
 Inspired by NumPy and PyTorch, built in Rust as a learning project with a focus on execution speed.
 
 ## To do
-- implement full reductions (sum, mean, variance, std_dev over the whole tensor)
+- implement full reductions (sum, mean, variance, std-dev over the whole tensor)
 - gradients
 
 ## Features
