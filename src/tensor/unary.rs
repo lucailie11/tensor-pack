@@ -1,15 +1,11 @@
 use crate::Tensor;
 use std::ops::Neg;
 
-/*
- * Allows application of a certain function to all elements of a Tensor
- * May be done inplace on the Tensor
- * Supported functions: exp, ln, sqrt, abs, tah, sigmoid, relu
-*/
-
-/*
- * Implements the operator - on a Tensor
-*/
+// Element-wise unary operations. Each function has an `_inplace` variant that
+// mutates the tensor in place instead of allocating a new one.
+// Supported: exp, ln, sqrt, abs, tanh, sigmoid, relu.
+//
+// The unary negation operator (-&Tensor) is also implemented here.
 
 fn sigmoid(x: f64) -> f64 {
     1.0 / ((-x).exp() + 1.0)

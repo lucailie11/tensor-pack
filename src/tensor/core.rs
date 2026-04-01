@@ -9,9 +9,10 @@ pub struct Tensor {
 }
 
 impl Tensor {
-    // All functions take the shape of the new Tensor unless specified otherwise
+    // All constructors take the desired shape as a slice of dimension sizes.
+    // Data is stored in row-major order: the last axis varies fastest.
 
-    // Creates a Tensor filled with the same value
+    // Creates a Tensor field with 'value'
     pub fn full(shape: &[usize], value: f64) -> Tensor {
         let len: usize = shape.iter().product();
         Tensor {
@@ -20,17 +21,17 @@ impl Tensor {
         }
     }
 
-    // Creates a Tensor filled with 0
+    // Creates a Tensor filled with 0.0.
     pub fn zeros(shape: &[usize]) -> Tensor {
         Tensor::full(shape, 0.0)
     }
 
-    // Creates a Tensor filled with 1
+    // Creates a Tensor filled with 1.0.
     pub fn ones(shape: &[usize]) -> Tensor {
         Tensor::full(shape, 1.0)
     }
 
-    // Creates an 1D Tensor with n values in progression from start to end
+    // Creates a 1D Tensor of `n` evenly spaced values from `start` to `end` (inclusive).
     pub fn linspace(start: f64, end: f64, n: usize) -> Tensor {
         assert!(n > 1, "n must be at least 2");
 
@@ -44,7 +45,7 @@ impl Tensor {
         }
     }
 
-    // Creates a Tensor with values from a slice (by copying them)
+    // Creates a Tensor by copying values from `data`. The product of `shape` must equal `data.len()`.
     pub fn new(shape: &[usize], data: &[f64]) -> Tensor {
         assert_eq!(
             shape.iter().product::<usize>(),
@@ -58,11 +59,11 @@ impl Tensor {
         }
     }
 
-    // Creates a Tensor with random values from a normal distribution
-    pub fn randn(shape: &[usize], mean: f64, variance: f64) -> Tensor {
+    // Creates a Tensor filled with samples from N(`mean`, `std_dev`).
+    pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> Tensor {
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
-        let normal = Normal::new(mean, variance.sqrt()).unwrap();
+        let normal = Normal::new(mean, std_dev).unwrap();
         let data: Vec<f64> = (0..len).map(|_| normal.sample(&mut rng)).collect();
 
         Tensor {
@@ -71,7 +72,7 @@ impl Tensor {
         }
     }
 
-    // Reshapes a Tensor
+    // Changes the shape without moving data. The total number of elements must stay the same.
     pub fn reshape(&mut self, new_shape: &[usize]) {
         assert_eq!(
             new_shape.iter().product::<usize>(),
@@ -82,6 +83,7 @@ impl Tensor {
     }
 }
 
+// Pretty-prints the tensor. 2D tensors are shown row-by-row; other ranks print the flat slice.
 impl fmt::Display for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "Tensor {{")?;

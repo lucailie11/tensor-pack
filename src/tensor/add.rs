@@ -1,29 +1,22 @@
 use crate::Tensor;
 use std::ops::{Add, AddAssign};
 
-/*
- * Addition between two &Tensor requires them to have the same total length
- * (not the same shape) and adds them pointwise
-*/
-
-/*
- * Addition between a &Tensor and a f64 adds the scalar to
- * all elements of the Tensor
-*/
-
-/*
- * Defined operations
- * &Tensor + &Tensor -> Tensor
- * Tensor += &Tensor
- * &Tensor + f64
- * &Tensor += f64
- * f64 + &Tensor
-*/
+// Tensor + Tensor: element-wise addition. Requires equal total element count
+// (shapes can differ as long as len matches, e.g. [2,3] + [6] is allowed).
+//
+// Tensor + f64 or f64 + Tensor: broadcasts the scalar to every element.
+//
+// Defined operations:
+//   &Tensor + &Tensor  -> Tensor
+//   Tensor  += &Tensor
+//   &Tensor + f64      -> Tensor
+//   Tensor  += f64
+//   f64     + &Tensor  -> Tensor
 
 impl Add for &Tensor {
-    type Output = Tensor;
+type Output = Tensor;
 
-    fn add(self, other: &Tensor) -> Tensor {
+fn add(self, other: &Tensor) -> Tensor {
         assert_eq!(self.data.len(), other.data.len(), "Shape mismatch");
 
         let new_data: Vec<f64> = self

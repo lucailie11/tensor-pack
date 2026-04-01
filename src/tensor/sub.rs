@@ -1,24 +1,17 @@
 use crate::Tensor;
 use std::ops::{Sub, SubAssign};
 
-/*
- * Substraction between two &Tensor requires them to have the same total length
- * (not the same shape) and substracts the 1st one from the 2nd one them pointwise
-*/
-
-/*
- * Substraction between a &Tensor and a f64 substracts the scalar from
- * all elements of the Tensor
-*/
-
-/*
- * Defined operations
- * &Tensor - &Tensor -> Tensor
- * Tensor -= &Tensor
- * &Tensor - f64
- * &Tensor -= f64
- * f64 - Tensor -> Tensor
-*/
+// Tensor - Tensor: element-wise subtraction. Requires equal total element count.
+//
+// Tensor - f64: subtracts the scalar from every element.
+// f64 - Tensor: subtracts each element from the scalar (element-wise).
+//
+// Defined operations:
+//   &Tensor - &Tensor  -> Tensor
+//   Tensor  -= &Tensor
+//   &Tensor - f64      -> Tensor
+//   Tensor  -= f64
+//   f64     - &Tensor  -> Tensor
 
 impl Sub for &Tensor {
     type Output = Tensor;
