@@ -1,9 +1,8 @@
-pub mod add;
 pub mod core;
-pub mod div;
-pub mod mul;
-pub mod red;
-pub mod sub;
+pub mod elementwise;
+pub mod matmul;
+pub mod reduction;
+pub mod scalar;
 pub mod unary;
 
 pub use core::Tensor;

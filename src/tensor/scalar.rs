@@ -1,0 +1,106 @@
+use crate::Tensor;
+use std::ops::{Add, AddAssign};
+use std::ops::{Sub, SubAssign};
+use std::ops::{Mul, MulAssign};
+use std::ops::{Div, DivAssign};
+
+// Arithmetic between a Tensor and a scalar f64.
+// Every operation applies the scalar uniformly to all elements via map / map_inplace.
+//
+// Defined operations:
+//   &Tensor + f64   -> Tensor      f64 + &Tensor  -> Tensor
+//    Tensor += f64
+//   &Tensor - f64   -> Tensor      f64 - &Tensor  -> Tensor
+//    Tensor -= f64
+//   &Tensor * f64   -> Tensor      f64 * &Tensor  -> Tensor
+//    Tensor *= f64
+//   &Tensor / f64   -> Tensor      f64 / &Tensor  -> Tensor
+//    Tensor /= f64
+
+impl Add<f64> for &Tensor {
+    type Output = Tensor;
+
+    fn add(self, scalar: f64) -> Tensor {
+        self.map(|x| x + scalar)
+    }
+}
+
+impl Add<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn add(self, tensor: &Tensor) -> Tensor {
+        tensor.map(|x| x + self)
+    }
+}
+
+impl AddAssign<f64> for Tensor {
+    fn add_assign(&mut self, scalar: f64) {
+        self.map_inplace(|x| x + scalar)
+    }
+}
+
+impl Sub<f64> for &Tensor {
+    type Output = Tensor;
+
+    fn sub(self, scalar: f64) -> Tensor {
+        self.map(|x| x - scalar)
+    }
+}
+
+impl Sub<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn sub(self, tensor: &Tensor) -> Tensor {
+        tensor.map(|x| self - x)
+    }
+}
+
+impl SubAssign<f64> for Tensor {
+    fn sub_assign(&mut self, scalar: f64) {
+        self.map_inplace(|x| x - scalar);
+    }
+}
+
+impl Mul<f64> for &Tensor {
+    type Output = Tensor;
+
+    fn mul(self, scalar: f64) -> Tensor {
+        self.map(|x| x * scalar)
+    }
+}
+
+impl Mul<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn mul(self, tensor: &Tensor) -> Tensor {
+        tensor.map(|x| x * self)
+    }
+}
+
+impl MulAssign<f64> for Tensor {
+    fn mul_assign(&mut self, scalar: f64) {
+        self.map_inplace(|x| x * scalar);
+    }
+}
+
+impl Div<f64> for &Tensor {
+    type Output = Tensor;
+
+    fn div(self, scalar: f64) -> Tensor {
+        self.map(|x| x / scalar)
+    }
+}
+
+impl Div<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn div(self, tensor: &Tensor) -> Tensor {
+        tensor.map(|x| self / x)
+    }
+}
+
+impl DivAssign<f64> for Tensor {
+    fn div_assign(&mut self, scalar: f64) {
+        self.map_inplace(|x| x / scalar);
+    }
+}

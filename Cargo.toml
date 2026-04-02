@@ -1,7 +1,11 @@
 [package]
-name = "r"
+name = "rml"
 version = "0.1.0"
 edition = "2024"
+
+[[bin]]
+name = "rml"
+path = "src/example.rs"
 
 [dependencies]
 rand = "0.8"

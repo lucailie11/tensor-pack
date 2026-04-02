@@ -45,6 +45,19 @@ impl Tensor {
         }
     }
 
+    // Creates a Tensor filled with samples from N(`mean`, `std_dev`).
+    pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> Tensor {
+        let len: usize = shape.iter().product();
+        let mut rng = thread_rng();
+        let normal = Normal::new(mean, std_dev).unwrap();
+        let data: Vec<f64> = (0..len).map(|_| normal.sample(&mut rng)).collect();
+
+        Tensor {
+            shape: Box::from(shape),
+            data: data.into_boxed_slice(),
+        }
+    }
+
     // Creates a Tensor by copying values from `data`. The product of `shape` must equal `data.len()`.
     pub fn new(shape: &[usize], data: &[f64]) -> Tensor {
         assert_eq!(
@@ -56,19 +69,6 @@ impl Tensor {
         Tensor {
             shape: Box::from(shape),
             data: Box::from(data),
-        }
-    }
-
-    // Creates a Tensor filled with samples from N(`mean`, `std_dev`).
-    pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> Tensor {
-        let len: usize = shape.iter().product();
-        let mut rng = thread_rng();
-        let normal = Normal::new(mean, std_dev).unwrap();
-        let data: Vec<f64> = (0..len).map(|_| normal.sample(&mut rng)).collect();
-
-        Tensor {
-            shape: Box::from(shape),
-            data: data.into_boxed_slice(),
         }
     }
 
