@@ -1,7 +1,8 @@
 use crate::Tensor;
 use std::ops::Neg;
 
-// Element-wise unary operations.
+// Element-wise unary (pointwise) operations — each output element depends only on
+// the corresponding input element.
 //
 // map / map_inplace are the core primitives: apply a closure to every element,
 // either returning a new Tensor or mutating in place.
@@ -9,6 +10,10 @@ use std::ops::Neg;
 //
 // Scalar arithmetic (+f64, -f64, …) also builds on map but lives in scalar.rs.
 // Unary negation (-&Tensor) is here since it takes no second operand.
+//
+// Defined operations:
+//   exp, ln, sqrt, abs, tanh, sigmoid, relu  (and *_inplace variants)
+//   -&Tensor — negation
 
 fn sigmoid(x: f64) -> f64 {
     1.0 / ((-x).exp() + 1.0)

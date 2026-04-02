@@ -1,5 +1,25 @@
 use crate::Tensor;
 
+// Axis-based operations — functions that are applied independently along one axis
+// of the tensor while keeping all other axes fixed.
+//
+// apply_axis_inplace / apply_axis are the core primitives: they iterate over every
+// (outer, inner) pair and call f on the slice of `axis_size` elements that spans
+// the target axis at that position.
+//
+// Softmax uses this primitive to normalize each axis-slice to a probability distribution.
+// Future normalizations (layer norm, batch norm, …) will follow the same pattern.
+//
+// Row-major layout: the element at (outer, a, inner) lives at
+//   outer * axis_size * inner_size + a * inner_size + inner
+// so a stride of `inner_size` steps through consecutive axis elements.
+//
+// Defined operations:
+//   softmax(axis) / softmax_inplace(axis)
+
+// Applies softmax in place over a strided slice.
+// step is the stride between consecutive axis elements (equals inner_size).
+// Subtracts the max before exponentiation for numerical stability.
 fn softmax(data: &mut [f64], step: usize) {
     let max: f64 = data
         .iter()
@@ -23,6 +43,9 @@ fn softmax(data: &mut [f64], step: usize) {
 }
 
 impl Tensor {
+    // Applies f to each axis-slice in place.
+    // f receives a mutable slice starting at the first element of each (outer, inner) lane
+    // and a step size (inner_size) to stride through the axis elements.
     pub fn apply_axis_inplace(&mut self, axis: usize, f: impl Fn(&mut [f64], usize)) {
         assert!(axis < self.shape.len(), "axis out of bounds");
 
@@ -43,9 +66,10 @@ impl Tensor {
             for i in 0..inner_size {
                 f(&mut self.data[o * axis_size * inner_size + i..], inner_size);
             }
-        } 
+        }
     }
 
+    // Applies f to each axis-slice, returning a new Tensor with the same shape.
     pub fn apply_axis(&self, axis: usize, f: impl Fn(&mut [f64], usize)) -> Tensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
         let mut result = Tensor::new(&self.shape, &self.data);
@@ -56,7 +80,7 @@ impl Tensor {
     pub fn softmax_inplace(&mut self, axis: usize) {
         self.apply_axis_inplace(axis, softmax);
     }
- 
+
     pub fn softmax(&self, axis: usize) -> Tensor {
         self.apply_axis(axis, softmax)
     }
