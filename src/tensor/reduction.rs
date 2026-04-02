@@ -44,7 +44,6 @@ impl Tensor {
     // Example: shape [3, 4, 5] reduced on axis 1 → shape [3, 5]
 
     fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64]) -> f64) -> Tensor {
-        assert!(!self.shape.is_empty(), "reduce_axis requires at least a 1D tensor");
         assert!(axis < self.shape.len(), "axis out of bounds");
 
         let mut outer_size: usize = 1;

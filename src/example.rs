@@ -7,4 +7,6 @@ fn main() {
     x += &y;
     y += &x;
     println!("{}\n{}\n{}\n", x, y, &x - &y);
+    x.softmax_inplace(0);
+    println!("{}\n", x);
 }
