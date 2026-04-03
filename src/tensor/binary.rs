@@ -1,23 +1,25 @@
 use crate::Tensor;
 use std::ops::{Add, AddAssign};
 use std::ops::{Sub, SubAssign};
+use std::ops::{Mul, MulAssign};
+use std::ops::{Div, DivAssign};
 
 // Element-wise binary operations between two Tensors.
 // Broadcasting is not yet implemented; shapes must match exactly (same total element count).
 //
 // elementwise_op / elementwise_op_inplace are the core primitives.
-// + and - delegate to these. Matmul (&Tensor * &Tensor) lives in matmul.rs.
-// Scalar ops (&Tensor op f64) live in scalar.rs.
 //
 // Defined operations:
 //   &Tensor + &Tensor  -> Tensor
 //    Tensor += &Tensor
 //   &Tensor - &Tensor  -> Tensor
 //    Tensor -= &Tensor
+//   &Tensor * &Tensor  -> Tensor
+//    Tensor *= &Tensor
+//   &Tensor / &Tensor  -> Tensor
+//    Tensor /= &Tensor
 
 impl Tensor {
-    // Applies f element-wise to self and other, returning a new Tensor with self's shape.
-    // Panics if the two tensors have different total element counts.
     pub fn elementwise_op(&self, other: &Tensor, f: impl Fn(f64, f64) -> f64) -> Tensor {
         assert_eq!(self.data.len(), other.data.len(), "Shape mismatch");
 
@@ -34,7 +36,6 @@ impl Tensor {
         }
     }
 
-    // Applies f element-wise in place. Panics if lengths differ.
     pub fn elementwise_op_inplace(&mut self, other: &Tensor, f: impl Fn(f64, f64) -> f64) {
         assert_eq!(self.data.len(), other.data.len(), "Shape mismatch");
 
@@ -69,5 +70,33 @@ impl Sub for &Tensor {
 impl SubAssign<&Tensor> for Tensor {
     fn sub_assign(&mut self, other: &Tensor) {
         self.elementwise_op_inplace(other, |a, b| a - b);
+    }
+}
+
+impl Mul for &Tensor {
+    type Output = Tensor;
+
+    fn mul(self, other: &Tensor) -> Tensor {
+        self.elementwise_op(other, |a, b| a * b)
+    }
+}
+
+impl MulAssign<&Tensor> for Tensor {
+    fn mul_assign(&mut self, other: &Tensor) {
+        self.elementwise_op_inplace(other, |a, b| a * b);
+    }
+}
+
+impl Div for &Tensor {
+    type Output = Tensor;
+
+    fn div(self, other: &Tensor) -> Tensor {
+        self.elementwise_op(other, |a, b| a / b)
+    }
+}
+
+impl DivAssign<&Tensor> for Tensor {
+    fn div_assign(&mut self, other: &Tensor) {
+        self.elementwise_op_inplace(other, |a, b| a / b);
     }
 }

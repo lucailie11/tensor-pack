@@ -1,24 +1,21 @@
 use crate::Tensor;
 
-// Welford's online algorithm: numerically stable single-pass mean and population var.
-// More stable than E[X^2] - E[X]^2 for data with large mean.
-
-fn sum(data: &[f64]) -> f64 {
+fn sum(data: &[f64], step: usize) -> f64 {
     let mut sum: f64 = 0.0;
-    for &x in data {
+    for x in data.iter().step_by(step) {
         sum += x;
     }
     sum
 }
 
-fn mean(data: &[f64]) -> f64 {
-    sum(data) / data.len() as f64
+fn mean(data: &[f64], step: usize) -> f64 {
+    sum(data, step) / data.len() as f64
 }
 
-fn mean_and_var(data: &[f64]) -> (f64, f64) {
+fn mean_and_var(data: &[f64], step: usize) -> (f64, f64) {
     let mut mean: f64 = 0.0;
     let mut var: f64 = 0.0;
-    for (i, &x) in data.iter().enumerate() {
+    for (i, &x) in data.iter().step_by(step).enumerate() {
         let delta: f64 = x - mean;
         mean += delta / (i + 1) as f64;
         var += delta * (x - mean);
@@ -26,24 +23,22 @@ fn mean_and_var(data: &[f64]) -> (f64, f64) {
     (mean, var / data.len() as f64)
 }
 
-fn var(data: &[f64]) -> f64 {
-    mean_and_var(data).1
+fn var(data: &[f64], step: usize) -> f64 {
+    mean_and_var(data, step).1
 }
 
-fn std_dev(data: &[f64]) -> f64 {
-    f64::sqrt(var(data))
+fn std_dev(data: &[f64], step: usize) -> f64 {
+    f64::sqrt(var(data, step))
 }
 
 impl Tensor {
-    // Core reduction primitive. Folds along `axis` using f(accumulator, element),
-    // initialized to 0.0. The output shape is the input shape with `axis` removed.
-    //
-    // Row-major layout: element at (outer, a, inner) lives at
-    //   outer * axis_size * inner_size + a * inner_size + inner
+    // Core reduction primitive. For each (outer, inner) lane, passes a strided slice
+    // starting at the first axis element and a step size (inner_size) to f, which reads
+    // every step-th value to cover the axis. The output shape is the input shape with `axis` removed.
     //
     // Example: shape [3, 4, 5] reduced on axis 1 → shape [3, 5]
 
-    fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64]) -> f64) -> Tensor {
+    fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize) -> f64) -> Tensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
 
         let mut outer_size: usize = 1;
@@ -68,10 +63,7 @@ impl Tensor {
         let mut new_data: Vec<f64> = vec![0.0; outer_size * inner_size];
         for o in 0..outer_size {
             for i in 0..inner_size {
-                let vec: Vec<f64> = (0..axis_size)
-                    .map(|a| self.data[o * axis_size * inner_size + a * inner_size + i])
-                    .collect();
-                new_data[o * inner_size + i] = f(&vec)
+                new_data[o * inner_size + i] = f(&self.data[o * axis_size * inner_size + i..], inner_size);
             }
         }
 
@@ -96,10 +88,8 @@ impl Tensor {
         self.reduce_axis(axis, var)
     }
 
-    // Computes the stdandard deviation of elements along `axis`. Output shape drops that dimension.
+    // Computes the standard deviation of elements along `axis`. Output shape drops that dimension.
     pub fn std_dev_axis(&self, axis: usize) -> Tensor {
         self.reduce_axis(axis, std_dev)
     }
-
-    
 }

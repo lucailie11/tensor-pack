@@ -1,12 +1,8 @@
 use crate::Tensor;
 use std::ops::Neg;
 
-// Element-wise unary (pointwise) operations — each output element depends only on
-// the corresponding input element.
-//
 // map / map_inplace are the core primitives: apply a closure to every element,
 // either returning a new Tensor or mutating in place.
-// All named ops (exp, ln, relu, …) are thin wrappers around map.
 //
 // Scalar arithmetic (+f64, -f64, …) also builds on map but lives in scalar.rs.
 // Unary negation (-&Tensor) is here since it takes no second operand.
@@ -24,7 +20,6 @@ fn relu(x: f64) -> f64 {
 }
 
 impl Tensor {
-    // Applies f to every element, returning a new Tensor with the same shape.
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
         Tensor {
             shape: self.shape.clone(),
@@ -37,7 +32,6 @@ impl Tensor {
         }
     }
 
-    // Applies f to every element in place.
     pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
         self.data.iter_mut().for_each(|x| *x = f(*x));
     }
@@ -59,7 +53,6 @@ impl Tensor {
     pub fn relu_inplace(&mut self)    { self.map_inplace(relu)      }
 }
 
-// Unary negation: negates every element.
 impl Neg for &Tensor {
     type Output = Tensor;
 
