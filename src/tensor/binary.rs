@@ -1,11 +1,12 @@
 use crate::Tensor;
+use crate::tensor::broadcasting::{get_broadcast_index, get_broadcast_shape};
 use std::ops::{Add, AddAssign};
 use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};
 use std::ops::{Div, DivAssign};
 
-// Element-wise binary operations between two Tensors.
-// Broadcasting is not yet implemented; shapes must match exactly (same total element count).
+// Element-wise binary operations between two Tensors. Supports broadcasting.
+// For _inplace ops, self must already be the output shape (other broadcasts into self).
 //
 // elementwise_op / elementwise_op_inplace are the core primitives.
 //
@@ -20,27 +21,32 @@ use std::ops::{Div, DivAssign};
 //    Tensor /= &Tensor
 
 impl Tensor {
+    // Panics if the Tensors are not broadcastable
     pub fn elementwise_op(&self, other: &Tensor, f: impl Fn(f64, f64) -> f64) -> Tensor {
-        assert_eq!(self.data.len(), other.data.len(), "Shape mismatch");
-
-        let new_data: Vec<f64> = self
-            .data
-            .iter()
-            .zip(other.data.iter())
-            .map(|(a, b)| f(*a, *b))
+        let out_shape = get_broadcast_shape(&self.shape, &other.shape);
+        let out_len: usize = out_shape.iter().product();
+        let new_data: Vec<f64> = (0..out_len)
+            .map(|i| f(
+                self.data[get_broadcast_index(i, &self.shape, &out_shape)],
+                other.data[get_broadcast_index(i, &other.shape, &out_shape)],
+            ))
             .collect();
 
         Tensor {
-            shape: self.shape.clone(),
+            shape: out_shape.into_boxed_slice(),
             data: new_data.into_boxed_slice(),
         }
     }
 
+    // Panics if self is not already the broadcast output shape (other must broadcast into self).
     pub fn elementwise_op_inplace(&mut self, other: &Tensor, f: impl Fn(f64, f64) -> f64) {
-        assert_eq!(self.data.len(), other.data.len(), "Shape mismatch");
-
-        for (a, b) in self.data.iter_mut().zip(other.data.iter()) {
-            *a = f(*a, *b)
+        assert_eq!(
+            get_broadcast_shape(&self.shape, &other.shape).as_slice(),
+            &*self.shape,
+            "in-place broadcasting requires self to already be the output shape"
+        );
+        for i in 0..self.data.len() {
+            self.data[i] = f(self.data[i], other.data[get_broadcast_index(i, &other.shape, &self.shape)]);
         }
     }
 }
