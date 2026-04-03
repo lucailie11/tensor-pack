@@ -51,7 +51,9 @@ impl Tensor {
 
         for o in 0..outer_size {
             for i in 0..inner_size {
-                f(&mut self.data[o * axis_size * inner_size + i..], inner_size);
+                f(&mut self.data[
+                    o * axis_size * inner_size + i..
+                    o * axis_size * inner_size + axis_size * inner_size], inner_size);
             }
         }
     }

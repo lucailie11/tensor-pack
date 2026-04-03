@@ -6,5 +6,6 @@ pub mod reduction;
 pub mod scalar;
 pub mod transformations;
 pub mod unary;
+pub mod utils;
 
 pub use core::Tensor;

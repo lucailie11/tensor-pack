@@ -1,26 +1,23 @@
 use crate::Tensor;
+use crate::tensor::utils::stride_len;
 
 fn sum(data: &[f64], step: usize) -> f64 {
-    let mut sum: f64 = 0.0;
-    for x in data.iter().step_by(step) {
-        sum += x;
-    }
-    sum
+    data.iter().step_by(step).sum()
 }
 
 fn mean(data: &[f64], step: usize) -> f64 {
-    sum(data, step) / data.len() as f64
+    sum(data, step) / stride_len(data, step) as f64
 }
 
 fn mean_and_var(data: &[f64], step: usize) -> (f64, f64) {
     let mut mean: f64 = 0.0;
     let mut var: f64 = 0.0;
-    for (i, &x) in data.iter().step_by(step).enumerate() {
+    for (i, x) in data.iter().step_by(step).enumerate() {
         let delta: f64 = x - mean;
         mean += delta / (i + 1) as f64;
         var += delta * (x - mean);
     }
-    (mean, var / data.len() as f64)
+    (mean, var / stride_len(data, step) as f64)
 }
 
 fn var(data: &[f64], step: usize) -> f64 {
@@ -63,7 +60,9 @@ impl Tensor {
         let mut new_data: Vec<f64> = vec![0.0; outer_size * inner_size];
         for o in 0..outer_size {
             for i in 0..inner_size {
-                new_data[o * inner_size + i] = f(&self.data[o * axis_size * inner_size + i..], inner_size);
+                new_data[o * inner_size + i] = f(&self.data[
+                    o * axis_size * inner_size + i..
+                    o * axis_size * inner_size + axis_size * inner_size], inner_size);
             }
         }
 
