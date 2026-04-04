@@ -5,7 +5,7 @@ use super::Tensor;
 use super::grad::GradInfo;
 
 impl Tensor {
-    pub fn new_tensor(data: RawTensor, grad_info: Option<GradInfo>) -> Tensor {
+    pub(super) fn new_tensor(data: RawTensor, grad_info: Option<GradInfo>) -> Tensor {
         Tensor {
             data: Rc::new(RefCell::new(data)),
             grad_info: grad_info.map(|g| Rc::new(RefCell::new(g))),
