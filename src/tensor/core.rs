@@ -7,11 +7,14 @@ use std::fmt;
 
 #[derive(Debug)]
 pub struct Tensor {
-    pub shape: Box<[usize]>,
-    pub data: Box<[f64]>,
+    pub(super) shape: Box<[usize]>,
+    pub(super) data: Box<[f64]>,
 }
 
 impl Tensor {
+    pub fn shape(&self) -> &[usize] { &self.shape }
+    pub fn data(&self) -> &[f64]    { &self.data  }
+
     // All constructors take the desired shape as a slice of dimension sizes.
     // Data is stored in row-major order: the last axis varies fastest.
 

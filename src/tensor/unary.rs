@@ -1,4 +1,4 @@
-use crate::Tensor;
+use super::Tensor;
 use std::ops::Neg;
 
 // map / map_inplace are the core primitives: apply a closure to every element,

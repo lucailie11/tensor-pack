@@ -1,4 +1,4 @@
-use crate::Tensor;
+use super::Tensor;
 
 // Axis-based operations — functions that are applied independently along one axis
 // of the tensor while keeping all other axes fixed.

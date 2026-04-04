@@ -1,5 +1,5 @@
-use crate::Tensor;
-use crate::tensor::utils::stride_len;
+use super::Tensor;
+use super::utils::stride_len;
 
 fn sum(data: &[f64], step: usize) -> f64 {
     data.iter().step_by(step).sum()

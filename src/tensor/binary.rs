@@ -1,5 +1,5 @@
-use crate::Tensor;
-use crate::tensor::broadcasting::{get_broadcast_index, get_broadcast_shape};
+use super::Tensor;
+use super::broadcasting::{get_broadcast_index, get_broadcast_shape};
 use std::ops::{Add, AddAssign};
 use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};

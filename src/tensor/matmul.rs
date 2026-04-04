@@ -1,4 +1,4 @@
-use crate::Tensor;
+use super::Tensor;
 
 // Matrix multiplication: shapes [m,k] × [k,n] → [m,n]. Both tensors must be 2D.
 // Use tensor.matmul(other) instead of * (which is element-wise, like NumPy/PyTorch).

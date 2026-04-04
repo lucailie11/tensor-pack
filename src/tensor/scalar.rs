@@ -1,4 +1,4 @@
-use crate::Tensor;
+use super::Tensor;
 use std::ops::{Add, AddAssign};
 use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};

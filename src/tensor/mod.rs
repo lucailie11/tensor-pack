@@ -1,11 +1,11 @@
-pub mod core;
-pub mod binary;
-pub mod broadcasting;
-pub mod matmul;
-pub mod reduction;
-pub mod scalar;
-pub mod transformations;
-pub mod unary;
-pub mod utils;
+mod core;
+mod binary;
+mod broadcasting;
+mod matmul;
+mod reductions;
+mod scalar;
+mod transformations;
+mod unary;
+mod utils;
 
 pub use core::Tensor;
