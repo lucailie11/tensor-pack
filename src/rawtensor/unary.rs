@@ -1,4 +1,4 @@
-use super::Tensor;
+use super::RawTensor;
 use std::ops::Neg;
 
 // map / map_inplace are the core primitives: apply a closure to every element,
@@ -19,23 +19,30 @@ fn relu(x: f64) -> f64 {
     if x >= 0.0 { x } else { 0.0 }
 }
 
-impl Tensor {
-    pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
-        let raw = self.data.borrow().map(f);
-        Tensor::new_tensor(raw, None)
+impl RawTensor {
+    pub fn map(&self, f: impl Fn(f64) -> f64) -> RawTensor {
+        RawTensor {
+            shape: self.shape.clone(),
+            data: self
+                .data
+                .iter()
+                .map(|x| f(*x))
+                .collect::<Vec<f64>>()
+                .into_boxed_slice(),
+        }
     }
 
     pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
-        self.data.borrow_mut().map_inplace(f);
+        self.data.iter_mut().for_each(|x| *x = f(*x));
     }
 
-    pub fn exp(&self) -> Tensor     { self.map(f64::exp)  }
-    pub fn ln(&self) -> Tensor      { self.map(f64::ln)   }
-    pub fn sqrt(&self) -> Tensor    { self.map(f64::sqrt) }
-    pub fn abs(&self) -> Tensor     { self.map(f64::abs)  }
-    pub fn tanh(&self) -> Tensor    { self.map(f64::tanh) }
-    pub fn sigmoid(&self) -> Tensor { self.map(sigmoid)   }
-    pub fn relu(&self) -> Tensor    { self.map(relu)      }
+    pub fn exp(&self) -> RawTensor     { self.map(f64::exp)  }
+    pub fn ln(&self) -> RawTensor      { self.map(f64::ln)   }
+    pub fn sqrt(&self) -> RawTensor    { self.map(f64::sqrt) }
+    pub fn abs(&self) -> RawTensor     { self.map(f64::abs)  }
+    pub fn tanh(&self) -> RawTensor    { self.map(f64::tanh) }
+    pub fn sigmoid(&self) -> RawTensor { self.map(sigmoid)   }
+    pub fn relu(&self) -> RawTensor    { self.map(relu)      }
 
     pub fn exp_inplace(&mut self)     { self.map_inplace(f64::exp)  }
     pub fn ln_inplace(&mut self)      { self.map_inplace(f64::ln)   }
@@ -46,10 +53,10 @@ impl Tensor {
     pub fn relu_inplace(&mut self)    { self.map_inplace(relu)      }
 }
 
-impl Neg for Tensor {
-    type Output = Tensor;
+impl Neg for &RawTensor {
+    type Output = RawTensor;
 
-    fn neg(self) -> Tensor {
+    fn neg(self) -> RawTensor {
         self.map(|x| -x)
     }
 }

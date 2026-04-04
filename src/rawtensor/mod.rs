@@ -1,11 +1,11 @@
-mod binary;
 mod core;
+mod binary;
+mod broadcasting;
 mod constructors;
-mod grad;
+mod matmul;
 mod reductions;
 mod scalar;
 mod transformations;
 mod unary;
-mod matmul;
 
-pub use core::Tensor;
+pub use core::RawTensor;
