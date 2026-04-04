@@ -5,7 +5,7 @@ use crate::utils::stride::softmax;
 impl Tensor {
     pub fn apply_axis(&self, axis: usize, f: impl Fn(&mut [f64], usize)) -> Tensor {
         let raw: RawTensor = self.raw.borrow().apply_axis(axis, f);
-        Tensor::new_tensor(raw, None)
+        Tensor::from_raw(raw, None)
     }
 
     pub fn apply_axis_inplace(&mut self, axis: usize, f: impl Fn(&mut [f64], usize)) {

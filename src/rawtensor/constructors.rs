@@ -6,13 +6,60 @@ impl RawTensor {
     // All constructors take the desired shape as a slice of dimension sizes.
     // Data is stored in row-major order: the last axis varies fastest.
 
+    // Creates a RawTensor from existing shape and data slices. Panics if their sizes are inconsistent.
+    pub fn from_slice(shape: &[usize], data: &[f64]) -> RawTensor {
+        assert_eq!(
+            shape.iter().product::<usize>(),
+            data.len(),
+            "Data length doesn't match shape"
+        );
+
+        RawTensor {
+            shape: Box::from(shape),
+            data: Box::from(data),
+        }
+    }
+
+    pub fn from_vec(shape: &[usize], data: Vec<f64>) -> RawTensor {
+        assert_eq!(
+            shape.iter().product::<usize>(),
+            data.len(),
+            "Data length doesn't match shape"
+        );
+
+        RawTensor {
+            shape: Box::from(shape),
+            data: data.into_boxed_slice(),
+        }
+    }
+
+    pub fn from_box(shape: &[usize], data: Box<[f64]>) -> RawTensor {
+        assert_eq!(
+            shape.iter().product::<usize>(),
+            data.len(),
+            "Data length doesn't match shape"
+        );
+
+        RawTensor {
+            shape: Box::from(shape),
+            data,
+        }
+    }
+
+    // Changes the shape without moving data. The total number of elements must stay the same.
+    pub fn reshape(&mut self, new_shape: &[usize]) {
+        assert_eq!(
+            new_shape.iter().product::<usize>(),
+            self.data.len(),
+            "New shape doesn't match old data length"
+        );
+        self.shape = Box::from(new_shape);
+    }
+
     // Creates a RawTensor filled with value
     pub fn full(shape: &[usize], value: f64) -> RawTensor {
         let len: usize = shape.iter().product();
-        RawTensor {
-            shape: Box::from(shape),
-            data: vec![value; len].into_boxed_slice(),
-        }
+        RawTensor::from_vec(shape, vec![value; len])
     }
 
     // Creates a RawTensor filled with 0.0.
@@ -39,10 +86,7 @@ impl RawTensor {
             .map(|i| start + i as f64 * (end - start) / (n - 1) as f64)
             .collect();
 
-        RawTensor {
-            shape: vec![n].into_boxed_slice(),
-            data: data.into_boxed_slice(),
-        }
+        RawTensor::from_vec(&[n], data)
     }
 
     // Creates a RawTensor filled with samples from U([l, r)).
@@ -53,10 +97,7 @@ impl RawTensor {
         let uniform = Uniform::new(l, r);
         let data: Vec<f64> = (0..len).map(|_| uniform.sample(&mut rng)).collect();
 
-        RawTensor {
-            shape: Box::from(shape),
-            data: data.into_boxed_slice(),
-        }
+        RawTensor::from_vec(shape, data)
     }
 
     // Creates a RawTensor filled with samples from U([0, 1)).
@@ -71,33 +112,6 @@ impl RawTensor {
         let normal = Normal::new(mean, std_dev).unwrap();
         let data: Vec<f64> = (0..len).map(|_| normal.sample(&mut rng)).collect();
 
-        RawTensor {
-            shape: Box::from(shape),
-            data: data.into_boxed_slice(),
-        }
-    }
-
-    // Creates a RawTensor from existing shape and data slices. Panics if their sizes are inconsistent.
-    pub fn new(shape: &[usize], data: &[f64]) -> RawTensor {
-        assert_eq!(
-            shape.iter().product::<usize>(),
-            data.len(),
-            "Data length doesn't match shape"
-        );
-
-        RawTensor {
-            shape: Box::from(shape),
-            data: Box::from(data),
-        }
-    }
-
-    // Changes the shape without moving data. The total number of elements must stay the same.
-    pub fn reshape(&mut self, new_shape: &[usize]) {
-        assert_eq!(
-            new_shape.iter().product::<usize>(),
-            self.data.len(),
-            "New shape doesn't match old data length"
-        );
-        self.shape = Box::from(new_shape);
+        RawTensor::from_vec(shape, data)
     }
 }

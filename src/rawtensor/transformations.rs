@@ -39,7 +39,7 @@ impl RawTensor {
 
     pub fn apply_axis(&self, axis: usize, f: impl Fn(&mut [f64], usize)) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
-        let mut result = RawTensor::new(&self.shape, &self.data);
+        let mut result = RawTensor::from_slice(&self.shape, &self.data);
         result.apply_axis_inplace(axis, f);
         result
     }

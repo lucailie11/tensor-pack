@@ -5,15 +5,31 @@ use super::Tensor;
 use crate::grad::GradInfo;
 
 impl Tensor {
-    pub(super) fn new_tensor(data: RawTensor, grad_info: Option<GradInfo>) -> Tensor {
+    pub(super) fn from_raw(data: RawTensor, grad_info: Option<GradInfo>) -> Tensor {
         Tensor {
             raw: Rc::new(RefCell::new(data)),
             grad_info: grad_info.map(|g| Rc::new(RefCell::new(g))),
         }
     }
 
+    pub fn from_slice(shape: &[usize], data: &[f64]) -> Tensor {
+        Tensor::from_raw(RawTensor::from_slice(shape, data), None)
+    }
+
+    pub fn from_vec(shape: &[usize], data: Vec<f64>) -> Tensor {
+        Tensor::from_raw(RawTensor::from_vec(shape, data), None)
+    }
+
+    pub fn from_box(shape: &[usize], data: Box<[f64]>) -> Tensor {
+        Tensor::from_raw(RawTensor::from_box(shape, data), None)
+    }
+
+    pub fn reshape(&mut self, new_shape: &[usize]) {
+        (*self.raw).borrow_mut().reshape(new_shape);
+    }
+
     pub fn full(shape: &[usize], value: f64) -> Tensor {
-        Tensor::new_tensor(RawTensor::full(shape, value), None)
+        Tensor::from_raw(RawTensor::full(shape, value), None)
     }
 
     pub fn zeros(shape: &[usize]) -> Tensor {
@@ -25,11 +41,11 @@ impl Tensor {
     }
 
     pub fn linspace(start: f64, end: f64, n: usize) -> Tensor {
-        Tensor::new_tensor(RawTensor::linspace(start, end, n), None)
+        Tensor::from_raw(RawTensor::linspace(start, end, n), None)
     }
 
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> Tensor {
-        Tensor::new_tensor(RawTensor::rand_range(shape, l, r), None)
+        Tensor::from_raw(RawTensor::rand_range(shape, l, r), None)
     }
 
     pub fn rand(shape: &[usize]) -> Tensor {
@@ -37,15 +53,7 @@ impl Tensor {
     }
 
     pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> Tensor {
-        Tensor::new_tensor(RawTensor::randn(shape, mean, std_dev), None)
-    }
-
-    pub fn new(shape: &[usize], data: &[f64]) -> Tensor {
-        Tensor::new_tensor(RawTensor::new(shape, data), None)
-    }
-
-    pub fn reshape(&mut self, new_shape: &[usize]) {
-        (*self.raw).borrow_mut().reshape(new_shape);
+        Tensor::from_raw(RawTensor::randn(shape, mean, std_dev), None)
     }
 }
 

@@ -4,7 +4,7 @@ use crate::utils::stride::{sum, mean, var, std_dev};
 impl Tensor {
     pub fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize) -> f64) -> Tensor {
         let raw = self.raw.borrow().reduce_axis(axis, f);
-        Tensor::new_tensor(raw, None)
+        Tensor::from_raw(raw, None)
     }
 
     pub fn sum_axis(&self, axis: usize) -> Tensor {

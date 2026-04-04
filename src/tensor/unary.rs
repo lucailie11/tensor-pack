@@ -22,7 +22,7 @@ fn relu(x: f64) -> f64 {
 impl Tensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
         let raw = self.raw.borrow().map(f);
-        Tensor::new_tensor(raw, None)
+        Tensor::from_raw(raw, None)
     }
 
     pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
