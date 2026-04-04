@@ -1,5 +1,6 @@
 pub mod rawtensor;
 pub mod tensor;
-pub(crate) mod utils;
+pub mod grad;
+pub mod utils;
 
 pub use tensor::Tensor;

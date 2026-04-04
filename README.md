@@ -42,10 +42,10 @@ src/
 Element-wise operations between two tensors with NumPy-style broadcasting.
 `elementwise_op` / `elementwise_op_inplace` are the core primitives.
 In-place variants require `self` to already hold the output shape.
-- `Tensor + Tensor` / `Tensor += Tensor`
-- `Tensor - Tensor` / `Tensor -= Tensor`
-- `Tensor * Tensor` / `Tensor *= Tensor`
-- `Tensor / Tensor` / `Tensor /= Tensor`
+- `&Tensor + &Tensor` / `Tensor += &Tensor`
+- `&Tensor - &Tensor` / `Tensor -= &Tensor`
+- `&Tensor * &Tensor` / `Tensor *= &Tensor`
+- `&Tensor / &Tensor` / `Tensor /= &Tensor`
 
 ### Scalar ops
 Arithmetic between a tensor and a scalar `f64`.

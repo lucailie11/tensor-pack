@@ -4,5 +4,7 @@ fn main() {
     let x = Tensor::linspace(1.0, 24.0, 24);
     let y = Tensor::linspace(1.0, 24.0, 24);
 
-    println!("{}\n{}\n", x, x.matmul(y));
+    let z: Tensor = &x + &y;
+
+    println!("{}\n{}\n{}\n", x, y, z);
 }

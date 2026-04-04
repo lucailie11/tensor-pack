@@ -1,5 +1,5 @@
 use crate::rawtensor::RawTensor;
-use super::grad::GradInfo;
+use crate::grad::GradInfo;
 use core::fmt;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -19,6 +19,15 @@ impl Tensor {
     }
 }
 
+impl Clone for Tensor {                                                       
+      fn clone(&self) -> Tensor {
+          Tensor {                                                             
+              raw: Rc::clone(&self.raw),
+              grad_info: self.grad_info.as_ref().map(Rc::clone),
+          }                                                                     
+      }
+  }                                                                             
+   
 impl PartialEq for Tensor {
     fn eq(&self, other: &Tensor) -> bool {
         *self.raw.borrow() == *other.raw.borrow()

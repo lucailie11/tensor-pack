@@ -1,7 +1,6 @@
 mod binary;
 mod core;
 mod constructors;
-mod grad;
 mod reductions;
 mod scalar;
 mod transformations;

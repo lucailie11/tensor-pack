@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use crate::rawtensor::RawTensor;
 use super::Tensor;
-use super::grad::GradInfo;
+use crate::grad::GradInfo;
 
 impl Tensor {
     pub(super) fn new_tensor(data: RawTensor, grad_info: Option<GradInfo>) -> Tensor {
