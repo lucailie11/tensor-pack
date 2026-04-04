@@ -8,7 +8,7 @@ use std::ops::{Div, DivAssign};
 // Binary element-wise operations on two Tensors with broadcasting support.
 // In-place variants require self to already hold the output shape (other is broadcast into it)
 //
-// TODO: optimized broadcasting index lookup
+// TODO: optimizing broadcasting index lookup
 //
 // The core building blocks are elementwise_op and elementwise_op_inplace.
 //
