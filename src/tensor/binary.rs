@@ -6,12 +6,12 @@ use std::ops::{Div, DivAssign};
 
 impl Tensor {
     pub fn elementwise_op(&self, other: &Tensor, f: impl Fn(f64, f64) -> f64) -> Tensor {
-        let raw = self.data.borrow().elementwise_op(&other.data.borrow(), f);
+        let raw = self.raw.borrow().elementwise_op(&other.raw.borrow(), f);
         Tensor::new_tensor(raw, None)
     }
 
     pub fn elementwise_op_inplace(&mut self, other: &Tensor, f: impl Fn(f64, f64) -> f64) {
-        self.data.borrow_mut().elementwise_op_inplace(&other.data.borrow(), f);
+        self.raw.borrow_mut().elementwise_op_inplace(&other.raw.borrow(), f);
     }
 }
 

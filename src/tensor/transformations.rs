@@ -4,12 +4,12 @@ use crate::utils::stride::softmax;
 
 impl Tensor {
     pub fn apply_axis(&self, axis: usize, f: impl Fn(&mut [f64], usize)) -> Tensor {
-        let raw: RawTensor = self.data.borrow().apply_axis(axis, f);
+        let raw: RawTensor = self.raw.borrow().apply_axis(axis, f);
         Tensor::new_tensor(raw, None)
     }
 
     pub fn apply_axis_inplace(&mut self, axis: usize, f: impl Fn(&mut [f64], usize)) {
-        self.data.borrow_mut().apply_axis_inplace(axis, f);
+        self.raw.borrow_mut().apply_axis_inplace(axis, f);
     }
 
     pub fn softmax(&self, axis: usize) -> Tensor {
@@ -39,7 +39,7 @@ mod tests {
     fn softmax_2d_rows_sum_to_one() {
         let a = Tensor::new(&[2, 3], &[1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
         let b = a.softmax(1);
-        let data = b.data.borrow();
+        let data = b.raw.borrow();
         let row0: f64 = data.data()[0..3].iter().sum();
         let row1: f64 = data.data()[3..6].iter().sum();
         assert!(approx_eq(row0, 1.0));

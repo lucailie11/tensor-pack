@@ -7,7 +7,7 @@ use super::grad::GradInfo;
 impl Tensor {
     pub(super) fn new_tensor(data: RawTensor, grad_info: Option<GradInfo>) -> Tensor {
         Tensor {
-            data: Rc::new(RefCell::new(data)),
+            raw: Rc::new(RefCell::new(data)),
             grad_info: grad_info.map(|g| Rc::new(RefCell::new(g))),
         }
     }
@@ -45,7 +45,7 @@ impl Tensor {
     }
 
     pub fn reshape(&mut self, new_shape: &[usize]) {
-        (*self.data).borrow_mut().reshape(new_shape);
+        (*self.raw).borrow_mut().reshape(new_shape);
     }
 }
 
