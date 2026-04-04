@@ -5,10 +5,12 @@ use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};
 use std::ops::{Div, DivAssign};
 
-// Element-wise binary operations between two Tensors. Supports broadcasting.
-// For _inplace ops, self must already be the output shape (other broadcasts into self).
+// Binary element-wise operations on two Tensors with broadcasting support.
+// In-place variants require self to already hold the output shape (other is broadcast into it)
 //
-// elementwise_op / elementwise_op_inplace are the core primitives.
+// TODO: optimized broadcasting index lookup
+//
+// The core building blocks are elementwise_op and elementwise_op_inplace.
 //
 // Defined operations:
 //   &Tensor + &Tensor  -> Tensor
@@ -21,7 +23,7 @@ use std::ops::{Div, DivAssign};
 //    Tensor /= &Tensor
 
 impl Tensor {
-    // Panics if the Tensors are not broadcastable
+    // Panics if the shapes are incompatible for broadcasting.
     pub fn elementwise_op(&self, other: &Tensor, f: impl Fn(f64, f64) -> f64) -> Tensor {
         let out_shape = get_broadcast_shape(&self.shape, &other.shape);
         let out_len: usize = out_shape.iter().product();
@@ -38,7 +40,7 @@ impl Tensor {
         }
     }
 
-    // Panics if self is not already the broadcast output shape (other must broadcast into self).
+    // Panics if self doesn't already have the broadcast output shape (other is broadcast into self).
     pub fn elementwise_op_inplace(&mut self, other: &Tensor, f: impl Fn(f64, f64) -> f64) {
         assert_eq!(
             get_broadcast_shape(&self.shape, &other.shape).as_slice(),
