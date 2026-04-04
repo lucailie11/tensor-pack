@@ -1,6 +1,9 @@
 use rand::thread_rng;
-use rand_distr::{Distribution, Normal};
+use rand_distr::{Distribution, Normal, Uniform};
 use std::fmt;
+
+// Core Tensor type: a pair of shape and data (stored in row-major order).
+// Also defines the standard constructors.
 
 #[derive(Debug)]
 pub struct Tensor {
@@ -12,7 +15,7 @@ impl Tensor {
     // All constructors take the desired shape as a slice of dimension sizes.
     // Data is stored in row-major order: the last axis varies fastest.
 
-    // Creates a Tensor field with 'value'
+    // Creates a Tensor filled with value
     pub fn full(shape: &[usize], value: f64) -> Tensor {
         let len: usize = shape.iter().product();
         Tensor {
@@ -31,9 +34,15 @@ impl Tensor {
         Tensor::full(shape, 1.0)
     }
 
-    // Creates a 1D Tensor of `n` evenly spaced values from `start` to `end` (inclusive).
+    // Creates a 1D Tensor of n evenly spaced values in [start, end] (inclusive on both ends).
+    // If n = 1, returns a shape-[1] tensor containing just start.
     pub fn linspace(start: f64, end: f64, n: usize) -> Tensor {
-        assert!(n > 1, "n must be at least 2");
+        if n == 1 {
+            return Tensor {
+                shape: vec![1].into_boxed_slice(),
+                data: vec![start].into_boxed_slice(),
+            };
+        }
 
         let data: Vec<f64> = (0..n)
             .map(|i| start + i as f64 * (end - start) / (n - 1) as f64)
@@ -45,7 +54,26 @@ impl Tensor {
         }
     }
 
-    // Creates a Tensor filled with samples from N(`mean`, `std_dev`).
+    // Creates a Tensor filled with samples from U([l, r)).
+    pub fn rand_range(shape: &[usize], l: f64, r: f64) -> Tensor {
+        assert!(l < r, "[l, r) should be a non-empty interval");
+        let len: usize = shape.iter().product();
+        let mut rng = thread_rng();
+        let uniform = Uniform::new(l, r);
+        let data: Vec<f64> = (0..len).map(|_| uniform.sample(&mut rng)).collect();
+
+        Tensor {
+            shape: Box::from(shape),
+            data: data.into_boxed_slice(),
+        }
+    }
+
+    // Creates a Tensor filled with samples from U([0, 1)).
+    pub fn rand(shape: &[usize]) -> Tensor {
+        Tensor::rand_range(shape, 0.0, 1.0)
+    }
+
+    // Creates a Tensor filled with samples from N(mean, std_dev).
     pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> Tensor {
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
@@ -58,7 +86,7 @@ impl Tensor {
         }
     }
 
-    // Creates a Tensor by copying values from `data`. The product of `shape` must equal `data.len()`.
+    // Creates a Tensor from existing shape and data slices. Panics if their sizes are inconsistent.
     pub fn new(shape: &[usize], data: &[f64]) -> Tensor {
         assert_eq!(
             shape.iter().product::<usize>(),
@@ -83,7 +111,7 @@ impl Tensor {
     }
 }
 
-// Pretty-prints the tensor. 2D tensors are shown row-by-row; other ranks print the flat slice.
+// Pretty-prints the Tensor. 2D tensors are shown row-by-row; all other ranks print the flat data slice.
 impl fmt::Display for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "Tensor {{")?;
