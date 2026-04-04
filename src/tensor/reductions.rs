@@ -23,3 +23,33 @@ impl Tensor {
         self.reduce_axis(axis, std_dev)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::tensor::Tensor;
+
+    fn approx_eq(a: f64, b: f64) -> bool { (a - b).abs() < 1e-9 }
+
+    #[test]
+    fn sum_axis0() {
+        let a = Tensor::new(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = a.sum_axis(0);
+        assert_eq!(&*b.shape(), &[3]);
+        assert_eq!(&*b.data(), &[5.0, 7.0, 9.0]);
+    }
+
+    #[test]
+    fn sum_axis1() {
+        let a = Tensor::new(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = a.sum_axis(1);
+        assert_eq!(&*b.shape(), &[2]);
+        assert_eq!(&*b.data(), &[6.0, 15.0]);
+    }
+
+    #[test]
+    fn mean_axis0() {
+        let a = Tensor::new(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        let b = a.mean_axis(0);
+        assert!(b.data().iter().zip(&[2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
+    }
+}
