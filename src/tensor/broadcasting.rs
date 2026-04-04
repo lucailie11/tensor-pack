@@ -6,7 +6,7 @@ fn are_dimensions_compatible(d1: usize, d2: usize) -> bool {
 }
 
 // Computes the output shape from two broadcastable shapes. Panics if they aren't compatible.
-pub fn get_broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Vec<usize> {
+pub(super) fn get_broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Vec<usize> {
     let len = usize::max(shape1.len(), shape2.len());
     let mut out = vec![1usize; len];
     for i in 0..len {
@@ -19,7 +19,7 @@ pub fn get_broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Vec<usize> {
 }
 
 // Maps a flat output index to the corresponding flat index in the input shape, accounting for broadcasting.
-pub fn get_broadcast_index(out_index: usize, in_shape: &[usize], out_shape: &[usize]) -> usize {
+pub(super) fn get_broadcast_index(out_index: usize, in_shape: &[usize], out_shape: &[usize]) -> usize {
     let mut in_index: usize = 0;
     let mut in_inner_size: usize = 1;
     let mut out_inner_size: usize = 1;
