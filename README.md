@@ -5,6 +5,9 @@ Inspired by NumPy and PyTorch, built in Rust as a learning project with a focus 
 
 ## To do
 - gradients
+- optimizing broadcasting index lookup
+- implement dot and cross product
+- add new transformations
 
 ## Features
 
@@ -12,10 +15,10 @@ Inspired by NumPy and PyTorch, built in Rust as a learning project with a focus 
 - [x] Tensor struct (`shape: Box<[usize]>`, `data: Box<[f64]>`)
 - [x] `zeros` / `ones` / `full` constructors
 - [x] `linspace` — evenly spaced 1D tensor
-- [x] `new` — construct by copying the data and shape from slices
 - [x] `rand` — sample from U([0, 1))
 - [x] `rand_range` — sample from U([l, r))
 - [x] `randn` — sample from N(mean, std_dev)
+- [x] `new` — constructs a new Tensor by copying the data and shape from slices
 - [x] `reshape` — change shape without moving data
 
 ### Binary ops (`binary.rs`)
@@ -39,7 +42,7 @@ Arithmetic between a tensor and a scalar `f64`. All ops delegate to `map` / `map
 
 ### Unary ops (`unary.rs`)
 Element-wise single-tensor operations. `map` / `map_inplace` are the core primitives (and can be used on their own).
-- [x] `exp`, `ln`, `sqrt`, `abs`, `tanh`, `sigmoid`, `relu` 
+- [x] `exp`, `ln`, `sqrt`, `abs`, `tanh`, `sigmoid`, `relu` (as well as their _inplace versions)
 - [x] `-&Tensor` — negation
 
 ### Reduction ops (`reductions.rs`)
@@ -51,6 +54,6 @@ Reduction operations that drop one axis. `reduce_axis` is the core primitive (an
 
 ### Transformations (`transformations.rs`)
 Axis-based operations applied independently along one axis. `apply_axis` / `apply_axis_inplace`
-are the core primitives (and can be used on their own) 
+are the core primitives (and can be used on their own).
 Future normalizations (layer norm, batch norm) will follow the same pattern.
 - [x] `softmax(axis)` / `softmax_inplace(axis)` — numerically stable (subtracts max before exp)
