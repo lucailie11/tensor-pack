@@ -19,12 +19,13 @@ src/
 ```
 
 ## To do
-- tests
+- add more tests
 - implement backpropagation
 - optimizing broadcasting index lookup
 - implement dot and cross product
 - add new transformations
 - concurrency maybe
+- add to pyhton
 
 ## Features
 
