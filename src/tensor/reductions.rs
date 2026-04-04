@@ -1,6 +1,9 @@
 use super::Tensor;
 use super::utils::stride_len;
 
+// Reduction operations along a single tensor axis (sum, mean, variance, std dev).
+// Each public method delegates to `reduce_axis`, which handles the strided traversal.
+
 fn sum(data: &[f64], step: usize) -> f64 {
     data.iter().step_by(step).sum()
 }
@@ -9,6 +12,7 @@ fn mean(data: &[f64], step: usize) -> f64 {
     sum(data, step) / stride_len(data, step) as f64
 }
 
+// Computes mean and population variance in a single pass using Welford's online algorithm.
 fn mean_and_var(data: &[f64], step: usize) -> (f64, f64) {
     let mut mean: f64 = 0.0;
     let mut var: f64 = 0.0;
