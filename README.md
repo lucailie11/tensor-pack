@@ -19,10 +19,12 @@ src/
 ```
 
 ## To do
+- tests
 - implement backpropagation
 - optimizing broadcasting index lookup
 - implement dot and cross product
 - add new transformations
+- concurrency maybe
 
 ## Features
 
