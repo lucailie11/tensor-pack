@@ -1,7 +1,6 @@
 use std::fmt;
 
 // Core RawTensor type: a pair of shape and data (stored in row-major order).
-// Also defines the standard constructors.
 
 #[derive(Debug, PartialEq)]
 pub struct RawTensor {

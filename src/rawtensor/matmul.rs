@@ -1,13 +1,13 @@
 use super::RawTensor;
 
-// Matrix multiplication: shapes [m,k] × [k,n] → [m,n]. Both tensors must be 2D.
-// Use tensor.matmul(other) instead of * (which is element-wise, like NumPy/PyTorch).
+// Matrix multiplication: shapes [m, k] x [k, n] -> [m, n]. Both tensors must be 2D.
+// Use tensor.matmul(other) instead of * (which is element-wise)
 
 impl RawTensor {
     pub fn matmul(&self, other: &RawTensor) -> RawTensor {
         assert_eq!(self.shape.len(), 2, "matmul requires 2D tensors");
         assert_eq!(other.shape.len(), 2, "matmul requires 2D tensors");
-        assert_eq!(self.shape[1], other.shape[0], "shape mismatch: [m,k] × [k,n] required");
+        assert_eq!(self.shape[1], other.shape[0], "shape mismatch: [m, k] x [k, n] required");
 
         let mut new_data: Vec<f64> = vec![0.0; self.shape[0] * other.shape[1]];
         for i in 0..self.shape[0] {
@@ -24,4 +24,50 @@ impl RawTensor {
             data: new_data.into_boxed_slice(),
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn matmul_2x2() {
+        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        let b = RawTensor::from_slice(&[2, 2], &[1.0, 0.0, 0.0, 1.0]);
+        let c = a.matmul(&b);
+        assert_eq!(c.data(), &[1.0, 2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn matmul_output_shape() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0; 6]);
+        let b = RawTensor::from_slice(&[3, 4], &[1.0; 12]);
+        let c = a.matmul(&b);
+        assert_eq!(c.shape(), &[2, 4]);
+    }
+
+    #[test]
+    fn matmul_values() {
+        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        let b = RawTensor::from_slice(&[2, 2], &[2.0, 0.0, 1.0, 3.0]);
+        let c = a.matmul(&b);
+        assert_eq!(c.data(), &[4.0, 6.0, 10.0, 12.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn wrong_shape() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = RawTensor::from_slice(&[2, 2], &[2.0, 0.0, 1.0, 3.0]);
+        let _c = a.matmul(&b);
+    }
+
+    #[test]
+    #[should_panic]
+    fn not_matrix() {
+        let a = RawTensor::from_slice(&[6], &[1.0, 2.0, 3.0, 4.0]);
+        let b = RawTensor::from_slice(&[1, 2, 2], &[2.0, 0.0, 1.0, 3.0]);
+        let _c = a.matmul(&b);
+    }
+
 }

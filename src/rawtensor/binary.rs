@@ -5,8 +5,8 @@ use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};
 use std::ops::{Div, DivAssign};
 
-// Binary element-wise operations on two Tensors with broadcasting support.
-// In-place variants require self to already hold the output shape (other is broadcast into it)
+// Binary elementwise operations on two Tensors with broadcasting support
+// Inplace variants require self to already hold the output shape
 //
 // TODO: optimizing broadcasting index lookup
 //
@@ -23,7 +23,7 @@ use std::ops::{Div, DivAssign};
 //    RawTensor /= &RawTensor
 
 impl RawTensor {
-    // Panics if the shapes are incompatible for broadcasting.
+    // Panics if the shapes are incompatible for broadcasting
     pub fn elementwise_op(&self, other: &RawTensor, f: impl Fn(f64, f64) -> f64) -> RawTensor {
         let out_shape = get_broadcast_shape(&self.shape, &other.shape);
         let out_len: usize = out_shape.iter().product();
@@ -40,7 +40,7 @@ impl RawTensor {
         }
     }
 
-    // Panics if self doesn't already have the broadcast output shape (other is broadcast into self).
+    // Panics if self doesn't already have the broadcast output shape (other is broadcast into self)
     pub fn elementwise_op_inplace(&mut self, other: &RawTensor, f: impl Fn(f64, f64) -> f64) {
         assert_eq!(
             get_broadcast_shape(&self.shape, &other.shape).as_slice(),
@@ -107,4 +107,108 @@ impl DivAssign<&RawTensor> for RawTensor {
     fn div_assign(&mut self, other: &RawTensor) {
         self.elementwise_op_inplace(other, |a, b| a / b);
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_elementwise() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let b = RawTensor::from_slice(&[3], &[4.0, 5.0, 6.0]);
+        let c = &a + &b;
+        assert_eq!(c.data(), &[5.0, 7.0, 9.0]);
+    }
+
+    #[test]
+    fn sub_elementwise() {
+        let a = RawTensor::from_slice(&[3], &[4.0, 5.0, 6.0]);
+        let b = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let c = &a - &b;
+        assert_eq!(c.data(), &[3.0, 3.0, 3.0]);
+    }
+
+    #[test]
+    fn mul_elementwise() {
+        let a = RawTensor::from_slice(&[3], &[2.0, 3.0, 4.0]);
+        let b = RawTensor::from_slice(&[3], &[2.0, 2.0, 2.0]);
+        let c = &a * &b;
+        assert_eq!(c.data(), &[4.0, 6.0, 8.0]);
+    }
+
+    #[test]
+    fn div_elementwise() {
+        let a = RawTensor::from_slice(&[3], &[6.0, 8.0, 9.0]);
+        let b = RawTensor::from_slice(&[3], &[2.0, 4.0, 3.0]);
+        let c = &a / &b;
+        assert_eq!(c.data(), &[3.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn add_assign() {
+        let mut a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let b = RawTensor::from_slice(&[3], &[1.0, 1.0, 1.0]);
+        a += &b;
+        assert_eq!(a.data(), &[2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn sub_assign() {
+        let mut a = RawTensor::from_slice(&[3], &[4.0, 5.0, 6.0]);
+        let b = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        a -= &b;
+        assert_eq!(a.data(), &[3.0, 3.0, 3.0]);
+    }
+
+    #[test]
+    fn mul_assing() {
+        let mut a = RawTensor::from_slice(&[3], &[2.0, 3.0, 4.0]);
+        let b = RawTensor::from_slice(&[3], &[2.0, 2.0, 2.0]);
+        a *= &b;
+        assert_eq!(a.data(), &[4.0, 6.0, 8.0]);
+    }
+
+    #[test]
+    fn div_assign() {
+        let mut a = RawTensor::from_slice(&[3], &[6.0, 8.0, 9.0]);
+        let b = RawTensor::from_slice(&[3], &[2.0, 4.0, 3.0]);
+        a /= &b;
+        assert_eq!(a.data(), &[3.0, 2.0, 3.0]);
+    }
+
+
+    #[test]
+    fn add_elementwise_with_broadcast() {
+        let a = RawTensor::from_slice(&[2, 3, 1], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = RawTensor::from_slice(&[3, 2], &[4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        let c = &a + &b;
+        assert_eq!(c.data(), &[5.0, 6.0, 8.0, 9.0, 11.0, 12.0, 8.0, 9.0, 11.0, 12.0, 14.0, 15.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn add_elementwise_with_broadcast_panic() {
+        let a = RawTensor::from_slice(&[2, 3, 1], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = RawTensor::from_slice(&[2, 3], &[4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        let _c = &a + &b;
+    }
+
+    #[test]
+    fn add_assign_with_broadcast() {
+        let mut a = RawTensor::from_slice(&[2, 3, 1], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = RawTensor::from_slice(&[3, 1], &[4.0, 5.0, 6.0]);
+        a += &b;
+        assert_eq!(a.shape(), &[2, 3, 1]);
+        assert_eq!(a.data(), &[5.0, 7.0, 9.0, 8.0, 10.0, 12.0]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn add_assign_with_broadcast_panic() {
+        let mut a = RawTensor::from_slice(&[2, 3, 1], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = RawTensor::from_slice(&[3, 2], &[4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        a += &b;
+    }
+
 }

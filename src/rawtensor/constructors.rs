@@ -1,12 +1,12 @@
+use super::RawTensor;
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};
-use super::RawTensor;
 
 impl RawTensor {
-    // All constructors take the desired shape as a slice of dimension sizes.
-    // Data is stored in row-major order: the last axis varies fastest.
+    // All constructors take the desired shape as a slice and copy it, unless specified otherwise
 
-    // Creates a RawTensor from existing shape and data slices. Panics if their sizes are inconsistent.
+    // Creates a RawTensor from by copying data from a slice
+    // Panics if shape and data don't match lengths
     pub fn from_slice(shape: &[usize], data: &[f64]) -> RawTensor {
         assert_eq!(
             shape.iter().product::<usize>(),
@@ -20,6 +20,9 @@ impl RawTensor {
         }
     }
 
+    // Creates a RawTensor from by using data from a Vec (no copying done here)
+    // Panics if shape and data don't match lengths
+    // The Vec loses its ownership of the data
     pub fn from_vec(shape: &[usize], data: Vec<f64>) -> RawTensor {
         assert_eq!(
             shape.iter().product::<usize>(),
@@ -33,6 +36,9 @@ impl RawTensor {
         }
     }
 
+    // Creates a RawTensor from by using data from a Box (no copying done here)
+    // Panics if shape and data don't match lengths
+    // The Box loses its ownership of the data
     pub fn from_box(shape: &[usize], data: Box<[f64]>) -> RawTensor {
         assert_eq!(
             shape.iter().product::<usize>(),
@@ -46,7 +52,8 @@ impl RawTensor {
         }
     }
 
-    // Changes the shape without moving data. The total number of elements must stay the same.
+    // Changes the shape without moving data
+    // Panics if the length changes
     pub fn reshape(&mut self, new_shape: &[usize]) {
         assert_eq!(
             new_shape.iter().product::<usize>(),
@@ -89,7 +96,7 @@ impl RawTensor {
         RawTensor::from_vec(&[n], data)
     }
 
-    // Creates a RawTensor filled with samples from U([l, r)).
+    // Creates a RawTensor filled with random samples from U([l, r)).
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> RawTensor {
         assert!(l < r, "[l, r) should be a non-empty interval");
         let len: usize = shape.iter().product();
@@ -100,12 +107,12 @@ impl RawTensor {
         RawTensor::from_vec(shape, data)
     }
 
-    // Creates a RawTensor filled with samples from U([0, 1)).
+    // Creates a RawTensor filled with random samples from U([0, 1)).
     pub fn rand(shape: &[usize]) -> RawTensor {
         RawTensor::rand_range(shape, 0.0, 1.0)
     }
 
-    // Creates a RawTensor filled with samples from N(mean, std_dev).
+    // Creates a RawTensor filled with random samples from N(mean, std_dev).
     pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> RawTensor {
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
@@ -115,3 +122,98 @@ impl RawTensor {
         RawTensor::from_vec(shape, data)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_from_slice() {
+        let t = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(t.shape(), &[2, 2]);
+        assert_eq!(t.data(), &[1.0, 2.0, 3.0, 4.0]);
+    }
+
+
+    #[test]
+    #[should_panic]
+    fn new_from_slice_lens_dont_match() {
+        let _t = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn new_from_vec() {
+        let x: Vec<f64> = vec![1.0; 4];
+        let t = RawTensor::from_vec(&[2, 2], x);
+        assert_eq!(t.shape(), &[2, 2]);
+        assert_eq!(t.data(), &[1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn reshape_changes_shape() {
+        let mut t = RawTensor::linspace(1.0, 6.0, 6);
+        t.reshape(&[2, 3]);
+        assert_eq!(t.shape(), &[2, 3]);
+    }
+
+    #[test]
+    fn zeros_shape_and_data() {
+        let t = RawTensor::zeros(&[2, 3]);
+        assert_eq!(t.shape(), &[2, 3]);
+        assert!(t.data().iter().all(|&x| x == 0.0));
+    }
+
+    #[test]
+    fn ones_shape_and_data() {
+        let t = RawTensor::ones(&[2, 3]);
+        assert_eq!(t.shape(), &[2, 3]);
+        assert!(t.data().iter().all(|&x| x == 1.0));
+    }
+
+    #[test]
+    fn full_fills_value() {
+        let t = RawTensor::full(&[3], 7.0);
+        assert_eq!(t.shape(), &[3]);
+        assert!(t.data().iter().all(|&x| x == 7.0));
+    }
+
+    #[test]
+    fn linspace_endpoints() {
+        let t = RawTensor::linspace(0.0, 1.0, 6);
+        let d = t.data();
+        assert!((d[0] - 0.0).abs() < 1e-9);
+        assert!((d[1] - 0.2).abs() < 1e-9);
+        assert!((d[2] - 0.4).abs() < 1e-9);
+        assert!((d[3] - 0.6).abs() < 1e-9);
+        assert!((d[4] - 0.8).abs() < 1e-9);
+        assert!((d[5] - 1.0).abs() < 1e-9);
+    }
+
+
+    #[test]
+    fn rand_in_range() {
+        let t = RawTensor::rand(&[100]);
+        assert!(t.data().iter().all(|&x| (0.0..1.0).contains(&x))); 
+    }
+
+    #[test]             
+    fn randn_mean_and_std() {                                    
+        let n = 10_000;
+        let mean = 2.0;                                          
+        let std_dev = 1.5;                                       
+        let k = 3.0;
+        let t = RawTensor::randn(&[n], mean, std_dev);          
+        let data = t.data();                                     
+                    
+        let sample_mean = data.iter().sum::<f64>() / n as f64;   
+        let sample_var = data.iter().map(|x| (x - sample_mean).powi(2)).sum::<f64>() / n as f64;               
+        let sample_std = sample_var.sqrt();
+                                                                 
+        let eps_mean = k * std_dev / (n as f64).sqrt();
+        let eps_std = k * std_dev / (2.0 * n as f64).sqrt();
+                                                                
+        assert!((sample_mean - mean).abs() < eps_mean);          
+        assert!((sample_std - std_dev).abs() < eps_std);
+    }             
+}
+

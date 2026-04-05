@@ -104,3 +104,43 @@ impl DivAssign<f64> for RawTensor {
         self.map_inplace(|x| x / scalar);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_scalar() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let b = &a + 1.0;
+        assert_eq!(b.data(), &[2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn scalar_add_tensor() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let b = 1.0 + &a;
+        assert_eq!(b.data(), &[2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn sub_scalar() {
+        let a = RawTensor::from_slice(&[3], &[3.0, 4.0, 5.0]);
+        let b = &a - 1.0;
+        assert_eq!(b.data(), &[2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn mul_scalar() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let b = &a * 2.0;
+        assert_eq!(b.data(), &[2.0, 4.0, 6.0]);
+    }
+
+    #[test]
+    fn div_scalar() {
+        let a = RawTensor::from_slice(&[3], &[2.0, 4.0, 6.0]);
+        let b = &a / 2.0;
+        assert_eq!(b.data(), &[1.0, 2.0, 3.0]);
+    }
+}

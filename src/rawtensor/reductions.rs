@@ -1,7 +1,7 @@
 use super::RawTensor;
 use crate::utils::stride::{sum, mean, var, std_dev};
 
-// Reduction operations along a single tensor axis (sum, mean, variance, std dev).
+// Reduction operations along a single axis
 // Each public method delegates to `reduce_axis`, which handles the strided traversal.
 
 impl RawTensor {
@@ -42,29 +42,41 @@ impl RawTensor {
             }
         }
 
-        RawTensor {
-            shape: new_shape.into_boxed_slice(),
-            data: new_data.into_boxed_slice(),
-        }
+        RawTensor::from_vec(&new_shape, new_data)
     }
 
-    // Computes the sum of elements along `axis`. Output shape drops that dimension.
-    pub fn sum_axis(&self, axis: usize) -> RawTensor {
-        self.reduce_axis(axis, sum)
+    pub fn sum_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, sum) }
+    pub fn mean_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, mean) }
+    pub fn var_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, var) }
+    pub fn std_dev_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, std_dev) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn approx_eq(a: f64, b: f64) -> bool { (a - b).abs() < 1e-9 }
+
+    #[test]
+    fn sum_axis0() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = a.sum_axis(0);
+        assert_eq!(b.shape(), &[3]);
+        assert_eq!(b.data(), &[5.0, 7.0, 9.0]);
     }
 
-    // Computes the mean of elements along `axis`. Output shape drops that dimension.
-    pub fn mean_axis(&self, axis: usize) -> RawTensor {
-        self.reduce_axis(axis, mean)
-    }
+    #[test]
+    fn sum_axis1() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = a.sum_axis(1);
+        assert_eq!(b.shape(), &[2]);
+        assert_eq!(b.data(), &[6.0, 15.0]);
+    } 
 
-    // Computes the var of elements along `axis`. Output shape drops that dimension.
-    pub fn var_axis(&self, axis: usize) -> RawTensor {
-        self.reduce_axis(axis, var)
-    }
-
-    // Computes the standard deviation of elements along `axis`. Output shape drops that dimension.
-    pub fn std_dev_axis(&self, axis: usize) -> RawTensor {
-        self.reduce_axis(axis, std_dev)
+    #[test]
+    fn mean_axis0() {
+        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        let b = a.mean_axis(0);
+        assert!(b.data().iter().zip(&[2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
     }
 }
