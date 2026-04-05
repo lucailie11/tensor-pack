@@ -2,13 +2,16 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use crate::rawtensor::RawTensor;
 use super::Tensor;
-use crate::grad::GradInfo;
 
 impl Tensor {
-    pub(super) fn from_raw(data: RawTensor, grad_info: Option<GradInfo>) -> Tensor {
+    pub(super) fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
         Tensor {
-            raw: Rc::new(RefCell::new(data)),
-            grad_info: grad_info.map(|g| Rc::new(RefCell::new(g))),
+            raw: Rc::new(RefCell::new(raw)),
+            requires_grad: false,
+            grad: grad.map(|g| Rc::new(RefCell::new(g))),
+            inputs: Rc::from(Vec::<Tensor>::new()),
+            backprop: None
+
         }
     }
 
@@ -90,7 +93,7 @@ mod tests {
 
     #[test]
     fn new_from_slice() {
-        let t = Tensor::new(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        let t = Tensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
         assert_eq!(&*t.data(), &[1.0, 2.0, 3.0, 4.0]);
     }
 

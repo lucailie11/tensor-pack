@@ -29,7 +29,7 @@ mod tests {
 
     #[test]
     fn softmax_sums_to_one() {
-        let a = Tensor::new(&[4], &[1.0, 2.0, 3.0, 4.0]);
+        let a = Tensor::from_slice(&[4], &[1.0, 2.0, 3.0, 4.0]);
         let b = a.softmax(0);
         let sum: f64 = b.data().iter().sum();
         assert!(approx_eq(sum, 1.0));
@@ -37,7 +37,7 @@ mod tests {
 
     #[test]
     fn softmax_2d_rows_sum_to_one() {
-        let a = Tensor::new(&[2, 3], &[1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
+        let a = Tensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
         let b = a.softmax(1);
         let data = b.raw.borrow();
         let row0: f64 = data.data()[0..3].iter().sum();

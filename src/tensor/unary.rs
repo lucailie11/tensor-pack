@@ -62,28 +62,28 @@ mod tests {
 
     #[test]
     fn neg() {
-        let a = Tensor::new(&[3], &[1.0, -2.0, 3.0]);
+        let a = Tensor::from_slice(&[3], &[1.0, -2.0, 3.0]);
         let b = -a;
         assert_eq!(&*b.data(), &[-1.0, 2.0, -3.0]);
     }
 
     #[test]
     fn exp_and_ln_inverses() {
-        let a = Tensor::new(&[3], &[1.0, 2.0, 3.0]);
+        let a = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
         let b = a.exp().ln();
         assert!(b.data().iter().zip(&[1.0, 2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
     }
 
     #[test]
     fn relu_zeroes_negatives() {
-        let a = Tensor::new(&[4], &[-2.0, -1.0, 0.0, 1.0]);
+        let a = Tensor::from_slice(&[4], &[-2.0, -1.0, 0.0, 1.0]);
         let b = a.relu();
         assert_eq!(&*b.data(), &[0.0, 0.0, 0.0, 1.0]);
     }
 
     #[test]
     fn sigmoid_range() {
-        let a = Tensor::new(&[3], &[-100.0, 0.0, 100.0]);
+        let a = Tensor::from_slice(&[3], &[-100.0, 0.0, 100.0]);
         let b = a.sigmoid();
         let data = b.data();
         assert!(data[0] > 0.0 && data[0] < 0.01);
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn sqrt() {
-        let a = Tensor::new(&[3], &[1.0, 4.0, 9.0]);
+        let a = Tensor::from_slice(&[3], &[1.0, 4.0, 9.0]);
         let b = a.sqrt();
         assert!(b.data().iter().zip(&[1.0, 2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
     }
