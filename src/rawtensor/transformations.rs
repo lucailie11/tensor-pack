@@ -72,4 +72,37 @@ mod tests {
         assert!(approx_eq(row0, 1.0));
         assert!(approx_eq(row1, 1.0));
     }
+
+    #[test]
+    fn softmax_uniform_on_equal_inputs() {
+        let a = RawTensor::from_slice(&[4], &[5.0, 5.0, 5.0, 5.0]);
+        let b = a.softmax(0);
+        assert!(b.data().iter().all(|&x| approx_eq(x, 0.25)));
+    }
+
+    #[test]
+    fn softmax_large_values_stable() {
+        // Without max-subtraction this would overflow to NaN/Inf
+        let a = RawTensor::from_slice(&[3], &[1000.0, 1001.0, 1002.0]);
+        let b = a.softmax(0);
+        let sum: f64 = b.data().iter().sum();
+        assert!(approx_eq(sum, 1.0));
+        assert!(b.data().iter().all(|&x| x.is_finite() && x > 0.0));
+    }
+
+    #[test]
+    fn softmax_inplace_matches_softmax() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let expected = a.softmax(0);
+        let mut b = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        b.softmax_inplace(0);
+        assert!(b.data().iter().zip(expected.data()).all(|(&x, &y)| approx_eq(x, y)));
+    }
+
+    #[test]
+    #[should_panic]
+    fn apply_axis_out_of_bounds() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0; 6]);
+        let _ = a.softmax(2);
+    }
 }

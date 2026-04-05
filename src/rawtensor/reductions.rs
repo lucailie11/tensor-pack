@@ -79,4 +79,49 @@ mod tests {
         let b = a.mean_axis(0);
         assert!(b.data().iter().zip(&[2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
     }
+
+    #[test]
+    fn var_axis0() {
+        // var([1,3]) = 1.0, var([2,4]) = 1.0
+        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        let b = a.var_axis(0);
+        assert_eq!(b.shape(), &[2]);
+        assert!(b.data().iter().zip(&[1.0, 1.0]).all(|(&x, &y)| approx_eq(x, y)));
+    }
+
+    #[test]
+    fn std_dev_axis0() {
+        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
+        let b = a.std_dev_axis(0);
+        assert_eq!(b.shape(), &[2]);
+        assert!(b.data().iter().zip(&[1.0, 1.0]).all(|(&x, &y)| approx_eq(x, y)));
+    }
+
+    #[test]
+    fn var_axis1_known_values() {
+        // row [2, 4, 6]: mean=4, var = ((2-4)^2 + (4-4)^2 + (6-4)^2) / 3 = 8/3
+        let a = RawTensor::from_slice(&[1, 3], &[2.0, 4.0, 6.0]);
+        let b = a.var_axis(1);
+        assert_eq!(b.shape(), &[1]);
+        assert!(approx_eq(b.data()[0], 8.0 / 3.0));
+    }
+
+    #[test]
+    fn sum_axis_3d() {
+        // shape [2, 3, 4], reduce axis 1 -> shape [2, 4]
+        let data: Vec<f64> = (0..24).map(|x| x as f64).collect();
+        let a = RawTensor::from_vec(&[2, 3, 4], data);
+        let b = a.sum_axis(1);
+        assert_eq!(b.shape(), &[2, 4]);
+        // first outer: rows [0..4], [4..8], [8..12] summed elementwise
+        assert_eq!(b.data()[0], 0.0 + 4.0 + 8.0);
+        assert_eq!(b.data()[1], 1.0 + 5.0 + 9.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn reduce_axis_out_of_bounds() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0; 6]);
+        let _ = a.sum_axis(2);
+    }
 }

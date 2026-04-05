@@ -196,7 +196,43 @@ mod tests {
         assert!(t.data().iter().all(|&x| (0.0..1.0).contains(&x))); 
     }
 
-    #[test]             
+    #[test]
+    fn linspace_n1_returns_start() {
+        let t = RawTensor::linspace(3.0, 99.0, 1);
+        assert_eq!(t.shape(), &[1]);
+        assert_eq!(t.data(), &[3.0]);
+    }
+
+    #[test]
+    fn linspace_n2_endpoints_only() {
+        let t = RawTensor::linspace(0.0, 1.0, 2);
+        assert!((t.data()[0] - 0.0).abs() < 1e-9);
+        assert!((t.data()[1] - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    #[should_panic]
+    fn reshape_length_mismatch_panics() {
+        let mut t = RawTensor::zeros(&[2, 3]);
+        t.reshape(&[2, 4]);
+    }
+
+    #[test]
+    fn reshape_preserves_data() {
+        let mut t = RawTensor::linspace(1.0, 6.0, 6);
+        let data_before: Vec<f64> = t.data().to_vec();
+        t.reshape(&[3, 2]);
+        assert_eq!(t.data(), data_before.as_slice());
+        assert_eq!(t.shape(), &[3, 2]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn rand_range_empty_interval_panics() {
+        let _ = RawTensor::rand_range(&[10], 5.0, 5.0);
+    }
+
+    #[test]
     fn randn_mean_and_std() {                                    
         let n = 10_000;
         let mean = 2.0;                                          

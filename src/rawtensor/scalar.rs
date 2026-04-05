@@ -143,4 +143,53 @@ mod tests {
         let b = &a / 2.0;
         assert_eq!(b.data(), &[1.0, 2.0, 3.0]);
     }
+
+    #[test]
+    fn scalar_sub_tensor() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let b = 10.0 - &a;
+        assert_eq!(b.data(), &[9.0, 8.0, 7.0]);
+    }
+
+    #[test]
+    fn scalar_mul_tensor() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let b = 3.0 * &a;
+        assert_eq!(b.data(), &[3.0, 6.0, 9.0]);
+    }
+
+    #[test]
+    fn scalar_div_tensor() {
+        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 4.0]);
+        let b = 8.0 / &a;
+        assert_eq!(b.data(), &[8.0, 4.0, 2.0]);
+    }
+
+    #[test]
+    fn add_assign_scalar() {
+        let mut a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        a += 10.0;
+        assert_eq!(a.data(), &[11.0, 12.0, 13.0]);
+    }
+
+    #[test]
+    fn sub_assign_scalar() {
+        let mut a = RawTensor::from_slice(&[3], &[5.0, 6.0, 7.0]);
+        a -= 2.0;
+        assert_eq!(a.data(), &[3.0, 4.0, 5.0]);
+    }
+
+    #[test]
+    fn mul_assign_scalar() {
+        let mut a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        a *= 2.0;
+        assert_eq!(a.data(), &[2.0, 4.0, 6.0]);
+    }
+
+    #[test]
+    fn div_assign_scalar() {
+        let mut a = RawTensor::from_slice(&[3], &[4.0, 6.0, 8.0]);
+        a /= 2.0;
+        assert_eq!(a.data(), &[2.0, 3.0, 4.0]);
+    }
 }

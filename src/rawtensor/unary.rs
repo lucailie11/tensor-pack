@@ -104,4 +104,52 @@ mod tests {
         let b = a.sqrt();
         assert!(b.data().iter().zip(&[1.0, 2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
     }
+
+    #[test]
+    fn tanh_known_values() {
+        let a = RawTensor::from_slice(&[3], &[0.0, 1.0, -1.0]);
+        let b = a.tanh();
+        assert!(approx_eq(b.data()[0], 0.0));
+        assert!(approx_eq(b.data()[1], 1.0_f64.tanh()));
+        assert!(approx_eq(b.data()[2], (-1.0_f64).tanh()));
+    }
+
+    #[test]
+    fn abs_removes_sign() {
+        let a = RawTensor::from_slice(&[4], &[-3.0, -1.0, 0.0, 2.0]);
+        let b = a.abs();
+        assert_eq!(b.data(), &[3.0, 1.0, 0.0, 2.0]);
+    }
+
+    #[test]
+    fn relu_boundary() {
+        // Exactly 0.0 should pass through (>= 0 branch)
+        let a = RawTensor::from_slice(&[1], &[0.0]);
+        assert_eq!(a.relu().data(), &[0.0]);
+    }
+
+    #[test]
+    fn neg_double_is_identity() {
+        let a = RawTensor::from_slice(&[3], &[1.0, -2.0, 0.0]);
+        let b = -&(-&a);
+        assert_eq!(b.data(), a.data());
+    }
+
+    #[test]
+    fn inplace_matches_non_inplace() {
+        let a = RawTensor::from_slice(&[4], &[-2.0, 0.0, 1.0, 3.0]);
+        let expected = a.relu();
+        let mut b = RawTensor::from_slice(&[4], &[-2.0, 0.0, 1.0, 3.0]);
+        b.relu_inplace();
+        assert_eq!(b.data(), expected.data());
+    }
+
+    #[test]
+    fn exp_inplace_matches_exp() {
+        let a = RawTensor::from_slice(&[3], &[0.0, 1.0, 2.0]);
+        let expected = a.exp();
+        let mut b = RawTensor::from_slice(&[3], &[0.0, 1.0, 2.0]);
+        b.exp_inplace();
+        assert!(b.data().iter().zip(expected.data()).all(|(&x, &y)| approx_eq(x, y)));
+    }
 }
