@@ -38,18 +38,11 @@ pub(crate) fn softmax(data: &mut [f64], step: usize) {
         .copied()
         .fold(f64::NEG_INFINITY, f64::max);
 
-    for x in data.iter_mut().step_by(step) {
-        *x -= max;
-    }
+    let exps: Vec<f64> = data.iter().step_by(step).map(|&x| f64::exp(x - max)).collect();
+    let sum: f64 = exps.iter().sum();
 
-    let sum: f64 = data
-        .iter()
-        .step_by(step)
-        .map(|x| f64::exp(*x))
-        .sum();
-
-    for x in data.iter_mut().step_by(step) {
-        *x = f64::exp(*x) / sum;
+    for (x, e) in data.iter_mut().step_by(step).zip(exps) {
+        *x = e / sum;
     }
 }
 
