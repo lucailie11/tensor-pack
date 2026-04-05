@@ -46,7 +46,7 @@ impl Tensor {
     pub fn relu_inplace(&mut self)    { self.map_inplace(relu)      }
 }
 
-impl Neg for Tensor {
+impl Neg for &Tensor {
     type Output = Tensor;
 
     fn neg(self) -> Tensor {
