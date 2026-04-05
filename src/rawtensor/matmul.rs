@@ -11,8 +11,8 @@ impl RawTensor {
 
         let mut new_data: Vec<f64> = vec![0.0; self.shape[0] * other.shape[1]];
         for i in 0..self.shape[0] {
-            for j in 0..other.shape[1] {
-                for k in 0..self.shape[1] {
+            for k in 0..self.shape[1] {
+                for j in 0..other.shape[1] {
                     new_data[i * other.shape[1] + j] +=
                         self.data[i * self.shape[1] + k] * other.data[k * other.shape[1] + j];
                 }
