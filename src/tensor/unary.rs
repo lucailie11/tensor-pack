@@ -21,12 +21,12 @@ fn relu(x: f64) -> f64 {
 
 impl Tensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
-        let raw = self.raw.borrow().map(f);
+        let raw = self.borrow().raw.map(f);
         Tensor::from_raw(raw, None)
     }
 
     pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
-        self.raw.borrow_mut().map_inplace(f);
+        self.borrow_mut().raw.map_inplace(f);
     }
 
     pub fn exp(&self) -> Tensor     { self.map(f64::exp)  }

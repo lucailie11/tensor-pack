@@ -1,26 +1,24 @@
 use super::Tensor;
-use crate::utils::stride::{sum, mean, var, std_dev};
 
 impl Tensor {
-    pub fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize) -> f64) -> Tensor {
-        let raw = self.raw.borrow().reduce_axis(axis, f);
+    pub fn sum_axis(&self, axis: usize) -> Tensor {
+        let raw = self.borrow().raw.sum_axis(axis);
         Tensor::from_raw(raw, None)
     }
 
-    pub fn sum_axis(&self, axis: usize) -> Tensor {
-        self.reduce_axis(axis, sum)
-    }
-
     pub fn mean_axis(&self, axis: usize) -> Tensor {
-        self.reduce_axis(axis, mean)
+        let raw = self.borrow().raw.mean_axis(axis);
+        Tensor::from_raw(raw, None)
     }
 
     pub fn var_axis(&self, axis: usize) -> Tensor {
-        self.reduce_axis(axis, var)
+        let raw = self.borrow().raw.var_axis(axis); 
+        Tensor::from_raw(raw, None) 
     }
 
     pub fn std_dev_axis(&self, axis: usize) -> Tensor {
-        self.reduce_axis(axis, std_dev)
+        let raw = self.borrow().raw.std_dev_axis(axis);
+        Tensor::from_raw(raw, None)
     }
 }
 

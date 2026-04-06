@@ -1,50 +1,59 @@
 use crate::rawtensor::RawTensor;
 use core::fmt;
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, Ref, RefMut};
+use crate::grad::BackpropOp;
 
-pub struct Tensor {
-    pub(super) raw: Rc<RefCell<RawTensor>>,
-    pub(super) requires_grad: bool,
-    pub(super) inputs: Rc<[Tensor]>,
-    pub(super) grad: Option<Rc<RefCell<RawTensor>>>,
-    pub(super) backprop: Option<Rc<dyn Fn(&RawTensor)>>,
+pub struct TensorInner {
+    pub raw: RawTensor,
+    pub grad: Option<RawTensor>,
+    pub inputs: Box<[Tensor]>,
+    pub backprop_op: BackpropOp,
+    pub requires_grad: bool,
 }
 
+#[derive(Clone)]
+pub struct Tensor(pub Rc<RefCell<TensorInner>>);
+
 impl Tensor {
+    pub fn borrow(&self) -> Ref<TensorInner> {
+        Ref::map(self.0.borrow(), |t| t)
+    }
+
+    pub fn borrow_mut(&self) -> RefMut<TensorInner> {
+        RefMut::map(self.0.borrow_mut(), |t| t)
+    }
+
     pub fn shape(&self) -> Box<[usize]> {
-        Box::from(self.raw.borrow().shape())
+        Box::from(self.0.borrow().raw.shape())
     }
 
     pub fn data(&self) -> Box<[f64]> {
-        Box::from(self.raw.borrow().data())
+        Box::from(self.0.borrow().raw.data())
+    }
+
+    pub fn set_requires_grad(&self, requires_grad: bool) {
+        self.borrow_mut().requires_grad = requires_grad;
+    }
+
+    pub fn get_requires_grad(&self) -> bool {
+        self.borrow().requires_grad
     }
 }
 
-impl Clone for Tensor {                                                       
-      fn clone(&self) -> Tensor {
-          Tensor {                                                             
-              raw: Rc::clone(&self.raw),
-              requires_grad: self.requires_grad,
-              grad: self.grad.as_ref().map(Rc::clone),
-              inputs: Rc::clone(&self.inputs),
-              backprop: self.backprop.as_ref().map(Rc::clone),
-          }                                                                     
-      }
-  }                                                                             
-   
 impl PartialEq for Tensor {
     fn eq(&self, other: &Tensor) -> bool {
-        *self.raw.borrow() == *other.raw.borrow()
+        self.borrow().raw == other.borrow().raw
     }
 }
 
 impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Tensor {{ data: {:?}", self.raw.borrow())?;
+        write!(f, "Tensor {{ data: {:?}", self.borrow().raw)?;
 
-        if self.grad.is_some() {
-            write!(f, ", grad: <some>")?;
+ 
+        if let Some(grad) = self.borrow().grad.as_ref() {
+            write!(f, ", grad: {}", grad)?;
         }
 
         write!(f, " }}")
@@ -53,10 +62,10 @@ impl fmt::Debug for Tensor {
 
 impl fmt::Display for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Tensor {{ data: {}", self.raw.borrow())?;
+        write!(f, "Tensor {{ data: {:?}", self.borrow().raw)?;
 
-        if self.grad.is_some() {
-            write!(f, ", grad: <some>")?;
+        if let Some(grad) = self.borrow().grad.as_ref() {
+            write!(f, ", grad: {}", grad)?;
         }
 
         write!(f, " }}")
@@ -66,7 +75,7 @@ impl fmt::Display for Tensor {
 
 #[cfg(test)]
 mod tests {
-    use crate::tensor::Tensor;
+    use super::*;
 
     #[test]
     fn test_partial_eq() {

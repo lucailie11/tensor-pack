@@ -1,5 +1,5 @@
 mod binary;
-mod core;
+pub mod core;
 mod constructors;
 mod reductions;
 mod scalar;

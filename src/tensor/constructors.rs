@@ -1,18 +1,26 @@
+use crate::grad::BackpropOp;
+use crate::rawtensor::RawTensor;
+use super::core::TensorInner;
+use super::Tensor;
 use std::rc::Rc;
 use std::cell::RefCell;
-use crate::rawtensor::RawTensor;
-use super::Tensor;
+
 
 impl Tensor {
-    pub(super) fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
-        Tensor {
-            raw: Rc::new(RefCell::new(raw)),
-            requires_grad: false,
-            grad: grad.map(|g| Rc::new(RefCell::new(g))),
-            inputs: Rc::from(Vec::<Tensor>::new()),
-            backprop: None
+    pub fn from_inner(tensor: TensorInner) -> Tensor {
+        Tensor(Rc::new(RefCell::new(tensor)))
+    }
 
-        }
+    pub fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
+        Tensor::from_inner(
+            TensorInner {
+                raw,
+                grad,
+                inputs: Box::from([]),
+                backprop_op: BackpropOp::None,
+                requires_grad: false,
+            }
+        )
     }
 
     pub fn from_slice(shape: &[usize], data: &[f64]) -> Tensor {
@@ -28,7 +36,7 @@ impl Tensor {
     }
 
     pub fn reshape(&mut self, new_shape: &[usize]) {
-        (*self.raw).borrow_mut().reshape(new_shape);
+        self.borrow_mut().raw.reshape(new_shape);
     }
 
     pub fn full(shape: &[usize], value: f64) -> Tensor {
