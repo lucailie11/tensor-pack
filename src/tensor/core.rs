@@ -16,12 +16,28 @@ pub struct TensorInner {
 pub struct Tensor(pub Rc<RefCell<TensorInner>>);
 
 impl Tensor {
-    pub fn borrow(&self) -> Ref<TensorInner> {
+    pub fn borrow(&self) -> Ref<'_, TensorInner> {
         Ref::map(self.0.borrow(), |t| t)
     }
 
-    pub fn borrow_mut(&self) -> RefMut<TensorInner> {
+    pub fn borrow_mut(&self) -> RefMut<'_, TensorInner> {
         RefMut::map(self.0.borrow_mut(), |t| t)
+    }
+
+    pub fn borrow_raw(&self) -> Ref<'_, RawTensor> {
+        Ref::map(self.0.borrow(), |t| &t.raw)
+    }
+
+    pub fn borrow_mut_raw(&self) -> RefMut<'_, RawTensor> {
+        RefMut::map(self.0.borrow(), |&mut t| t.raw)
+    }
+
+    pub fn borrow_grad(&self) -> Ref<'_, RawTensor> {
+        Ref::map(self.0.borrow(), |t| &t.grad)
+    }
+
+    pub fn borrow_mut_grad(&self) -> Ref<'_, RawTensor> {
+        Ref::map(self.0.borrow(), |t| &t.grad)
     }
 
     pub fn shape(&self) -> Box<[usize]> {
