@@ -24,7 +24,7 @@ impl Mul for &Tensor {
     type Output = Tensor;
 
     fn mul(self, other: &Tensor) -> Tensor {
-        let raw = &self.raw - &other.raw;
+        let raw = &self.raw * &other.raw;
         Tensor::tensor_grad(raw, Box::from([self.clone(), other.clone()]), BackpropOp::MulTensor)
     }
 }
@@ -34,7 +34,7 @@ impl Div for &Tensor {
     type Output = Tensor;
 
     fn div(self, other: &Tensor) -> Tensor {
-        let raw = &self.raw - &other.raw;
+        let raw = &self.raw / &other.raw;
         Tensor::tensor_grad(raw, Box::from([self.clone(), other.clone()]), BackpropOp::DivTensor)
     }
 }
