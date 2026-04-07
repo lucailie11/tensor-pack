@@ -5,10 +5,12 @@ use std::rc::Rc;
 
 fn topo_sort_dfs(tensor: &Tensor, sorted: &mut Vec<Tensor>, visited: &mut HashSet<usize>) {
     let id: usize = Rc::as_ptr(&tensor.0) as usize;
-    if !tensor.requires_computing_grad() { return };
     if visited.contains(&id) { return; };
     visited.insert(id);
-    for input in tensor.borrow().inputs.iter() {
+
+    if !tensor.requires_computing_grad() { return };
+
+    for input in tensor.inputs.iter() {
         topo_sort_dfs(input, sorted, visited);
     }
     sorted.push(tensor.clone());
@@ -23,12 +25,13 @@ fn topo_sort(root: &Tensor) -> Vec<Tensor> {
 
 impl Tensor {
     pub fn backward(&self) {
-        self.borrow_mut().grad = Some(RawTensor::ones(&self.shape()));
+        *self.grad.borrow_mut() = Some(RawTensor::ones(self.raw.shape()));
+
         let topo = topo_sort(self);
         for tensor in topo.iter().rev() {
             tensor.backprop();
-            if !tensor.get_requires_grad() {
-                tensor.borrow_mut().grad = None;
+            if !tensor.requires_grad {
+                *tensor.grad.borrow_mut() = None;
             }
         }
     }

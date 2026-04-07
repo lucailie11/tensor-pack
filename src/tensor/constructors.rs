@@ -1,6 +1,6 @@
 use crate::grad::BackpropOp;
 use crate::rawtensor::RawTensor;
-use super::core::TensorInner;
+use crate::tensor::core::TensorInner;
 use super::Tensor;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -8,16 +8,16 @@ use std::cell::RefCell;
 
 impl Tensor {
     pub fn from_inner(tensor: TensorInner) -> Tensor {
-        Tensor(Rc::new(RefCell::new(tensor)))
+        Tensor(Rc::new(tensor))
     }
 
     pub fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
-        Tensor::from_inner(
+        Tensor::from_inner (
             TensorInner {
                 raw,
-                grad,
+                grad: RefCell::new(grad),
                 inputs: Box::from([]),
-                backprop_op: BackpropOp::None,
+                op: BackpropOp::None,
                 requires_grad: false,
             }
         )
@@ -36,7 +36,11 @@ impl Tensor {
     }
 
     pub fn reshape(&mut self, new_shape: &[usize]) {
-        self.borrow_mut().raw.reshape(new_shape);
+        if let Some(tensor) = Rc::get_mut(&mut self.0) {
+            tensor.raw.reshape(new_shape);
+        } else {
+            panic!("Can't reshape non-leaf tensor");
+        }
     }
 
     pub fn full(shape: &[usize], value: f64) -> Tensor {

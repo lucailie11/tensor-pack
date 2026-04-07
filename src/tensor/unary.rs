@@ -21,13 +21,13 @@ fn relu(x: f64) -> f64 {
 
 impl Tensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
-        let raw = self.borrow().raw.map(f);
+        let raw = self.0.raw.map(f);
         Tensor::from_raw(raw, None)
     }
 
-    pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
-        self.borrow_mut().raw.map_inplace(f);
-    }
+    // pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
+    //     self.raw.map_inplace(f);
+    // }
 
     pub fn exp(&self) -> Tensor     { self.map(f64::exp)  }
     pub fn ln(&self) -> Tensor      { self.map(f64::ln)   }
@@ -37,13 +37,13 @@ impl Tensor {
     pub fn sigmoid(&self) -> Tensor { self.map(sigmoid)   }
     pub fn relu(&self) -> Tensor    { self.map(relu)      }
 
-    pub fn exp_inplace(&mut self)     { self.map_inplace(f64::exp)  }
-    pub fn ln_inplace(&mut self)      { self.map_inplace(f64::ln)   }
-    pub fn sqrt_inplace(&mut self)    { self.map_inplace(f64::sqrt) }
-    pub fn abs_inplace(&mut self)     { self.map_inplace(f64::abs)  }
-    pub fn tanh_inplace(&mut self)    { self.map_inplace(f64::tanh) }
-    pub fn sigmoid_inplace(&mut self) { self.map_inplace(sigmoid)   }
-    pub fn relu_inplace(&mut self)    { self.map_inplace(relu)      }
+    // pub fn exp_inplace(&mut self)     { self.map_inplace(f64::exp)  }
+    // pub fn ln_inplace(&mut self)      { self.map_inplace(f64::ln)   }
+    // pub fn sqrt_inplace(&mut self)    { self.map_inplace(f64::sqrt) }
+    // pub fn abs_inplace(&mut self)     { self.map_inplace(f64::abs)  }
+    // pub fn tanh_inplace(&mut self)    { self.map_inplace(f64::tanh) }
+    // pub fn sigmoid_inplace(&mut self) { self.map_inplace(sigmoid)   }
+    // pub fn relu_inplace(&mut self)    { self.map_inplace(relu)      }
 }
 
 impl Neg for &Tensor {

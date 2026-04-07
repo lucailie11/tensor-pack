@@ -3,7 +3,7 @@ use super::Tensor;
 
 impl Tensor {
     pub fn matmul(&self, other: Tensor) -> Tensor {
-        let raw: RawTensor = self.borrow().raw.matmul(&other.borrow().raw);
+        let raw: RawTensor = self.raw.matmul(&other.raw);
         Tensor::from_raw(raw, None)
     }
 }
