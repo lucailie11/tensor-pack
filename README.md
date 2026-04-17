@@ -92,7 +92,9 @@ println!("{:?}", y);
 
 ## To do
 - from_slice, from_vec, from_box definitions
+- pretty print
 - comments
+- more tests
 - impl dot and cross product
 - Implement backprop for `sigmoid`, `tanh`, `abs`, `relu`
 - Gradient support for `matmul`, reductions, and `softmax`

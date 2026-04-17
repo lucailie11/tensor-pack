@@ -7,11 +7,11 @@ use std::cell::RefCell;
 
 
 impl Tensor {
-    pub fn from_inner(tensor: TensorInner) -> Tensor {
+    pub(crate) fn from_inner(tensor: TensorInner) -> Tensor {
         Tensor(Rc::new(tensor))
     }
 
-    pub fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
+    pub(crate) fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
         Tensor::from_inner (
             TensorInner {
                 raw,
@@ -23,14 +23,23 @@ impl Tensor {
         )
     }
 
+
+    // Creates a RawTensor from by copying data from a slice
+    // Panics if shape and data don't match lengths
     pub fn from_slice(shape: &[usize], data: &[f64]) -> Tensor {
         Tensor::from_raw(RawTensor::from_slice(shape, data), None)
     }
 
+    // Creates a RawTensor from by using data from a Vec (no copying done here)
+    // Panics if shape and data don't match lengths
+    // The Vec loses its ownership of the data
     pub fn from_vec(shape: &[usize], data: Vec<f64>) -> Tensor {
         Tensor::from_raw(RawTensor::from_vec(shape, data), None)
     }
 
+    // Creates a Tensor from by using data from a Box (no copying done here)
+    // Panics if shape and data don't match lengths
+    // The Box loses its ownership of the data
     pub fn from_box(shape: &[usize], data: Box<[f64]>) -> Tensor {
         Tensor::from_raw(RawTensor::from_box(shape, data), None)
     }

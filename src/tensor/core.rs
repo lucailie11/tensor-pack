@@ -1,9 +1,9 @@
-use crate::rawtensor::RawTensor;
-use crate::grad::BackpropOp;
 use core::fmt;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::cell::{RefCell};
+use crate::rawtensor::RawTensor;
+use crate::grad::BackpropOp;
 
 pub struct TensorInner {
     pub raw: RawTensor,
@@ -56,19 +56,14 @@ impl fmt::Display for Tensor {
 }
 
 impl Tensor {
-    pub fn shape(&self) -> &[usize] {
-        self.raw.shape()
-    }
-
-    pub fn data(&self) -> &[f64] {
-        self.raw.data()
-    }
+    pub fn shape(&self) -> &[usize] { self.raw.shape() }
+    pub fn data(&self) -> &[f64] { self.raw.data() }
 
     pub fn reshape(&mut self, new_shape: &[usize]) {
         if self.op == BackpropOp::None && let Some(tensor) = Rc::get_mut(&mut self.0) {
             tensor.raw.reshape(new_shape);
         } else {
-            panic!("Can't reshape autograd graph tensor");
+            panic!("Can't reshape non-leaf tensor");
         }
     }
 
@@ -76,7 +71,7 @@ impl Tensor {
         if let Some(tensor) = Rc::get_mut(&mut self.0) {
             tensor.requires_grad = requires_grad;
         } else {
-            panic!("Can't change requires_grad on a tensor that was already ");
+            panic!("Can't change requires_grad on a tensor with at least one out edge");
         }
     }
 
