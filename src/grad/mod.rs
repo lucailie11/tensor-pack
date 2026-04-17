@@ -1,8 +1,8 @@
 pub mod core;
-pub mod binary;
-pub mod backward;
-pub mod scalar;
-pub mod unary;
+mod binary;
+mod backward;
+mod scalar;
+mod unary;
 
 pub use core::BackpropOp;
 

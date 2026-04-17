@@ -1,7 +1,5 @@
-// Returns the number of elements reachable from `data` when stepping by `step`.
-// Equivalent to ceil(data.len() / step).
 fn stride_len(data: &[f64], step: usize) -> usize {
-    (data.len() - 1) / step + 1
+    data.len().div_ceil(step)
 }
 
 pub(crate) fn sum(data: &[f64], step: usize) -> f64 {

@@ -2,19 +2,14 @@ use super::Tensor;
 use std::ops::Neg;
 use crate::grad::BackpropOp;
 
-// map / map_inplace are the core primitives: apply a closure to every element,
-// either returning a new RawTensor or mutating in place.
-//
-// Scalar arithmetic (+f64, -f64, …) also builds on map but lives in scalar.rs.
-// Unary negation (-&RawTensor) is here since it takes no second operand.
-//
 // Defined operations:
-//   exp, ln, sqrt, abs, tanh, sigmoid, relu  (and *_inplace variants)
+//   general map (has no grad)
+//   exp, ln, sqrt, abs, tanh, sigmoid, relu
 //   -&RawTensor — negation
 
 impl Tensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
-        let raw = self.0.raw.map(f);
+        let raw = self.raw.map(f);
         Tensor::from_raw(raw, None)
     }
 

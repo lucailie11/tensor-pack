@@ -1,1 +1,1 @@
-pub mod stride;
+pub(crate) mod stride;
