@@ -14,7 +14,7 @@ pub struct TensorInner {
 }
 
 #[derive(Clone)]
-pub struct Tensor(pub Rc<TensorInner>);
+pub struct Tensor(pub(crate) Rc<TensorInner>);
 
 impl Deref for Tensor {
     type Target = TensorInner;

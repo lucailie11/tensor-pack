@@ -9,4 +9,4 @@ mod scalar;
 mod transformations;
 mod unary;
 
-pub use core::RawTensor;
+pub(crate) use core::RawTensor;

@@ -7,11 +7,11 @@ use std::cell::RefCell;
 
 
 impl Tensor {
-    pub(crate) fn from_inner(tensor: TensorInner) -> Tensor {
+    pub fn from_inner(tensor: TensorInner) -> Tensor {
         Tensor(Rc::new(tensor))
     }
 
-    pub(crate) fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
+    pub fn from_raw(raw: RawTensor, grad: Option<RawTensor>) -> Tensor {
         Tensor::from_inner (
             TensorInner {
                 raw,

@@ -27,12 +27,10 @@ pub enum BackpropOp {
 }
 
 impl Tensor {
-    pub fn requires_computing_grad(&self) -> bool {
+    pub(super) fn requires_computing_grad(&self) -> bool {
         self.requires_grad || self.op != BackpropOp::None
     }
-}
 
-impl Tensor {
     pub fn set_requires_grad(&mut self, requires_grad: bool) {
         if let Some(tensor) = Rc::get_mut(&mut self.0) {
             tensor.requires_grad = requires_grad;
@@ -41,7 +39,7 @@ impl Tensor {
         }
     }
 
-    pub fn backprop(&self) {
+    pub(super) fn backprop(&self) {
         for input in self.inputs.iter() {
             if input.grad.borrow().is_none() {
                 *input.grad.borrow_mut() = Some(RawTensor::zeros(input.shape()));
@@ -50,14 +48,20 @@ impl Tensor {
 
         match self.op {
             BackpropOp::None => {},
+
+            // Tensor Tensor ops
             BackpropOp::AddTensor => {add_tensor_backprop(self, &self.inputs[0], &self.inputs[1]);}
             BackpropOp::SubTensor => {sub_tensor_backprop(self, &self.inputs[0], &self.inputs[1]);}
             BackpropOp::MulTensor => {mul_tensor_backprop(self, &self.inputs[0], &self.inputs[1]);}
             BackpropOp::DivTensor => {div_tensor_backprop(self, &self.inputs[0], &self.inputs[1]);}
+
+            // Scalar Tensor ops
             BackpropOp::AddScalar => {add_scalar_backprop(self, &self.inputs[0]);}
             BackpropOp::SubScalar => {sub_scalar_backprop(self, &self.inputs[0]);}
             BackpropOp::MulScalar(scalar) => {mul_scalar_backprop(self, &self.inputs[0], scalar);}
             BackpropOp::DivScalar(scalar) => {div_scalar_backprop(self, &self.inputs[0], scalar);}
+
+            // Unary ops
             BackpropOp::Exp => {exp_backprop(self, &self.inputs[0]);}
             BackpropOp::Ln => {ln_backprop(self, &self.inputs[0]);}
             BackpropOp::Sqrt => {sqrt_backprop(self, &self.inputs[0]);}
@@ -68,7 +72,7 @@ impl Tensor {
         }
     }
 
-    pub fn tensor_grad(raw: RawTensor, inputs: Box<[Tensor]>, op: BackpropOp) -> Tensor {
+    pub(crate) fn tensor_grad(raw: RawTensor, inputs: Box<[Tensor]>, op: BackpropOp) -> Tensor {
         Tensor::from_inner( 
             TensorInner {
                 raw,

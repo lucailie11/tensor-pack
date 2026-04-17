@@ -1,5 +1,5 @@
 mod binary;
-pub mod core;
+pub(crate) mod core;
 mod constructors;
 mod reductions;
 mod scalar;

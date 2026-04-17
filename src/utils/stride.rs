@@ -2,15 +2,15 @@ fn stride_len(data: &[f64], step: usize) -> usize {
     data.len().div_ceil(step)
 }
 
-pub(crate) fn sum(data: &[f64], step: usize) -> f64 {
+pub fn sum(data: &[f64], step: usize) -> f64 {
     data.iter().step_by(step).sum()
 }
 
-pub(crate) fn mean(data: &[f64], step: usize) -> f64 {
+pub fn mean(data: &[f64], step: usize) -> f64 {
     sum(data, step) / stride_len(data, step) as f64
 }
 
-pub(crate) fn mean_and_var(data: &[f64], step: usize) -> (f64, f64) {
+pub fn mean_and_var(data: &[f64], step: usize) -> (f64, f64) {
     let mut mean: f64 = 0.0;
     let mut var: f64 = 0.0;
     for (i, x) in data.iter().step_by(step).enumerate() {
@@ -21,15 +21,15 @@ pub(crate) fn mean_and_var(data: &[f64], step: usize) -> (f64, f64) {
     (mean, var / stride_len(data, step) as f64)
 }
 
-pub(crate) fn var(data: &[f64], step: usize) -> f64 {
+pub fn var(data: &[f64], step: usize) -> f64 {
     mean_and_var(data, step).1
 }
 
-pub(crate) fn std_dev(data: &[f64], step: usize) -> f64 {
+pub fn std_dev(data: &[f64], step: usize) -> f64 {
     f64::sqrt(var(data, step))
 }
 
-pub(crate) fn softmax(data: &mut [f64], step: usize) {
+pub fn softmax(data: &mut [f64], step: usize) {
     let max: f64 = data
         .iter()
         .step_by(step)

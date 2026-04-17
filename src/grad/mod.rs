@@ -4,7 +4,7 @@ mod backward;
 mod scalar;
 mod unary;
 
-pub use core::BackpropOp;
+pub(crate) use core::BackpropOp;
 
 #[cfg(test)]
 mod tests {
