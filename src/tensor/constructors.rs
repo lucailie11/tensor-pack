@@ -23,7 +23,6 @@ impl Tensor {
         )
     }
 
-
     // Creates a RawTensor from by copying data from a slice
     // Panics if shape and data don't match lengths
     pub fn from_slice(shape: &[usize], data: &[f64]) -> Tensor {
