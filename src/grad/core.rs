@@ -31,14 +31,6 @@ impl Tensor {
         self.requires_grad || self.op != BackpropOp::None
     }
 
-    pub fn set_requires_grad(&mut self, requires_grad: bool) {
-        if let Some(tensor) = Rc::get_mut(&mut self.0) {
-            tensor.requires_grad = requires_grad;
-        } else {
-            panic!("Can't change requires_grad on a non-leaf tesnor");
-        }
-    }
-
     pub(super) fn backprop(&self) {
         for input in self.inputs.iter() {
             if input.grad.borrow().is_none() && input.requires_computing_grad() {

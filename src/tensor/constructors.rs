@@ -35,14 +35,6 @@ impl Tensor {
         Tensor::from_raw(RawTensor::from_box(shape, data), None)
     }
 
-    pub fn reshape(&mut self, new_shape: &[usize]) {
-        if let Some(tensor) = Rc::get_mut(&mut self.0) {
-            tensor.raw.reshape(new_shape);
-        } else {
-            panic!("Can't reshape non-leaf tensor");
-        }
-    }
-
     pub fn full(shape: &[usize], value: f64) -> Tensor {
         Tensor::from_raw(RawTensor::full(shape, value), None)
     }

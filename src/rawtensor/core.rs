@@ -11,7 +11,20 @@ pub struct RawTensor {
 impl RawTensor {
     pub fn shape(&self) -> &[usize] { &self.shape }
     pub fn data(&self) -> &[f64]    { &self.data  }
+
+    // Changes the shape without moving data
+    // Panics if the length changes
+    pub fn reshape(&mut self, new_shape: &[usize]) {
+        assert_eq!(
+            new_shape.iter().product::<usize>(),
+            self.data.len(),
+            "New shape doesn't match old data length"
+        );
+        self.shape = Box::from(new_shape);
+    }
+
 }
+
 
 // Pretty-prints the RawTensor. 2D tensors are shown row-by-row; all other ranks print the flat data slice.
 impl fmt::Display for RawTensor {

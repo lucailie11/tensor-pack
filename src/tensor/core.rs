@@ -63,6 +63,23 @@ impl Tensor {
     pub fn data(&self) -> &[f64] {
         self.raw.data()
     }
+
+    pub fn reshape(&mut self, new_shape: &[usize]) {
+        if self.op == BackpropOp::None && let Some(tensor) = Rc::get_mut(&mut self.0) {
+            tensor.raw.reshape(new_shape);
+        } else {
+            panic!("Can't reshape autograd graph tensor");
+        }
+    }
+
+    pub fn set_requires_grad(&mut self, requires_grad: bool) {
+        if let Some(tensor) = Rc::get_mut(&mut self.0) {
+            tensor.requires_grad = requires_grad;
+        } else {
+            panic!("Can't change requires_grad on a tensor that was already ");
+        }
+    }
+
 }
 
 #[cfg(test)]

@@ -52,17 +52,6 @@ impl RawTensor {
         }
     }
 
-    // Changes the shape without moving data
-    // Panics if the length changes
-    pub fn reshape(&mut self, new_shape: &[usize]) {
-        assert_eq!(
-            new_shape.iter().product::<usize>(),
-            self.data.len(),
-            "New shape doesn't match old data length"
-        );
-        self.shape = Box::from(new_shape);
-    }
-
     // Creates a RawTensor filled with value
     pub fn full(shape: &[usize], value: f64) -> RawTensor {
         let len: usize = shape.iter().product();
