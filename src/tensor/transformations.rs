@@ -4,7 +4,7 @@ use super::Tensor;
 impl Tensor {
     pub fn softmax(&self, axis: usize) -> Tensor {
         let raw: RawTensor = self.raw.softmax(axis);
-        Tensor::from_raw(raw, None)
+        Tensor::no_grad_tensor(raw)
     }
  
     // pub fn softmax_inplace(&mut self, axis: usize) {

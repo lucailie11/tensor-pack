@@ -4,7 +4,7 @@ use super::Tensor;
 impl Tensor {
     pub fn matmul(&self, other: Tensor) -> Tensor {
         let raw: RawTensor = self.raw.matmul(&other.raw);
-        Tensor::from_raw(raw, None)
+        Tensor::no_grad_tensor(raw)
     }
 }
 

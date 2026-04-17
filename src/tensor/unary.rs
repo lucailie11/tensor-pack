@@ -10,7 +10,7 @@ use crate::grad::BackpropOp;
 impl Tensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
         let raw = self.raw.map(f);
-        Tensor::from_raw(raw, None)
+        Tensor::no_grad_tensor(raw)
     }
 
     // pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
@@ -19,31 +19,31 @@ impl Tensor {
 
     pub fn exp(&self) -> Tensor {
         let raw = self.raw.exp();
-        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Exp)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Exp)
     }
     pub fn ln(&self) -> Tensor {
         let raw = self.raw.ln();
-        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Ln)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Ln)
     }
     pub fn sqrt(&self) -> Tensor {
         let raw = self.raw.sqrt();
-        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Sqrt)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Sqrt)
     }
     pub fn abs(&self) -> Tensor {
         let raw = self.raw.abs();
-        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Abs)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Abs)
     }
     pub fn tanh(&self) -> Tensor {
         let raw = self.raw.tanh();
-        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Tanh)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Tanh)
     }
     pub fn sigmoid(&self) -> Tensor {
         let raw = self.raw.sigmoid();
-        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Sigmoid)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Sigmoid)
     }
     pub fn relu(&self) -> Tensor {
         let raw = self.raw.relu();
-        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Relu)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Relu)
     }
 
     // pub fn exp_inplace(&mut self)     { self.map_inplace(f64::exp)  }

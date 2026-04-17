@@ -7,7 +7,7 @@ impl Add<&Tensor> for f64 {
 
     fn add(self, tensor: &Tensor) -> Tensor {
         let raw = self + &tensor.raw;
-        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::AddScalar)
+        Tensor::autograd_tensor(raw, Box::from([tensor.clone()]), BackpropOp::AddScalar)
     }
 }
 
@@ -16,7 +16,7 @@ impl Sub<&Tensor> for f64 {
 
     fn sub(self, tensor: &Tensor) -> Tensor {
         let raw = self - &tensor.raw;
-        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::SubScalar)
+        Tensor::autograd_tensor(raw, Box::from([tensor.clone()]), BackpropOp::SubScalar)
     }
 }
 
@@ -25,7 +25,7 @@ impl Mul<&Tensor> for f64 {
 
     fn mul(self, tensor: &Tensor) -> Tensor {
         let raw = self * &tensor.raw;
-        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::MulScalar(self))
+        Tensor::autograd_tensor(raw, Box::from([tensor.clone()]), BackpropOp::MulScalar(self))
     }
 }
 
@@ -34,7 +34,7 @@ impl Div<&Tensor> for f64 {
 
     fn div(self, tensor: &Tensor) -> Tensor {
         let raw = self / &tensor.raw;
-        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::DivScalar(self))
+        Tensor::autograd_tensor(raw, Box::from([tensor.clone()]), BackpropOp::DivScalar(self))
     }
 }
 

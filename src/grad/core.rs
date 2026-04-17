@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use std::cell::RefCell;
 
 use crate::{Tensor, rawtensor::RawTensor, tensor::core::TensorInner};
@@ -64,7 +63,7 @@ impl Tensor {
         }
     }
 
-    pub(crate) fn tensor_grad(raw: RawTensor, inputs: Box<[Tensor]>, op: BackpropOp) -> Tensor {
+    pub(crate) fn autograd_tensor(raw: RawTensor, inputs: Box<[Tensor]>, op: BackpropOp) -> Tensor {
         Tensor::from_inner( 
             TensorInner {
                 raw,

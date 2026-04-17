@@ -7,7 +7,7 @@ impl Add for &Tensor {
 
     fn add(self, other: &Tensor) -> Tensor {
         let raw = &self.raw + &other.raw;
-        Tensor::tensor_grad(raw, Box::from([self.clone(), other.clone()]), BackpropOp::AddTensor)
+        Tensor::autograd_tensor(raw, Box::from([self.clone(), other.clone()]), BackpropOp::AddTensor)
     }
 }
 
@@ -16,7 +16,7 @@ impl Sub for &Tensor {
 
     fn sub(self, other: &Tensor) -> Tensor {
         let raw = &self.raw - &other.raw;
-        Tensor::tensor_grad(raw, Box::from([self.clone(), other.clone()]), BackpropOp::SubTensor)
+        Tensor::autograd_tensor(raw, Box::from([self.clone(), other.clone()]), BackpropOp::SubTensor)
     }
 }
 
@@ -25,7 +25,7 @@ impl Mul for &Tensor {
 
     fn mul(self, other: &Tensor) -> Tensor {
         let raw = &self.raw * &other.raw;
-        Tensor::tensor_grad(raw, Box::from([self.clone(), other.clone()]), BackpropOp::MulTensor)
+        Tensor::autograd_tensor(raw, Box::from([self.clone(), other.clone()]), BackpropOp::MulTensor)
     }
 }
 
@@ -35,7 +35,7 @@ impl Div for &Tensor {
 
     fn div(self, other: &Tensor) -> Tensor {
         let raw = &self.raw / &other.raw;
-        Tensor::tensor_grad(raw, Box::from([self.clone(), other.clone()]), BackpropOp::DivTensor)
+        Tensor::autograd_tensor(raw, Box::from([self.clone(), other.clone()]), BackpropOp::DivTensor)
     }
 }
 
