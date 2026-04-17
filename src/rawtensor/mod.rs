@@ -1,4 +1,5 @@
 mod core;
+mod elementwise;
 mod binary;
 mod broadcasting;
 mod constructors;

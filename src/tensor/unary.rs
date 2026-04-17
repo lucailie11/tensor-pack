@@ -1,5 +1,6 @@
 use super::Tensor;
 use std::ops::Neg;
+use crate::grad::BackpropOp;
 
 // map / map_inplace are the core primitives: apply a closure to every element,
 // either returning a new RawTensor or mutating in place.
@@ -11,14 +12,6 @@ use std::ops::Neg;
 //   exp, ln, sqrt, abs, tanh, sigmoid, relu  (and *_inplace variants)
 //   -&RawTensor — negation
 
-fn sigmoid(x: f64) -> f64 {
-    1.0 / ((-x).exp() + 1.0)
-}
-
-fn relu(x: f64) -> f64 {
-    if x >= 0.0 { x } else { 0.0 }
-}
-
 impl Tensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {
         let raw = self.0.raw.map(f);
@@ -29,13 +22,34 @@ impl Tensor {
     //     self.raw.map_inplace(f);
     // }
 
-    pub fn exp(&self) -> Tensor     { self.map(f64::exp)  }
-    pub fn ln(&self) -> Tensor      { self.map(f64::ln)   }
-    pub fn sqrt(&self) -> Tensor    { self.map(f64::sqrt) }
-    pub fn abs(&self) -> Tensor     { self.map(f64::abs)  }
-    pub fn tanh(&self) -> Tensor    { self.map(f64::tanh) }
-    pub fn sigmoid(&self) -> Tensor { self.map(sigmoid)   }
-    pub fn relu(&self) -> Tensor    { self.map(relu)      }
+    pub fn exp(&self) -> Tensor {
+        let raw = self.raw.exp();
+        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Exp)
+    }
+    pub fn ln(&self) -> Tensor {
+        let raw = self.raw.ln();
+        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Ln)
+    }
+    pub fn sqrt(&self) -> Tensor {
+        let raw = self.raw.sqrt();
+        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Sqrt)
+    }
+    pub fn abs(&self) -> Tensor {
+        let raw = self.raw.abs();
+        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Abs)
+    }
+    pub fn tanh(&self) -> Tensor {
+        let raw = self.raw.tanh();
+        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Tanh)
+    }
+    pub fn sigmoid(&self) -> Tensor {
+        let raw = self.raw.sigmoid();
+        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Sigmoid)
+    }
+    pub fn relu(&self) -> Tensor {
+        let raw = self.raw.relu();
+        Tensor::tensor_grad(raw, Box::from([self.clone()]), BackpropOp::Relu)
+    }
 
     // pub fn exp_inplace(&mut self)     { self.map_inplace(f64::exp)  }
     // pub fn ln_inplace(&mut self)      { self.map_inplace(f64::ln)   }
@@ -50,7 +64,7 @@ impl Neg for &Tensor {
     type Output = Tensor;
 
     fn neg(self) -> Tensor {
-        self.map(|x| -x)
+        0.0 - self
     }
 }
 

@@ -1,71 +1,76 @@
 use super::Tensor;
+use crate::grad::BackpropOp;
 use std::ops::{Add, Sub, Mul, Div};
 
-impl Add<f64> for Tensor {
+impl Add<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn add(self, tensor: &Tensor) -> Tensor {
+        let raw = self + &tensor.raw;
+        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::AddScalar)
+    }
+}
+
+impl Sub<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn sub(self, tensor: &Tensor) -> Tensor {
+        let raw = self - &tensor.raw;
+        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::SubScalar)
+    }
+}
+
+impl Mul<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn mul(self, tensor: &Tensor) -> Tensor {
+        let raw = self * &tensor.raw;
+        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::MulScalar(self))
+    }
+}
+
+impl Div<&Tensor> for f64 {
+    type Output = Tensor;
+
+    fn div(self, tensor: &Tensor) -> Tensor {
+        let raw = self / &tensor.raw;
+        Tensor::tensor_grad(raw, Box::from([tensor.clone()]), BackpropOp::DivScalar(self))
+    }
+}
+
+impl Add<f64> for &Tensor {
     type Output = Tensor;
 
     fn add(self, scalar: f64) -> Tensor {
-        self.map(|x| x + scalar)
+        scalar + self
     }
 }
 
-impl Add<Tensor> for f64 {
-    type Output = Tensor;
 
-    fn add(self, tensor: Tensor) -> Tensor {
-        tensor + self
-    }
-}
-
-impl Sub<f64> for Tensor {
+impl Sub<f64> for &Tensor {
     type Output = Tensor;
 
     fn sub(self, scalar: f64) -> Tensor {
-        self.map(|x| x - scalar)
+        self + (-scalar)
     }
 }
 
-impl Sub<Tensor> for f64 {
-    type Output = Tensor;
-
-    fn sub(self, tensor: Tensor) -> Tensor {
-        tensor - self
-    }
-}
-
-
-impl Mul<f64> for Tensor {
+impl Mul<f64> for &Tensor {
     type Output = Tensor;
 
     fn mul(self, scalar: f64) -> Tensor {
-        self.map(|x| x * scalar)
+        scalar * self
     }
 }
 
-impl Mul<Tensor> for f64 {
-    type Output = Tensor;
-
-    fn mul(self, tensor: Tensor) -> Tensor {
-        tensor * self
-    }
-}
-
-
-impl Div<f64> for Tensor {
+impl Div<f64> for &Tensor {
     type Output = Tensor;
 
     fn div(self, scalar: f64) -> Tensor {
-        self.map(|x| x / scalar)
+        self * (1.0 / scalar)
     }
 }
 
-impl Div<Tensor> for f64 {
-    type Output = Tensor;
-
-    fn div(self, tensor: Tensor) -> Tensor {
-        tensor / self
-    }
-}
 
 // impl AddAssign<f64> for Tensor {
 //     fn add_assign(&mut self, scalar: f64) {

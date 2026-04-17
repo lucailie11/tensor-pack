@@ -6,7 +6,8 @@ fn main() {
     x.set_requires_grad(true);
     y.set_requires_grad(true);
     let z = &x * &y;
-    z.backward();
+    let a = &z * 2.0;
+    a.backward();
     // let a = &z + &x; 
     // let b = &z - &x;
     // let c = &b / &a;
@@ -14,6 +15,7 @@ fn main() {
     println!("x {:?}\n", x);
     println!("y {:?}\n", y);
     println!("z {:?}\n", z);
+    println!("a {:?}\n", a);
     // println!("a {:?}\n", a);
     // println!("b {:?}\n", b);
     // println!("c {:?}\n", c);
