@@ -41,7 +41,7 @@ impl Tensor {
 
     pub(super) fn backprop(&self) {
         for input in self.inputs.iter() {
-            if input.grad.borrow().is_none() {
+            if input.grad.borrow().is_none() && input.requires_computing_grad() {
                 *input.grad.borrow_mut() = Some(RawTensor::zeros(input.shape()));
             }
         }
