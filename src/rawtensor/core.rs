@@ -2,7 +2,8 @@ use std::fmt;
 
 // Core RawTensor type: a pair of shape and data (stored in row-major order).
 
-#[derive(Clone, PartialEq)] pub struct RawTensor {
+#[derive(Clone, PartialEq)] 
+pub struct RawTensor {
     pub(super) shape: Box<[usize]>,
     pub(super) data: Box<[f64]>,
 }
@@ -24,23 +25,43 @@ impl RawTensor {
 
 }
 
+// Writes a 2D slice as column-aligned rows, each indented by `indent`.
+pub(crate) fn fmt_matrix(f: &mut fmt::Formatter, data: &[f64], cols: usize, indent: &str) -> fmt::Result {
+    let formatted: Vec<Vec<String>> = data.chunks(cols)
+        .map(|row| row.iter().map(|x| format!("{:.4}", x)).collect())
+        .collect();
+    let col_widths: Vec<usize> = (0..cols)
+        .map(|c| formatted.iter().map(|row| row[c].len()).max().unwrap_or(0))
+        .collect();
+    for row in &formatted {
+        let padded: Vec<String> = row.iter().zip(&col_widths)
+            .map(|(val, &w)| format!("{:>width$}", val, width = w))
+            .collect();
+        writeln!(f, "{}[{}]", indent, padded.join(", "))?;
+    }
+    Ok(())
+}
 
-// Pretty-prints the RawTensor. 2D tensors are shown row-by-row; all other ranks print the flat data slice.
+impl fmt::Debug for RawTensor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "RawTensor {{ shape: {:?}, data: ", self.shape)?;
+        let vals: Vec<String> = self.data.iter().map(|x| format!("{:.4}", x)).collect();
+        write!(f, "[{}]", vals.join(", "))?;
+        write!(f, " }}")
+    }
+}
+
 impl fmt::Display for RawTensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "RawTensor {{")?;
         writeln!(f, "    shape: {:?}", self.shape)?;
-        writeln!(f, "    data: ")?;
         if self.shape.len() == 2 {
-            let cols = self.shape[1];
-            for row in self.data.chunks(cols) {
-                let formatted: Vec<String> = row.iter().map(|x| format!("{:.4}", x)).collect();
-                writeln!(f, "           [{}]", formatted.join(", "))?;
-            }
+            writeln!(f, "    data:")?;
+            fmt_matrix(f, &self.data, self.shape[1], "        ")?;
         } else {
-            write!(f, "{:.4?}", self.data)?;
+            let vals: Vec<String> = self.data.iter().map(|x| format!("{:.4}", x)).collect();
+            writeln!(f, "    data: [{}]", vals.join(", "))?;
         }
-        writeln!(f, "}}")?;
-        Ok(())
+        write!(f, "}}")
     }
 }

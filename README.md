@@ -91,11 +91,11 @@ println!("{:?}", y);
 ```
 
 ## To do
+- Implement dot and cross product
+- Implement broadcasiting for backprop
 - Improve pretty print
 - Add comments
 - Add more tests
-- Implement dot and cross product
-- Implement broadcasiting for backprop
 - Implement backprop for `sigmoid`, `tanh`, `abs`, `relu`
 - Gradient support for `matmul`, reductions, and `softmax`
 - Optimise broadcasting index lookup

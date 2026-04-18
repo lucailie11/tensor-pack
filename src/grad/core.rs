@@ -5,7 +5,7 @@ use super::binary::{add_tensor_backprop, sub_tensor_backprop, mul_tensor_backpro
 use super::scalar::{add_scalar_backprop, sub_scalar_backprop, mul_scalar_backprop, div_scalar_backprop};
 use super::unary::{exp_backprop, ln_backprop, sqrt_backprop, abs_backprop, tanh_backprop, sigmoid_backprop, relu_backprop};
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum BackpropOp {
     None,
     AddTensor,

@@ -10,3 +10,4 @@ mod transformations;
 mod unary;
 
 pub(crate) use core::RawTensor;
+pub(crate) use core::fmt_matrix;
