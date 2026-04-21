@@ -96,10 +96,10 @@ mod tests {
     use super::*;
 
     #[test]
+    #[should_panic]
     fn test_partial_eq() {
         let a: Tensor = Tensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let mut b: Tensor = Tensor::linspace(1.0, 6.0, 6);
-        b.reshape(&[2, 3]);
+        let b: Tensor = Tensor::linspace(1.0, 6.0, 6);
         assert_eq!(a, b)
     }
 

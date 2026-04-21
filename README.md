@@ -91,11 +91,12 @@ println!("{:?}", y);
 ```
 
 ## To do
-- Implement dot and cross product
-- Implement broadcasiting for backprop
-- Improve pretty print
-- Add comments
+- Fix RawTensor matmul red and transform
+- Fix Tensor with new updates
 - Add more tests
+- Implement dot and cross product
+- Implement broadcasting for backprop
+- Add comments
 - Implement backprop for `sigmoid`, `tanh`, `abs`, `relu`
 - Gradient support for `matmul`, reductions, and `softmax`
 - Optimise broadcasting index lookup

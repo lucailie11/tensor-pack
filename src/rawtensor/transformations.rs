@@ -1,5 +1,6 @@
 use super::RawTensor;
 use crate::utils::stride::softmax;
+use std::rc::Rc;
 
 // Axis-based operations — functions that are applied independently along one axis
 // of the tensor while keeping all other axes fixed.
@@ -28,11 +29,14 @@ impl RawTensor {
         let axis_size = self.shape[axis];
         let inner_size = inner_size;
 
-        for o in 0..outer_size {
-            for i in 0..inner_size {
-                f(&mut self.data[
-                    o * axis_size * inner_size + i..
-                    o * axis_size * inner_size + axis_size * inner_size], inner_size);
+
+        if let Some(data) = Rc::get_mut(&mut self.data) {
+            for o in 0..outer_size {
+                for i in 0..inner_size {
+                    f(&mut data[
+                        o * axis_size * inner_size + i..
+                        o * axis_size * inner_size + axis_size * inner_size], inner_size);
+                }
             }
         }
     }

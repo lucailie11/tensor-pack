@@ -1,4 +1,5 @@
 use super::RawTensor;
+use std::rc::Rc;
 
 // Matrix multiplication: shapes [m, k] x [k, n] -> [m, n]. Both tensors must be 2D.
 // Use tensor.matmul(other) instead of * (which is element-wise)
@@ -9,7 +10,7 @@ impl RawTensor {
         assert_eq!(other.shape.len(), 2, "matmul requires 2D tensors");
         assert_eq!(self.shape[1], other.shape[0], "shape mismatch: [m, k] x [k, n] required");
 
-        let mut new_data: Vec<f64> = vec![0.0; self.shape[0] * other.shape[1]];
+        let mut new_data: Box<[f64]> = Box::from(vec![0.0; self.shape[0] * other.shape[1]]);
         for i in 0..self.shape[0] {
             for k in 0..self.shape[1] {
                 for j in 0..other.shape[1] {
@@ -19,10 +20,7 @@ impl RawTensor {
             }
         }
 
-        RawTensor {
-            shape: vec![self.shape[0], other.shape[1]].into_boxed_slice(),
-            data: new_data.into_boxed_slice(),
-        }
+        RawTensor::from_rc(&[self.shape[0], other.shape[1]], &Rc::from(new_data))
     }
 }
 

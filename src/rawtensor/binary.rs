@@ -1,13 +1,13 @@
 use super::RawTensor;
+use super::structure::get_broadcast_shape;
 use std::ops::{Add, AddAssign};
 use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};
 use std::ops::{Div, DivAssign};
+use std::rc::Rc;
 
 // Binary elementwise operations on two Tensors with broadcasting support
 // Inplace variants require self to already hold the output shape
-//
-// TODO: optimizing broadcasting index lookup
 //
 // The core building blocks are elementwise_op and elementwise_op_inplace.
 //
@@ -20,6 +20,36 @@ use std::ops::{Div, DivAssign};
 //    RawTensor *= &RawTensor
 //   &RawTensor / &RawTensor  -> RawTensor
 //    RawTensor /= &RawTensor
+
+impl RawTensor {
+    // Panics if the shapes are incompatible for broadcasting
+    pub fn elementwise_op(&self, other: &RawTensor, f: impl Fn(f64, f64) -> f64) -> RawTensor {
+        let out_shape = get_broadcast_shape(&self.shape, &other.shape);
+        let a = self.expand(&out_shape);
+        let b = other.expand(&out_shape);
+        let new_data: Box<[f64]> = a.iter_strided()
+            .zip(b.iter_strided())
+            .map(|(x, y)| f(x, y))
+            .collect();
+        RawTensor::from_box(&out_shape, new_data)
+    }
+
+    // Panics if self doesn't already have the broadcast output shape
+    pub fn elementwise_op_inplace(&mut self, other: &RawTensor, f: impl Fn(f64, f64) -> f64) {
+        assert_eq!(
+            get_broadcast_shape(&self.shape, &other.shape),
+            self.shape,
+            "in-place broadcasting requires self to already be the output shape"
+        );
+
+        let b = other.expand(&self.shape);
+        let data = Rc::get_mut(&mut self.data)
+            .expect("cannot modify tensor in-place: multiple owners");
+        data.iter_mut().zip(b.iter_strided()).for_each(|(x, y)| *x = f(*x, y));
+    }
+}
+
+
 impl Add for &RawTensor {
     type Output = RawTensor;
 

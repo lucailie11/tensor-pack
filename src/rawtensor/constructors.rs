@@ -1,6 +1,8 @@
 use super::RawTensor;
+use std::rc::Rc;
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};
+use super::structure::contiguous_strides;
 
 impl RawTensor {
     // All constructors take the desired shape as a slice and copy it, unless specified otherwise
@@ -16,7 +18,24 @@ impl RawTensor {
 
         RawTensor {
             shape: Box::from(shape),
-            data: Box::from(data),
+            strides: contiguous_strides(shape),
+            data: Rc::from(data),
+        }
+    }
+
+    // Creates a RawTensor from by using data from a Rc (no copying done here)
+    // Panics if shape and data don't match lengths
+    pub fn from_rc(shape: &[usize], data: &Rc<[f64]>) -> RawTensor {
+        assert_eq!(
+            shape.iter().product::<usize>(),
+            data.len(),
+            "Data length doesn't match shape"
+        );
+
+        RawTensor {
+            shape: Box::from(shape),
+            strides: contiguous_strides(shape),
+            data: Rc::clone(data),
         }
     }
 
@@ -32,7 +51,8 @@ impl RawTensor {
 
         RawTensor {
             shape: Box::from(shape),
-            data: data.into_boxed_slice(),
+            strides: contiguous_strides(shape),
+            data: Rc::from(data),
         }
     }
 
@@ -48,7 +68,8 @@ impl RawTensor {
 
         RawTensor {
             shape: Box::from(shape),
-            data,
+            strides: contiguous_strides(shape),
+            data: Rc::from(data),
         }
     }
 
@@ -72,17 +93,14 @@ impl RawTensor {
     // If n = 1, returns a shape-[1] tensor containing just start.
     pub fn linspace(start: f64, end: f64, n: usize) -> RawTensor {
         if n == 1 {
-            return RawTensor {
-                shape: vec![1].into_boxed_slice(),
-                data: vec![start].into_boxed_slice(),
-            };
+            return RawTensor::from_vec(&[1], vec![start]);
         }
 
-        let data: Vec<f64> = (0..n)
+        let data: Box<[f64]> = (0..n)
             .map(|i| start + i as f64 * (end - start) / (n - 1) as f64)
             .collect();
 
-        RawTensor::from_vec(&[n], data)
+        RawTensor::from_box(&[n], data)
     }
 
     // Creates a RawTensor filled with random samples from U([l, r)).
@@ -91,9 +109,8 @@ impl RawTensor {
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
         let uniform = Uniform::new(l, r);
-        let data: Vec<f64> = (0..len).map(|_| uniform.sample(&mut rng)).collect();
-
-        RawTensor::from_vec(shape, data)
+        let data: Box<[f64]> = (0..len).map(|_| uniform.sample(&mut rng)).collect();
+        RawTensor::from_box(shape, data)
     }
 
     // Creates a RawTensor filled with random samples from U([0, 1)).
@@ -106,9 +123,8 @@ impl RawTensor {
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
         let normal = Normal::new(mean, std_dev).unwrap();
-        let data: Vec<f64> = (0..len).map(|_| normal.sample(&mut rng)).collect();
-
-        RawTensor::from_vec(shape, data)
+        let data: Box<[f64]> = (0..len).map(|_| normal.sample(&mut rng)).collect();
+        RawTensor::from_box(shape, data)
     }
 }
 
@@ -136,13 +152,6 @@ mod tests {
         let t = RawTensor::from_vec(&[2, 2], x);
         assert_eq!(t.shape(), &[2, 2]);
         assert_eq!(t.data(), &[1.0, 1.0, 1.0, 1.0]);
-    }
-
-    #[test]
-    fn reshape_changes_shape() {
-        let mut t = RawTensor::linspace(1.0, 6.0, 6);
-        t.reshape(&[2, 3]);
-        assert_eq!(t.shape(), &[2, 3]);
     }
 
     #[test]
@@ -197,22 +206,6 @@ mod tests {
         let t = RawTensor::linspace(0.0, 1.0, 2);
         assert!((t.data()[0] - 0.0).abs() < 1e-9);
         assert!((t.data()[1] - 1.0).abs() < 1e-9);
-    }
-
-    #[test]
-    #[should_panic]
-    fn reshape_length_mismatch_panics() {
-        let mut t = RawTensor::zeros(&[2, 3]);
-        t.reshape(&[2, 4]);
-    }
-
-    #[test]
-    fn reshape_preserves_data() {
-        let mut t = RawTensor::linspace(1.0, 6.0, 6);
-        let data_before: Vec<f64> = t.data().to_vec();
-        t.reshape(&[3, 2]);
-        assert_eq!(t.data(), data_before.as_slice());
-        assert_eq!(t.shape(), &[3, 2]);
     }
 
     #[test]

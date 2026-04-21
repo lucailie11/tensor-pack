@@ -1,5 +1,6 @@
 use super::RawTensor;
 use std::ops::Neg;
+use std::rc::Rc;
 
 // map / map_inplace are the core primitives: apply a closure to every element,
 // either returning a new RawTensor or mutating in place.
@@ -21,19 +22,19 @@ fn relu(x: f64) -> f64 {
 
 impl RawTensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> RawTensor {
-        RawTensor {
-            shape: self.shape.clone(),
-            data: self
+        let new_data: Box<[f64]> = self
                 .data
                 .iter()
                 .map(|x| f(*x))
-                .collect::<Vec<f64>>()
-                .into_boxed_slice(),
-        }
+                .collect();
+
+        RawTensor::from_box(&self.shape, new_data)
     }
 
     pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
-        self.data.iter_mut().for_each(|x| *x = f(*x));
+        if let Some(data) = Rc::get_mut(&mut self.data) {
+            data.iter_mut().for_each(|x| *x = f(*x));
+        }
     }
 
     pub fn exp(&self) -> RawTensor     { self.map(f64::exp)  }

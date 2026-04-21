@@ -15,5 +15,9 @@ fn main() {
     // println!("3-dim debug {:?}", x);
     // println!("3-dim pretty {}", x);
     // println!("\n\n\n");
+    //
+    let x: Tensor = Tensor::linspace(1.0, 6.0, 12);
+    let y: Tensor = Tensor::linspace(1.0, 6.0, 12);
+    println!("{:?}\n{:?}\n{:?}", x, y, &x + &y);
 }
 
