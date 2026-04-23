@@ -8,13 +8,16 @@ pub struct RawTensor {
 }
 
 impl RawTensor {
-    pub fn shape(&self) -> &[usize] { &self.shape }
-    pub fn data(&self) -> &[f64]    { &self.data  }
+    pub fn shape(&self)    -> &[usize] { &self.shape }
+    pub fn data(&self)     -> &[f64]   { &self.data }
+    pub fn ndim(&self)     -> usize    { self.shape.len() }
+    pub fn len(&self)      -> usize    { self.shape.iter().product() }
+    pub fn is_empty(&self) -> bool     { self.shape.iter().any(|&x| x > 0) }
 }
 
 impl PartialEq for RawTensor {
     fn eq(&self, other: &RawTensor) -> bool {
         self.shape == other.shape && 
-        self.get_contiguous() == other.get_contiguous()
+        self.contiguous_data() == other.contiguous_data()
     }
 }

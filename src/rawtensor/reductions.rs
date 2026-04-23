@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::RawTensor;
 use crate::utils::stride::{sum, mean, var, std_dev};
 
@@ -11,38 +13,45 @@ impl RawTensor {
     //
     // Example: shape [3, 4, 5] reduced on axis 1 → shape [3, 5]
 
-    pub fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize) -> f64) -> RawTensor {
+    pub fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize, usize) -> f64) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
 
-        let mut outer_size: usize = 1;
-        let mut inner_size: usize = 1;
-        let mut new_shape: Vec<usize> = Vec::with_capacity(self.shape.len() - 1);
-        for i in 0..self.shape.len() {
-            if i != axis {
-                new_shape.push(self.shape[i]);
-            }
+        let n = self.shape[axis];
+        let new_shape: Box<[usize]> = self.shape.iter().enumerate().
+            filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
 
-            if i < axis {
-                outer_size *= self.shape[i];
-            } else if i > axis {
-                inner_size *= self.shape[i];
-            }
-        }
-        let new_shape = new_shape;
-        let outer_size = outer_size;
-        let axis_size = self.shape[axis];
-        let inner_size = inner_size;
+        if self.strides[axis] == 0 {
+            let view_shape: Box<[usize]> = new_shape.clone();
+            let view_strades: Box<[usize]> = self.strides.iter().enumerate().
+                filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
 
-        let mut new_data: Vec<f64> = vec![0.0; outer_size * inner_size];
-        for o in 0..outer_size {
-            for i in 0..inner_size {
-                new_data[o * inner_size + i] = f(&self.data[
-                    o * axis_size * inner_size + i..
-                    o * axis_size * inner_size + axis_size * inner_size], inner_size);
-            }
+            let view = RawTensor {
+                shape: view_shape,
+                strides: view_strades,
+                data: Rc::clone(&self.data),
+            };
+
+            let new_data: Box<[f64]> = view.iter()
+                .map(|x| {
+                    let repeated: Box<[f64]> = vec![x; n].into_boxed_slice();
+                    f(&repeated, 1, n)
+                })
+                .collect();
+
+            return RawTensor::from_box(&new_shape, new_data);
         }
 
-        RawTensor::from_vec(&new_shape, new_data)
+        let new_data: Box<[f64]> = self.iter().enumerate()
+            .filter(|(i, _)| (i / self.strides[axis]).is_multiple_of(self.shape[axis]))
+            .map(|(i, _)| f(&self.data[i..i + (n - 1) * self.strides[axis] + 1], self.strides[axis], n))
+            .collect();
+
+        RawTensor::from_box(&new_shape, new_data)
+    }
+
+    //TODO
+    pub fn reduce(&self, _f: impl Fn(&[f64], usize, usize) -> f64) -> f64 {
+        0.0
     }
 
     pub fn sum_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, sum) }
@@ -108,12 +117,10 @@ mod tests {
 
     #[test]
     fn sum_axis_3d() {
-        // shape [2, 3, 4], reduce axis 1 -> shape [2, 4]
         let data: Vec<f64> = (0..24).map(|x| x as f64).collect();
         let a = RawTensor::from_vec(&[2, 3, 4], data);
         let b = a.sum_axis(1);
         assert_eq!(b.shape(), &[2, 4]);
-        // first outer: rows [0..4], [4..8], [8..12] summed elementwise
         assert_eq!(b.data()[0], 0.0 + 4.0 + 8.0);
         assert_eq!(b.data()[1], 1.0 + 5.0 + 9.0);
     }
@@ -123,5 +130,23 @@ mod tests {
     fn reduce_axis_out_of_bounds() {
         let a = RawTensor::from_slice(&[2, 3], &[1.0; 6]);
         let _ = a.sum_axis(2);
+    }
+
+    #[test]
+    fn reduce_transposed() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = a.transpose(&[1, 0]);
+        let c = b.sum_axis(0);
+        assert_eq!(c.shape(), &[2]);
+        assert_eq!(c.data(), &[6.0, 15.0]);
+    }
+
+    #[test]
+    fn reduce_expanded() {
+        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = a.expand(&[5, 2, 3]);
+        let c = b.sum_axis(0);
+        assert_eq!(c.shape(), &[2, 3]);
+        assert_eq!(c.data(), &[5.0, 10.0, 15.0, 20.0, 25.0, 30.0]);
     }
 }

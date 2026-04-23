@@ -1,4 +1,5 @@
 mod core;
+mod iter;
 mod binary;
 mod constructors;
 mod matmul;

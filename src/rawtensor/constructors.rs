@@ -2,7 +2,7 @@ use super::RawTensor;
 use std::rc::Rc;
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};
-use super::structure::contiguous_strides;
+use super::structure::get_strides_contiguous;
 
 impl RawTensor {
     // All constructors take the desired shape as a slice and copy it, unless specified otherwise
@@ -10,6 +10,7 @@ impl RawTensor {
     // Creates a RawTensor from by copying data from a slice
     // Panics if shape and data don't match lengths
     pub fn from_slice(shape: &[usize], data: &[f64]) -> RawTensor {
+        assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
         assert_eq!(
             shape.iter().product::<usize>(),
             data.len(),
@@ -18,7 +19,7 @@ impl RawTensor {
 
         RawTensor {
             shape: Box::from(shape),
-            strides: contiguous_strides(shape),
+            strides: get_strides_contiguous(shape),
             data: Rc::from(data),
         }
     }
@@ -26,6 +27,7 @@ impl RawTensor {
     // Creates a RawTensor from by using data from a Rc (no copying done here)
     // Panics if shape and data don't match lengths
     pub fn from_rc(shape: &[usize], data: &Rc<[f64]>) -> RawTensor {
+        assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
         assert_eq!(
             shape.iter().product::<usize>(),
             data.len(),
@@ -34,7 +36,7 @@ impl RawTensor {
 
         RawTensor {
             shape: Box::from(shape),
-            strides: contiguous_strides(shape),
+            strides: get_strides_contiguous(shape),
             data: Rc::clone(data),
         }
     }
@@ -43,6 +45,7 @@ impl RawTensor {
     // Panics if shape and data don't match lengths
     // The Vec loses its ownership of the data
     pub fn from_vec(shape: &[usize], data: Vec<f64>) -> RawTensor {
+        assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
         assert_eq!(
             shape.iter().product::<usize>(),
             data.len(),
@@ -51,7 +54,7 @@ impl RawTensor {
 
         RawTensor {
             shape: Box::from(shape),
-            strides: contiguous_strides(shape),
+            strides: get_strides_contiguous(shape),
             data: Rc::from(data),
         }
     }
@@ -60,6 +63,7 @@ impl RawTensor {
     // Panics if shape and data don't match lengths
     // The Box loses its ownership of the data
     pub fn from_box(shape: &[usize], data: Box<[f64]>) -> RawTensor {
+        assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
         assert_eq!(
             shape.iter().product::<usize>(),
             data.len(),
@@ -68,7 +72,7 @@ impl RawTensor {
 
         RawTensor {
             shape: Box::from(shape),
-            strides: contiguous_strides(shape),
+            strides: get_strides_contiguous(shape),
             data: Rc::from(data),
         }
     }
@@ -102,6 +106,14 @@ impl RawTensor {
 
         RawTensor::from_box(&[n], data)
     }
+
+    pub fn identity(n: usize) -> RawTensor {
+        let data: Box<[f64]> = (0..n * n)
+            .map(|i| if i % n == i / n {1.0} else {0.0})
+            .collect();
+        RawTensor::from_box(&[n, n], data)
+    }
+
 
     // Creates a RawTensor filled with random samples from U([l, r)).
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> RawTensor {
@@ -206,6 +218,12 @@ mod tests {
         let t = RawTensor::linspace(0.0, 1.0, 2);
         assert!((t.data()[0] - 0.0).abs() < 1e-9);
         assert!((t.data()[1] - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_dim_panics() {
+        let _ = RawTensor::from_slice(&[2, 0, 3], &[]);
     }
 
     #[test]

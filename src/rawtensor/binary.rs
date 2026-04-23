@@ -27,8 +27,8 @@ impl RawTensor {
         let out_shape = get_broadcast_shape(&self.shape, &other.shape);
         let a = self.expand(&out_shape);
         let b = other.expand(&out_shape);
-        let new_data: Box<[f64]> = a.iter_strided()
-            .zip(b.iter_strided())
+        let new_data: Box<[f64]> = a.iter()
+            .zip(b.iter())
             .map(|(x, y)| f(x, y))
             .collect();
         RawTensor::from_box(&out_shape, new_data)
@@ -45,7 +45,7 @@ impl RawTensor {
         let b = other.expand(&self.shape);
         let data = Rc::get_mut(&mut self.data)
             .expect("cannot modify tensor in-place: multiple owners");
-        data.iter_mut().zip(b.iter_strided()).for_each(|(x, y)| *x = f(*x, y));
+        data.iter_mut().zip(b.iter()).for_each(|(x, y)| *x = f(*x, y));
     }
 }
 

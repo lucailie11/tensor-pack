@@ -91,7 +91,12 @@ println!("{:?}", y);
 ```
 
 ## To do
-- Fix RawTensor matmul red and transform
+- fix transform
+- accumulate
+- no inplace
+- contigous/cont_dta
+- from cons
+
 - Fix Tensor with new updates
 - Add more tests
 - Implement dot and cross product
