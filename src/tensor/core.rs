@@ -1,17 +1,16 @@
-use core::fmt;
 use std::ops::Deref;
 use std::rc::Rc;
-use std::cell::{RefCell};
+use std::cell::RefCell;
 use crate::rawtensor::RawTensor;
 use crate::grad::BackpropOp;
 
 #[derive(Clone)]
 pub struct TensorInner {
-    pub raw: RawTensor,
-    pub grad: RefCell<Option<RawTensor>>,
-    pub inputs: Box<[Tensor]>,
-    pub op: BackpropOp,
-    pub requires_grad: bool,
+    pub(crate) raw: RawTensor,
+    pub(crate) grad: RefCell<Option<RawTensor>>,
+    pub(crate) inputs: Box<[Tensor]>,
+    pub(crate) op: BackpropOp,
+    pub(crate) requires_grad: bool,
 }
 
 #[derive(Clone)]
@@ -31,55 +30,11 @@ impl PartialEq for Tensor {
     }
 }
 
-impl fmt::Debug for Tensor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Tensor {{ data: {:?}", self.raw)?;
-        write!(f, ", requires_grad: {}", self.requires_grad)?;
-        if let Some(grad) = self.grad.borrow().as_ref() {
-            write!(f, ", grad: {:?}", grad)?;
-        }
-        write!(f, " }}")
-    }
-}
-
-impl fmt::Display for Tensor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::rawtensor::fmt_matrix;
-        writeln!(f, "Tensor {{")?;
-        writeln!(f, "    shape:         {:?}", self.raw.shape())?;
-        writeln!(f, "    requires_grad: {}", self.requires_grad)?;
-        writeln!(f, "    op: {:?}", self.op)?;
-        if self.raw.shape().len() == 2 {
-            writeln!(f, "    data:")?;
-            fmt_matrix(f, self.raw.data(), self.raw.shape()[1], "        ")?;
-        } else {
-            let vals: Vec<String> = self.raw.data().iter().map(|x| format!("{:.4}", x)).collect();
-            writeln!(f, "    data:          [{}]", vals.join(", "))?;
-        }
-        if let Some(grad) = self.grad.borrow().as_ref() {
-            if grad.shape().len() == 2 {
-                writeln!(f, "    grad:")?;
-                fmt_matrix(f, grad.data(), grad.shape()[1], "        ")?;
-            } else {
-                let vals: Vec<String> = grad.data().iter().map(|x| format!("{:.4}", x)).collect();
-                writeln!(f, "    grad:          [{}]", vals.join(", "))?;
-            }
-        }
-        write!(f, "}}")
-    }
-}
-
 impl Tensor {
     pub fn shape(&self) -> &[usize] { self.raw.shape() }
     pub fn data(&self) -> &[f64] { self.raw.data() }
-
-    pub fn reshape(&mut self, new_shape: &[usize]) {
-        if self.op == BackpropOp::None && let Some(tensor) = Rc::get_mut(&mut self.0) {
-            tensor.raw.reshape(new_shape);
-        } else {
-            panic!("Can't reshape non-leaf tensor");
-        }
-    }
+    pub fn ndim(&self)     -> usize    { self.raw.ndim() }
+    pub fn len(&self)      -> usize    { self.raw.len() }
 
     pub fn set_requires_grad(&mut self, requires_grad: bool) {
         if let Some(tensor) = Rc::get_mut(&mut self.0) {
@@ -90,32 +45,3 @@ impl Tensor {
     }
 
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[should_panic]
-    fn test_partial_eq() {
-        let a: Tensor = Tensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b: Tensor = Tensor::linspace(1.0, 6.0, 6);
-        assert_eq!(a, b)
-    }
-
-    #[test]
-    fn test_partial_eq_diff_shape() {
-        let a: Tensor = Tensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b: Tensor = Tensor::linspace(1.0, 6.0, 6);
-        assert_ne!(a, b)
-    }
-
-    #[test]
-    fn test_partial_eq_diff_data() {
-        let a: Tensor = Tensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let mut b: Tensor = Tensor::linspace(1.0, 7.0, 6);
-        b.reshape(&[2, 3]);
-        assert_ne!(a, b)
-    }
-}
-

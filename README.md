@@ -97,6 +97,7 @@ println!("{:?}", y);
 - fmt
 - vec, box, inits
 
+- Add gradient for structure ops
 - Fix Tensor with new updates
 - Add more tests
 - Implement dot and cross product

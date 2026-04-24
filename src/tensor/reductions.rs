@@ -1,5 +1,8 @@
 use super::Tensor;
 
+// Delegate all ops to RawTensor 
+// No gradient support so far
+
 impl Tensor {
     pub fn sum_axis(&self, axis: usize) -> Tensor {
         let raw = self.raw.sum_axis(axis);

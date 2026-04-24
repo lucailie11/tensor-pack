@@ -1,14 +1,13 @@
 use crate::rawtensor::RawTensor;
 use super::Tensor;
 
+// Delegate all ops to RawTensor 
+// No gradient support so far
+
 impl Tensor {
     pub fn softmax(&self, axis: usize) -> Tensor {
         let raw: RawTensor = self.raw.softmax(axis);
         Tensor::no_grad_tensor(raw)
     }
- 
-    // pub fn softmax_inplace(&mut self, axis: usize) {
-    //     self.raw.softmax_inplace(axis);
-    // }
 }
 

@@ -1,6 +1,17 @@
 use super::Tensor;
 use crate::grad::BackpropOp;
 use std::ops::{Add, Sub, Mul, Div};
+use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
+
+// Binary elementwise operations on two Tensors with broadcasting support
+// Delegates data logic to RawTensor and autograd logic to grad/ 
+// Assign operations replace the left-hand side with the result (not in-place)
+//
+// Defined operations:
+//   &RawTensor + &RawTensor  -> RawTensor       RawTensor += &RawTensor
+//   &RawTensor - &RawTensor  -> RawTensor       RawTensor -= &RawTensor
+//   &RawTensor * &RawTensor  -> RawTensor       RawTensor *= &RawTensor
+//   &RawTensor / &RawTensor  -> RawTensor       RawTensor /= &RawTensor
 
 impl Add for &Tensor {
     type Output = Tensor;
@@ -39,26 +50,26 @@ impl Div for &Tensor {
     }
 }
 
-// impl AddAssign<&Tensor> for Tensor {
-//     fn add_assign(&mut self, other: &Tensor) {
-//         self.0.raw += &other.raw;
-//     }
-// }
-//
-// impl SubAssign<&Tensor> for Tensor {
-//     fn sub_assign(&mut self, other: &Tensor) {
-//         self.elementwise_op_inplace(other, |a, b| a - b);
-//     }
-// }
-// impl MulAssign<&Tensor> for Tensor {
-//     fn mul_assign(&mut self, other: &Tensor) {
-//         self.elementwise_op_inplace(other, |a, b| a * b);
-//     }
-// }
+impl AddAssign<&Tensor> for Tensor {
+    fn add_assign(&mut self, other: &Tensor) {
+        *self = &*self + other;
+    }
+}
 
-// impl DivAssign<&Tensor> for Tensor {
-//     fn div_assign(&mut self, other: &Tensor) {
-//         self.elementwise_op_inplace(other, |a, b| a / b);
-//     }
-// }
-//
+impl SubAssign<&Tensor> for Tensor {
+    fn sub_assign(&mut self, other: &Tensor) {
+        *self = &*self - other;
+    }
+}
+impl MulAssign<&Tensor> for Tensor {
+    fn mul_assign(&mut self, other: &Tensor) {
+        *self = &*self * other;
+    }
+}
+
+impl DivAssign<&Tensor> for Tensor {
+    fn div_assign(&mut self, other: &Tensor) {
+        *self = &*self / other;
+    }
+}
+
