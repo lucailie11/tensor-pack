@@ -5,8 +5,9 @@ use crate::rawtensor::RawTensor;
 // No gradient support so far
 
 impl Tensor {
-    pub fn dot(&self, other: &Tensor) -> f64 {
-        self.raw.dot(&other.raw)
+    pub fn dot(&self, other: &Tensor) -> Tensor {
+        let raw: RawTensor = self.raw.dot(&other.raw);
+        Tensor::no_grad_tensor(raw)
     }
 
     pub fn matmul(&self, other: &Tensor) -> Tensor {

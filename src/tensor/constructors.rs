@@ -13,13 +13,15 @@ impl Tensor {
 
     // Wraps a RawTensor in a Tensor with no gradient tracking
     pub(super) fn no_grad_tensor(raw: RawTensor) -> Tensor {
-        Tensor::from_inner(TensorInner {
-            raw,
-            grad: RefCell::new(None),
-            inputs: Box::from([]),
-            op: BackpropOp::None,
-            requires_grad: false,
-        })
+        Tensor::from_inner(
+            TensorInner {
+                raw,
+                grad: RefCell::new(None),
+                inputs: Box::from([]),
+                op: BackpropOp::None,
+                requires_grad: false,
+            }
+        )
     }
 
     // Returns a Tensor from a reference to an Rc (no copying)
@@ -40,6 +42,12 @@ impl Tensor {
     pub fn from_slice(shape: &[usize], data: &[f64]) -> Tensor {
         Tensor::no_grad_tensor(RawTensor::from_slice(shape, data))
     }
+    
+    // Returns a 0D Tensor from a scalar (f64)
+    pub fn from_scalar(scalar: f64) -> Tensor {
+        Tensor::from_slice(&[], &[scalar])
+    }
+
 
     // Creates a Tensor filled with value
     pub fn full(shape: &[usize], value: f64) -> Tensor {

@@ -37,6 +37,11 @@ impl RawTensor {
         RawTensor::new(shape, Rc::from(data))
     }
 
+    // Returns a 0D RawTensor from a scalar (f64)
+    pub fn from_scalar(scalar: f64) -> RawTensor {
+        RawTensor::from_slice(&[], &[scalar])
+    }
+
     // Returns a new RawTensor with data in logical order
     pub fn contiguous(&self) -> RawTensor {
         RawTensor::from_rc(&self.shape, &self.contiguous_data())

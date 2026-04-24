@@ -4,12 +4,13 @@ use std::rc::Rc;
 
 impl RawTensor {
     // Dot product: Both tensors must be 1D and have the same shape
-    pub fn dot(&self, other: &RawTensor) -> f64 {
+    pub fn dot(&self, other: &RawTensor) -> RawTensor {
         assert_eq!(self.shape.len(), 1, "dot requires 1D tensors");
         assert_eq!(other.shape.len(), 1, "dot requires 1D tensors");
         assert_eq!(self.shape[0], other.shape[0], "shape mismatch");
 
-        self.iter().zip(other.iter()).map(|(a, b)| a * b).sum()
+        let p: f64 = self.iter().zip(other.iter()).map(|(a, b)| a * b).sum();
+        RawTensor::from_scalar(p)
     }
 
     // Matrix multiplication: shapes [m, k] x [k, n] -> [m, n]. Both tensors must be 2D
@@ -43,7 +44,7 @@ mod tests {
         let a = RawTensor::from_slice(&[4], &[1.0, 2.0, 3.0, 4.0]);
         let b = RawTensor::from_slice(&[4], &[1.0, 2.0, 3.0, 4.0]);
         let c = a.dot(&b);
-        assert_eq!(c, 30.0);
+        assert_eq!(c.data()[0], 30.0);
     }
 
     #[test]

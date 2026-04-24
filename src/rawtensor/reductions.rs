@@ -49,11 +49,6 @@ impl RawTensor {
         RawTensor::from_box(&new_shape, new_data)
     }
 
-    //TODO
-    pub fn reduce(&self, _f: impl Fn(&[f64], usize, usize) -> f64) -> f64 {
-        0.0
-    }
-
     pub fn sum_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, sum) }
     pub fn mean_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, mean) }
     pub fn var_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, var) }
