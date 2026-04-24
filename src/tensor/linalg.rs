@@ -1,5 +1,5 @@
-use crate::rawtensor::RawTensor;
 use super::Tensor;
+use crate::rawtensor::RawTensor;
 
 // Delegate all ops to RawTensor 
 // No gradient support so far

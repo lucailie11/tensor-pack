@@ -1,8 +1,9 @@
+use crate::rawtensor::RawTensor;
+use crate::grad::BackpropOp;
+
 use std::ops::Deref;
 use std::rc::Rc;
 use std::cell::RefCell;
-use crate::rawtensor::RawTensor;
-use crate::grad::BackpropOp;
 
 #[derive(Clone)]
 pub struct TensorInner {

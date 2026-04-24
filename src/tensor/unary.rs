@@ -1,10 +1,12 @@
 use super::Tensor;
-use std::ops::Neg;
 use crate::grad::BackpropOp;
+
+use std::ops::Neg;
 
 // Unary operations on Tensors
 // Delegates data logic to RawTensor and autograd logic to grad/ 
 // Assign operations replace the left-hand side with the result (not in-place)
+//
 // Defined operations:
 //   general map (has no grad)
 //   exp, ln, sqrt, abs, tanh, sigmoid, relu

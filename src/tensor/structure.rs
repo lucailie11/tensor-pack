@@ -1,5 +1,6 @@
-use std::ops::Index;
 use super::Tensor;
+
+use std::ops::Index;
 
 // Delegate all ops to RawTensor 
 // No gradient support so far

@@ -6,6 +6,7 @@ use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 // Arithmetics between a RawTensor and a scalar f64
 // Every operation applies the scalar uniformly to all elements via map
 // Assign operations replace the left-hand side with the result (not in-place)
+//
 // Defined operations:
 //   &RawTensor + f64   -> RawTensor      f64 + &RawTensor  -> RawTensor      RawTensor += f64
 //   &RawTensor - f64   -> RawTensor      f64 - &RawTensor  -> RawTensor      RawTensor -= f64

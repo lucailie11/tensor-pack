@@ -1,9 +1,10 @@
 use super::Tensor;
-use std::rc::Rc;
-use std::cell::RefCell;
 use crate::grad::BackpropOp;
 use crate::rawtensor::RawTensor;
 use crate::tensor::core::TensorInner;
+
+use std::rc::Rc;
+use std::cell::RefCell;
 
 impl Tensor {
     pub(crate) fn from_inner(tensor: TensorInner) -> Tensor {

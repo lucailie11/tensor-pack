@@ -5,6 +5,7 @@ use std::rc::Rc;
 
 // Unary operations on Tensors
 // Core primitive is map
+//
 // Defined operations
 //   exp, ln, sqrt, abs, tanh, sigmoid, relu
 //   -&RawTensor — negation

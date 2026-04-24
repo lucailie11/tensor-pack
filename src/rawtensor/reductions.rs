@@ -5,6 +5,7 @@ use std::rc::Rc;
 
 // Reduction operations along a single axis
 // Core primitive is reduce_axis
+//
 // Defined operations
 // - sum
 // - mean
