@@ -1,24 +1,23 @@
 use super::RawTensor;
 use std::rc::Rc;
 
-// Matrix multiplication: shapes [m, k] x [k, n] -> [m, n]. Both tensors must be 2D.
-// Use tensor.matmul(other) instead of * (which is element-wise)
-
 impl RawTensor {
+    // Dot product: Both tensors must be 1D and have the same shape
     pub fn dot(&self, other: &RawTensor) -> f64 {
         assert_eq!(self.shape.len(), 1, "dot requires 1D tensors");
         assert_eq!(other.shape.len(), 1, "dot requires 1D tensors");
-        assert_eq!(self.shape[0], other.shape[0], "shape mismatch: [m, k] x [k, n] required");
+        assert_eq!(self.shape[0], other.shape[0], "shape mismatch");
 
         self.iter().zip(other.iter()).map(|(a, b)| a * b).sum()
     }
 
+    // Matrix multiplication: shapes [m, k] x [k, n] -> [m, n]. Both tensors must be 2D.
     pub fn matmul(&self, other: &RawTensor) -> RawTensor {
         assert_eq!(self.shape.len(), 2, "matmul requires 2D tensors");
         assert_eq!(other.shape.len(), 2, "matmul requires 2D tensors");
         assert_eq!(self.shape[1], other.shape[0], "shape mismatch: [m, k] x [k, n] required");
 
-        let mut new_data: Box<[f64]> = Box::from(vec![0.0; self.shape[0] * other.shape[1]]);
+        let mut new_data: Box<[f64]> = vec![0.0; self.shape[0] * other.shape[1]].into_boxed_slice();
         let a: Rc<[f64]> = self.contiguous_data();
         let b: Rc<[f64]> = other.contiguous_data();
         for i in 0..self.shape[0] {
@@ -81,7 +80,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn not_matrix() {
-        let a = RawTensor::from_slice(&[6], &[1.0, 2.0, 3.0, 4.0]);
+        let a = RawTensor::from_slice(&[4], &[1.0, 2.0, 3.0, 4.0]);
         let b = RawTensor::from_slice(&[1, 2, 2], &[2.0, 0.0, 1.0, 3.0]);
         let _c = a.matmul(&b);
     }

@@ -1,25 +1,19 @@
 use super::RawTensor;
 use crate::utils::stride::softmax;
 
-// Axis-based operations — functions that are applied independently along one axis
-// of the tensor while keeping all other axes fixed.
-//
-// apply_axis_inplace / apply_axis are the core primitives: they iterate over every
-// (outer, inner) pair and call f on the slice of `axis_size` elements that spans
-// the target axis at that position.
+// Normalize_axis is the core primitive: applies a normalization operation over an axis 
 //
 // Defined operations:
-//   softmax(axis) / softmax_inplace(axis)
+//   softmax(axis)
 
 impl RawTensor {
     //TODO
-    pub fn transform_axis(&self, axis: usize, _f: impl Fn(&mut [f64], usize, usize)) -> RawTensor {
+    pub fn normalize_axis(&self, axis: usize, _f: impl Fn(&mut [f64], usize, usize)) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
         RawTensor::randn(&[5], 0.0, 1.0)
     }
 
-    pub fn softmax(&self, axis: usize) -> RawTensor { self.transform_axis(axis, softmax) }
-
+    pub fn softmax(&self, axis: usize) -> RawTensor { self.normalize_axis(axis, softmax) }
 }
 
 #[cfg(test)]
@@ -59,7 +53,6 @@ mod tests {
     #[test]
     #[ignore = "transform not implemented yet"]
     fn softmax_large_values_stable() {
-        // Without max-subtraction this would overflow to NaN/Inf
         let a = RawTensor::from_slice(&[3], &[1000.0, 1001.0, 1002.0]);
         let b = a.softmax(0);
         let sum: f64 = b.data().iter().sum();

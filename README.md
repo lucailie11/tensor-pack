@@ -91,11 +91,11 @@ println!("{:?}", y);
 ```
 
 ## To do
-- fix transform
-- accumulate
-- no inplace
-- contigous/cont_dta
-- from cons
+- transform axis
+- fix reduce axis
+- reduce all
+- fmt
+- vec, box, inits
 
 - Fix Tensor with new updates
 - Add more tests

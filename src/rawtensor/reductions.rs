@@ -4,15 +4,15 @@ use super::RawTensor;
 use crate::utils::stride::{sum, mean, var, std_dev};
 
 // Reduction operations along a single axis
-// Each public method delegates to `reduce_axis`, which handles the strided traversal.
+// Core primitive is reduce_axis
+//
+// Defined operations
+// - sum
+// - mean
+// - var
+// - std_dev
 
 impl RawTensor {
-    // Core reduction primitive. For each (outer, inner) lane, passes a strided slice
-    // starting at the first axis element and a step size (inner_size) to f, which reads
-    // every step-th value to cover the axis. The output shape is the input shape with `axis` removed.
-    //
-    // Example: shape [3, 4, 5] reduced on axis 1 → shape [3, 5]
-
     pub fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize, usize) -> f64) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
 

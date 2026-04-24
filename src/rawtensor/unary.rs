@@ -1,15 +1,11 @@
 use super::RawTensor;
-use std::ops::Neg;
-use std::rc::Rc;
+use std::{ops::Neg, rc::Rc};
 
-// map / map_inplace are the core primitives: apply a closure to every element,
-// either returning a new RawTensor or mutating in place.
+// map is the core primitive: apply a function to every element,
+// returns a new RawTensor
 //
-// Scalar arithmetic (+f64, -f64, …) also builds on map but lives in scalar.rs.
-// Unary negation (-&RawTensor) is here since it takes no second operand.
-//
-// Defined operations:
-//   exp, ln, sqrt, abs, tanh, sigmoid, relu  (and *_inplace variants)
+// Defined operations
+//   exp, ln, sqrt, abs, tanh, sigmoid, relu
 //   -&RawTensor — negation
 
 fn sigmoid(x: f64) -> f64 {
@@ -22,18 +18,11 @@ fn relu(x: f64) -> f64 {
 
 impl RawTensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> RawTensor {
-        let new_data: Box<[f64]> = self
-                .data
-                .iter()
-                .map(|x| f(*x))
-                .collect();
-
-        RawTensor::from_box(&self.shape, new_data)
-    }
-
-    pub fn map_inplace(&mut self, f: impl Fn(f64) -> f64) {
-        if let Some(data) = Rc::get_mut(&mut self.data) {
-            data.iter_mut().for_each(|x| *x = f(*x));
+        let new_data: Box<[f64]> = self.data().iter().map(|x| f(*x)).collect();
+        RawTensor {
+            shape: self.shape.clone(),
+            strides: self.strides.clone(),
+            data: Rc::from(new_data),
         }
     }
 
@@ -44,14 +33,6 @@ impl RawTensor {
     pub fn tanh(&self) -> RawTensor    { self.map(f64::tanh) }
     pub fn sigmoid(&self) -> RawTensor { self.map(sigmoid)   }
     pub fn relu(&self) -> RawTensor    { self.map(relu)      }
-
-    pub fn exp_inplace(&mut self)     { self.map_inplace(f64::exp)  }
-    pub fn ln_inplace(&mut self)      { self.map_inplace(f64::ln)   }
-    pub fn sqrt_inplace(&mut self)    { self.map_inplace(f64::sqrt) }
-    pub fn abs_inplace(&mut self)     { self.map_inplace(f64::abs)  }
-    pub fn tanh_inplace(&mut self)    { self.map_inplace(f64::tanh) }
-    pub fn sigmoid_inplace(&mut self) { self.map_inplace(sigmoid)   }
-    pub fn relu_inplace(&mut self)    { self.map_inplace(relu)      }
 }
 
 impl Neg for &RawTensor {
@@ -134,23 +115,5 @@ mod tests {
         let a = RawTensor::from_slice(&[3], &[1.0, -2.0, 0.0]);
         let b = -&(-&a);
         assert_eq!(b.data(), a.data());
-    }
-
-    #[test]
-    fn inplace_matches_non_inplace() {
-        let a = RawTensor::from_slice(&[4], &[-2.0, 0.0, 1.0, 3.0]);
-        let expected = a.relu();
-        let mut b = RawTensor::from_slice(&[4], &[-2.0, 0.0, 1.0, 3.0]);
-        b.relu_inplace();
-        assert_eq!(b.data(), expected.data());
-    }
-
-    #[test]
-    fn exp_inplace_matches_exp() {
-        let a = RawTensor::from_slice(&[3], &[0.0, 1.0, 2.0]);
-        let expected = a.exp();
-        let mut b = RawTensor::from_slice(&[3], &[0.0, 1.0, 2.0]);
-        b.exp_inplace();
-        assert!(b.data().iter().zip(expected.data()).all(|(&x, &y)| approx_eq(x, y)));
     }
 }

@@ -8,7 +8,7 @@ fn are_dimensions_compatible(d1: usize, d2: usize) -> bool {
     (d1 == d2) || (d1 == 1) || (d2 == 1)
 }
 
-pub fn get_broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Box<[usize]> {
+pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Box<[usize]> {
     let len = usize::max(shape1.len(), shape2.len());
     let mut out = vec![1; len].into_boxed_slice();
     for i in 0..len {
@@ -20,7 +20,7 @@ pub fn get_broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Box<[usize]> {
     out
 }
 
-pub fn get_strides_contiguous(shape: &[usize]) -> Box<[usize]> {
+pub(super) fn strides_contiguous(shape: &[usize]) -> Box<[usize]> {
     if shape.is_empty() { return Box::from([]); }
     let mut strides: Box<[usize]> = vec![1; shape.len()].into_boxed_slice();
     for i in (0..shape.len() - 1).rev() {
@@ -32,21 +32,34 @@ pub fn get_strides_contiguous(shape: &[usize]) -> Box<[usize]> {
 // --- Shape / layout methods ---
 
 impl RawTensor {
+    // Returns true if the data in memory has the same order as the logical order
     pub fn is_contiguous(&self) -> bool {
-        self.strides.iter().any(|&x| x > 0) && self.strides.windows(2).all(|w| w[0] >= w[1])
+        self.strides.iter().all(|&x| x > 0) && self.strides.windows(2).all(|w| w[0] >= w[1])
     }
 
-    // Returns the backing data in logical order. Clones the Rc if already contiguous (no copy).
-    pub fn contiguous_data(&self) -> Rc<[f64]> {
+    // Returns the data in logical order. Clones the Rc if already contiguous
+    pub(super) fn contiguous_data(&self) -> Rc<[f64]> {
         if self.is_contiguous() { return Rc::clone(&self.data); }
         self.iter().collect()
     }
 
-    // Returns a new RawTensor with data in logical order
-    pub fn contiguous(&self) -> RawTensor {
-        RawTensor::from_rc(&self.shape, &self.contiguous_data())
+
+    // Returns the strides self would have if expanded to new_shape. Broadcast dims get stride 0.
+    pub(super) fn expand_strides(&self, new_shape: &[usize]) -> Box<[usize]> {
+        assert_eq!(broadcast_shape(&self.shape, new_shape), Box::from(new_shape), "shape not broadcastable to new_shape");
+
+        let new_strides: Box<[usize]> = (0..new_shape.len())
+            .rev()
+            .map(|i| {
+                if i >= self.shape.len() || self.shape[self.shape.len() - 1 - i] == 1 { 0 }
+                else { self.strides[self.shape.len() - 1 - i] }
+            })
+            .collect();
+
+        new_strides
     }
 
+    // Returns a new RawTensor with a new shape. Panics if tensor is not contiguous
     pub fn reshape(&self, new_shape: &[usize]) -> RawTensor {
         assert!(self.is_contiguous(), "cannot reshape a non-contiguous tensor");
         assert_eq!(
@@ -57,8 +70,9 @@ impl RawTensor {
         RawTensor::from_rc(new_shape, &self.data)
     }
 
+    // Returns a new RawTensor by transposing some dimensions
     pub fn transpose(&self, perm: &[usize]) -> RawTensor {
-        assert_eq!(perm.len(), self.shape.len(), "permutation length doesn't match tensor rank");
+        assert_eq!(perm.len(), self.shape.len(), "permutation length doesn't match tensor ndim");
         assert_eq!(
             { let mut v = perm.to_vec(); v.sort(); v },
             (0..perm.len()).collect::<Vec<usize>>(),
@@ -71,24 +85,16 @@ impl RawTensor {
         }
     }
 
-    // Broadcasts self to new_shape by setting strides to 0 on expanded dims.
-    // No data is copied; expanded dims reuse the same memory.
+    // Expands self to new_shape. Panics if self is not broadcastable to new_shape.
     pub fn expand(&self, new_shape: &[usize]) -> RawTensor {
-        assert_eq!(get_broadcast_shape(&self.shape, new_shape), Box::from(new_shape), "shapes are not broadcastable to new_shape");
-        let new_strides: Box<[usize]> = (0..new_shape.len())
-            .rev()
-            .map(|i| {
-                if i >= self.shape.len() || self.shape[self.shape.len() - 1 - i] == 1 { 0 }
-                else { self.strides[self.shape.len() - 1 - i] }
-            })
-            .collect();
         RawTensor { 
             shape: Box::from(new_shape), 
-            strides: new_strides,
+            strides: self.expand_strides(new_shape),
             data: Rc::clone(&self.data),
         }
     }
 
+    // Removes a set of size-1 axes from the shape.
     pub fn squeeze_axes(&self, axes: &[usize]) -> RawTensor {
         for &axis in axes {
             assert!(axis < self.shape.len(), "axis {axis} out of bounds");
@@ -138,6 +144,7 @@ impl RawTensor {
     }
 }
 
+// Panics if indices are out of bounds or wrong number of dims.
 impl Index<&[usize]> for RawTensor {
     type Output = f64;
 
@@ -159,17 +166,17 @@ mod tests {
 
     #[test]
     fn contiguous_strides_2d() {
-        assert_eq!(&*get_strides_contiguous(&[3, 4]), &[4, 1]);
+        assert_eq!(&*strides_contiguous(&[3, 4]), &[4, 1]);
     }
 
     #[test]
     fn contiguous_strides_1d() {
-        assert_eq!(&*get_strides_contiguous(&[5]), &[1]);
+        assert_eq!(&*strides_contiguous(&[5]), &[1]);
     }
 
     #[test]
     fn contiguous_strides_empty() {
-        assert_eq!(&*get_strides_contiguous(&[]), &[]);
+        assert_eq!(&*strides_contiguous(&[]), &[]);
     }
 
     #[test]

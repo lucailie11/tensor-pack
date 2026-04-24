@@ -1,21 +1,16 @@
 use super::RawTensor;
-use std::ops::{Add, AddAssign};
-use std::ops::{Sub, SubAssign};
-use std::ops::{Mul, MulAssign};
-use std::ops::{Div, DivAssign};
+use std::ops::{Add, Sub, Mul, Div};
+use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 
 // Arithmetic between a RawTensor and a scalar f64.
-// Every operation applies the scalar uniformly to all elements via map / map_inplace.
+// Every operation applies the scalar uniformly to all elements via map
+// Assign operations replace the left-hand side with the result (not in-place)
 //
 // Defined operations:
-//   &RawTensor + f64   -> RawTensor      f64 + &RawTensor  -> RawTensor
-//    RawTensor += f64
-//   &RawTensor - f64   -> RawTensor      f64 - &RawTensor  -> RawTensor
-//    RawTensor -= f64
-//   &RawTensor * f64   -> RawTensor      f64 * &RawTensor  -> RawTensor
-//    RawTensor *= f64
-//   &RawTensor / f64   -> RawTensor      f64 / &RawTensor  -> RawTensor
-//    RawTensor /= f64
+//   &RawTensor + f64   -> RawTensor      f64 + &RawTensor  -> RawTensor      RawTensor += f64
+//   &RawTensor - f64   -> RawTensor      f64 - &RawTensor  -> RawTensor      RawTensor -= f64
+//   &RawTensor * f64   -> RawTensor      f64 * &RawTensor  -> RawTensor      RawTensor *= f64
+//   &RawTensor / f64   -> RawTensor      f64 / &RawTensor  -> RawTensor      RawTensor /= f64
 
 impl Add<f64> for &RawTensor {
     type Output = RawTensor;
@@ -35,7 +30,7 @@ impl Add<&RawTensor> for f64 {
 
 impl AddAssign<f64> for RawTensor {
     fn add_assign(&mut self, scalar: f64) {
-        self.map_inplace(|x| x + scalar)
+        *self = &*self + scalar;
     }
 }
 
@@ -57,7 +52,7 @@ impl Sub<&RawTensor> for f64 {
 
 impl SubAssign<f64> for RawTensor {
     fn sub_assign(&mut self, scalar: f64) {
-        self.map_inplace(|x| x - scalar);
+        *self = &*self - scalar;
     }
 }
 
@@ -79,7 +74,7 @@ impl Mul<&RawTensor> for f64 {
 
 impl MulAssign<f64> for RawTensor {
     fn mul_assign(&mut self, scalar: f64) {
-        self.map_inplace(|x| x * scalar);
+        *self = &*self * scalar;
     }
 }
 
@@ -101,7 +96,7 @@ impl Div<&RawTensor> for f64 {
 
 impl DivAssign<f64> for RawTensor {
     fn div_assign(&mut self, scalar: f64) {
-        self.map_inplace(|x| x / scalar);
+        *self = &*self / scalar;
     }
 }
 
