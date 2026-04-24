@@ -12,7 +12,6 @@ impl RawTensor {
     pub fn data(&self)     -> &[f64]   { &self.data }
     pub fn ndim(&self)     -> usize    { self.shape.len() }
     pub fn len(&self)      -> usize    { self.shape.iter().product() }
-    pub fn is_empty(&self) -> bool     { self.shape.iter().any(|&x| x > 0) }
 }
 
 impl PartialEq for RawTensor {
