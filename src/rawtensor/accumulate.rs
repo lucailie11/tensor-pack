@@ -3,9 +3,9 @@ use super::RawTensor;
 use super::iter::LogicalIndices;
 use super::structure::broadcast_shape;
 
-// In-place gradient accumulation: self += f(a, b, c, ...) with broadcasting.
-// Used by grad/ to accumulate gradients.
-// Requires self to be the sole owner of its data.
+// In-place gradient accumulation: self += f(a, b, c, ...) with broadcasting
+// Used by grad/ to accumulate gradients
+// Requires self to be the sole owner of its data
 
 impl RawTensor {
     pub(crate) fn accumulate_1(&mut self, a: &RawTensor, f: impl Fn(f64) -> f64) {

@@ -1,16 +1,15 @@
-mod accumulate;     // handles accumulations function for logic in grad/
-mod core;           // declares the RawTensor type and implements basic functions
-mod iter;           // creates iterators in logical order
-mod binary;         // handles elementwise arihemtics between two RawTensors
-mod constructors;   // implements various constructors (e.g. from_slice, randn, linspace)
-mod linalg;         // handles matmul and dotproduct
-mod fmt;            // implements Debug and Display traits for RawTensor
-mod normalizations; // handles normalization operations on an axis (e.g. softmax)
-mod reductions;     // handles reduction operations on an axis (sum, mean, var, std_dev, etc)
-mod scalar;         // handles arithmetics between a RawTensor and a scalar(f64)
-mod structure;      // handles stuff related to the shape of a RawTensor (indexing, broadcasting,
-                    // expanding, squeezing, reshaping, tranposing etc)
-mod unary;          // handles maps and unary operations on RawTensor (exp, ln, etc)
+mod accumulate;     // in-place gradient accumulation for grad/
+mod core;           // RawTensor type and basic accessors
+mod iter;           // iterators in logical order
+mod binary;         // elementwise arithmetic between two RawTensors (+, -, *, /)
+mod constructors;   // constructors (from_slice, zeros, randn, linspace, ...)
+mod linalg;         // dot product and matmul
+mod fmt;            // Debug and Display
+mod normalizations; // normalization along an axis (softmax, ...)
+mod reductions;     // reductions along an axis (sum, mean, var, std_dev, ...)
+mod scalar;         // arithmetic between a RawTensor and an f64
+mod structure;      // shape operations (reshape, transpose, expand, squeeze, unsqueeze, ...)
+mod unary;          // elementwise unary operations (exp, ln, relu, ...)
 
 pub(crate) use core::RawTensor;
 pub(crate) use fmt::fmt_matrix;

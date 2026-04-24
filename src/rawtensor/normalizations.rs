@@ -1,8 +1,8 @@
 use super::RawTensor;
 use crate::utils::stride::softmax;
 
-// Normalize_axis is the core primitive: applies a normalization operation over an axis 
-//
+// Normalization operations along a single axis
+// Core primitive is reduce_axis
 // Defined operations:
 //   softmax(axis)
 

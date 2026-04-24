@@ -11,7 +11,7 @@ impl RawTensor {
         self.iter().zip(other.iter()).map(|(a, b)| a * b).sum()
     }
 
-    // Matrix multiplication: shapes [m, k] x [k, n] -> [m, n]. Both tensors must be 2D.
+    // Matrix multiplication: shapes [m, k] x [k, n] -> [m, n]. Both tensors must be 2D
     pub fn matmul(&self, other: &RawTensor) -> RawTensor {
         assert_eq!(self.shape.len(), 2, "matmul requires 2D tensors");
         assert_eq!(other.shape.len(), 2, "matmul requires 2D tensors");

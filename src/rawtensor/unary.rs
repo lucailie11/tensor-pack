@@ -1,9 +1,8 @@
 use super::RawTensor;
 use std::{ops::Neg, rc::Rc};
 
-// map is the core primitive: apply a function to every element,
-// returns a new RawTensor
-//
+// Unary operations on Tensors
+// Core primitive is map
 // Defined operations
 //   exp, ln, sqrt, abs, tanh, sigmoid, relu
 //   -&RawTensor — negation

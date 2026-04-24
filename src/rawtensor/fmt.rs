@@ -1,7 +1,7 @@
 use std::fmt;
 use super::RawTensor;
 
-// Writes a 2D slice as column-aligned rows, each indented by `indent`.
+// Writes a 2D slice as column-aligned rows, each indented by `indent`
 pub(crate) fn fmt_matrix(f: &mut fmt::Formatter, data: &[f64], cols: usize, indent: &str) -> fmt::Result {
     let formatted: Vec<Vec<String>> = data.chunks(cols)
         .map(|row| row.iter().map(|x| format!("{:.4}", x)).collect())

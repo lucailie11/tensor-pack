@@ -1,7 +1,7 @@
 use super::RawTensor;
 
-// Iterates elements in logical order in O(self.len()).
-// Supports non-contiguous tensors (transposed, expanded) via strides.
+// Iterates elements in logical order in O(self.len())
+// Supports non-contiguous tensors (transposed, expanded) via strides
 
 pub struct LogicalIndices {
     shape: Box<[usize]>,
@@ -25,6 +25,7 @@ impl Iterator for LogicalIndices {
             self.flat -= self.indices[i] * self.strides[i];
             self.indices[i] = 0;
         }
+        
         if i == 0 {
             self.done = true;
         } else {

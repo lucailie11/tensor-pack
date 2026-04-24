@@ -5,7 +5,6 @@ use crate::utils::stride::{sum, mean, var, std_dev};
 
 // Reduction operations along a single axis
 // Core primitive is reduce_axis
-//
 // Defined operations
 // - sum
 // - mean

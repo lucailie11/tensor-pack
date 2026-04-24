@@ -5,7 +5,6 @@ use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};
 
 impl RawTensor {
-    // Returns a contiguous RawTensor from a shape and a shared reference of the data
     fn new(shape: &[usize], data: Rc<[f64]>) -> RawTensor {
         assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
         assert_eq!(shape.iter().product::<usize>(), data.len(), "data length doesn't match shape");
@@ -17,22 +16,22 @@ impl RawTensor {
         }
     }
 
-    // Returns a contiguous RawTensor from a shape and a reference to an Rc (no copying)
+    // Returns a contiguous RawTensor from a reference to an Rc (no copying)
     pub fn from_rc(shape: &[usize], data: &Rc<[f64]>) -> RawTensor {
         RawTensor::new(shape, Rc::clone(data))
     }
 
-    // Returns a contiguous RawTensor from a shape and a Box (no copying)
+    // Returns a contiguous RawTensor from a Box (no copying)
     pub fn from_box(shape: &[usize], data: Box<[f64]>) -> RawTensor {
         RawTensor::new(shape, Rc::from(data))
     }
 
-    // Returns a contiguous RawTensor from a shape and a vec (no copying)
+    // Returns a contiguous RawTensor from a Vec (no copying)
     pub fn from_vec(shape: &[usize], data: Vec<f64>) -> RawTensor {
         RawTensor::new(shape, Rc::from(data.into_boxed_slice()))
     }
 
-    // Returns a contiguous RawTensor from a shape and a slice (copying data)
+    // Returns a contiguous RawTensor from a slice (copies data)
     pub fn from_slice(shape: &[usize], data: &[f64]) -> RawTensor {
         RawTensor::new(shape, Rc::from(data))
     }
@@ -48,18 +47,18 @@ impl RawTensor {
         RawTensor::from_vec(shape, vec![value; len])
     }
 
-    // Creates a RawTensor filled with 0.0.
+    // Creates a RawTensor filled with 0.0
     pub fn zeros(shape: &[usize]) -> RawTensor {
         RawTensor::full(shape, 0.0)
     }
 
-    // Creates a RawTensor filled with 1.0.
+    // Creates a RawTensor filled with 1.0
     pub fn ones(shape: &[usize]) -> RawTensor {
         RawTensor::full(shape, 1.0)
     }
 
     // Creates a 1D RawTensor of n evenly spaced values in [start, end] (inclusive on both ends).
-    // If n = 1, returns a shape-[1] tensor containing just start.
+    // If n = 1, returns a shape-[1] tensor containing just start
     pub fn linspace(start: f64, end: f64, n: usize) -> RawTensor {
         if n == 1 {
             return RawTensor::from_vec(&[1], vec![start]);
@@ -72,7 +71,7 @@ impl RawTensor {
         RawTensor::from_box(&[n], data)
     }
 
-    // Creates a RawTensor equal to I_n (the idendity matrix of size [n x n])
+    // Creates a RawTensor equal to I_n (the identity matrix of size [n x n])
     pub fn identity(n: usize) -> RawTensor {
         let data: Box<[f64]> = (0..n * n)
             .map(|i| if i % n == i / n {1.0} else {0.0})
@@ -81,7 +80,7 @@ impl RawTensor {
     }
 
 
-    // Creates a RawTensor filled with random samples from U([l, r)).
+    // Creates a RawTensor filled with random samples from U([l, r))
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> RawTensor {
         assert!(l < r, "[l, r) should be a non-empty interval");
 
@@ -92,12 +91,12 @@ impl RawTensor {
         RawTensor::from_box(shape, data)
     }
 
-    // Creates a RawTensor filled with random samples from U([0, 1)).
+    // Creates a RawTensor filled with random samples from U([0, 1))
     pub fn rand(shape: &[usize]) -> RawTensor {
         RawTensor::rand_range(shape, 0.0, 1.0)
     }
 
-    // Creates a RawTensor filled with random samples from N(mean, std_dev).
+    // Creates a RawTensor filled with random samples from N(mean, std_dev)
     pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> RawTensor {
         assert!(std_dev > 0.0, "std_dev should be grater than 0");
 
