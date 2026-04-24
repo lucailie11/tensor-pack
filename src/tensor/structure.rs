@@ -14,7 +14,7 @@ impl Tensor {
 
     // Returns a new Tensor with dimensions permuted according to perm
     pub fn transpose(&self, perm: &[usize]) -> Tensor {
-        let raw = self.raw.reshape(perm);
+        let raw = self.raw.transpose(perm);
         Tensor::no_grad_tensor(raw)
     }
 

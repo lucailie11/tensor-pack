@@ -4,15 +4,15 @@ use crate::grad::BackpropOp;
 use std::ops::{Add, Sub, Mul, Div};
 use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 
-// Arithmetics between a RawTensor and a scalar f64
-// Delegates data logic to RawTensor and autograd logic to grad/ 
+// Arithmetic between a Tensor and a scalar f64
+// Delegates data logic to RawTensor and autograd logic to grad/
 // Assign operations replace the left-hand side with the result (not in-place)
 //
 // Defined operations:
-//   &RawTensor + f64   -> RawTensor      f64 + &RawTensor  -> RawTensor      RawTensor += f64
-//   &RawTensor - f64   -> RawTensor      f64 - &RawTensor  -> RawTensor      RawTensor -= f64
-//   &RawTensor * f64   -> RawTensor      f64 * &RawTensor  -> RawTensor      RawTensor *= f64
-//   &RawTensor / f64   -> RawTensor      f64 / &RawTensor  -> RawTensor      RawTensor /= f64
+//   &Tensor + f64   -> Tensor      f64 + &Tensor  -> Tensor      Tensor += f64
+//   &Tensor - f64   -> Tensor      f64 - &Tensor  -> Tensor      Tensor -= f64
+//   &Tensor * f64   -> Tensor      f64 * &Tensor  -> Tensor      Tensor *= f64
+//   &Tensor / f64   -> Tensor      f64 / &Tensor  -> Tensor      Tensor /= f64
 
 
 impl Add<&Tensor> for f64 {

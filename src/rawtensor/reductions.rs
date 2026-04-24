@@ -22,12 +22,12 @@ impl RawTensor {
 
         if self.strides[axis] == 0 {
             let view_shape: Box<[usize]> = new_shape.clone();
-            let view_strades: Box<[usize]> = self.strides.iter().enumerate().
+            let view_strides: Box<[usize]> = self.strides.iter().enumerate().
                 filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
 
             let view = RawTensor {
                 shape: view_shape,
-                strides: view_strades,
+                strides: view_strides,
                 data: Rc::clone(&self.data),
             };
 

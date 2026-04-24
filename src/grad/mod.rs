@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn same_var_twic() {
+    fn same_var_twice() {
         let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
         x.set_requires_grad(true);
         (&x * &x).backward();

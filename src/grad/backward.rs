@@ -8,7 +8,7 @@ fn topo_sort_dfs(tensor: &Tensor, sorted: &mut Vec<Tensor>, visited: &mut HashSe
     if visited.contains(&id) { return; };
     visited.insert(id);
 
-    if !tensor.requires_computing_grad() { return };
+    if !tensor.tracks_grad() { return };
 
     for input in tensor.inputs.iter() {
         topo_sort_dfs(input, sorted, visited);
@@ -24,6 +24,9 @@ fn topo_sort(root: &Tensor) -> Vec<Tensor> {
 }
 
 impl Tensor {
+    // Runs backpropagation from this tensor. Seeds the gradient with all-ones.
+    // Only valid for scalar outputs — calling on a non-scalar tensor uses an
+    // all-ones gradient, which is equivalent to summing all output elements.
     pub fn backward(&self) {
         *self.grad.borrow_mut() = Some(RawTensor::ones(self.raw.shape()));
 

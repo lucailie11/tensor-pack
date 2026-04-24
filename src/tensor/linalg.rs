@@ -5,11 +5,11 @@ use crate::rawtensor::RawTensor;
 // No gradient support so far
 
 impl Tensor {
-    pub fn dot(&self, other: Tensor) -> f64 {
+    pub fn dot(&self, other: &Tensor) -> f64 {
         self.raw.dot(&other.raw)
     }
 
-    pub fn matmul(&self, other: Tensor) -> Tensor {
+    pub fn matmul(&self, other: &Tensor) -> Tensor {
         let raw: RawTensor = self.raw.matmul(&other.raw);
         Tensor::no_grad_tensor(raw)
     }

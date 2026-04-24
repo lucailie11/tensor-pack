@@ -68,7 +68,11 @@ Reduce along one axis, dropping it from the output shape.
 ### Autograd
 Gradients are tracked automatically during the forward pass. Call `.backward()` on any tensor to populate `.grad` on all leaf tensors that have `requires_grad = true`.
 
-Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`, `abs`, `tanh`, `sigmoid`, `relu`.
+`.backward()` seeds the gradient with all-ones. It is intended for scalar outputs — calling it on a non-scalar is valid but equivalent to summing all output elements before backpropagating.
+
+Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`.
+
+> **Not yet implemented:** `abs`, `tanh`, `sigmoid`, `relu` backprop (forward works, gradient is wrong).
 
 ## Usage
 
@@ -95,6 +99,8 @@ println!("{:?}", y);
 ```
 
 ## To do
+- dot, reduce_all -> Tensor(&[])
+- Redo FMT
 - Fix reductions for non-contiguous tensors
 - Fix normalizations
 - Reduce all

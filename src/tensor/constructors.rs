@@ -12,7 +12,7 @@ impl Tensor {
     }
 
     // Wraps a RawTensor in a Tensor with no gradient tracking
-    pub(crate) fn no_grad_tensor(raw: RawTensor) -> Tensor {
+    pub(super) fn no_grad_tensor(raw: RawTensor) -> Tensor {
         Tensor::from_inner(TensorInner {
             raw,
             grad: RefCell::new(None),

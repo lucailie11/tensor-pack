@@ -9,7 +9,7 @@ use crate::utils::stride::softmax;
 
 impl RawTensor {
     //TODO
-    pub fn normalize_axis(&self, axis: usize, _f: impl Fn(&mut [f64], usize, usize)) -> RawTensor {
+    pub(super) fn normalize_axis(&self, axis: usize, _f: impl Fn(&mut [f64], usize, usize)) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
         RawTensor::randn(&[5], 0.0, 1.0)
     }

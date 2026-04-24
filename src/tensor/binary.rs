@@ -5,14 +5,14 @@ use std::ops::{Add, Sub, Mul, Div};
 use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 
 // Binary elementwise operations on two Tensors with broadcasting support
-// Delegates data logic to RawTensor and autograd logic to grad/ 
+// Delegates data logic to RawTensor and autograd logic to grad/
 // Assign operations replace the left-hand side with the result (not in-place)
 //
 // Defined operations:
-//   &RawTensor + &RawTensor  -> RawTensor       RawTensor += &RawTensor
-//   &RawTensor - &RawTensor  -> RawTensor       RawTensor -= &RawTensor
-//   &RawTensor * &RawTensor  -> RawTensor       RawTensor *= &RawTensor
-//   &RawTensor / &RawTensor  -> RawTensor       RawTensor /= &RawTensor
+//   &Tensor + &Tensor  -> Tensor       Tensor += &Tensor
+//   &Tensor - &Tensor  -> Tensor       Tensor -= &Tensor
+//   &Tensor * &Tensor  -> Tensor       Tensor *= &Tensor
+//   &Tensor / &Tensor  -> Tensor       Tensor /= &Tensor
 
 impl Add for &Tensor {
     type Output = Tensor;
