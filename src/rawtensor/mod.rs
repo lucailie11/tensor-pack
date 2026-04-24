@@ -12,4 +12,3 @@ mod structure;      // shape operations (reshape, transpose, expand, squeeze, un
 mod unary;          // elementwise unary operations (exp, ln, relu, ...)
 
 pub(crate) use core::RawTensor;
-pub(crate) use fmt::fmt_matrix;

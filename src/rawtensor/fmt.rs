@@ -1,10 +1,9 @@
 use super::RawTensor;
 
-use std::fmt;
+use core::fmt;
 
-// Writes a 2D slice as column-aligned rows, each indented by `indent`
-pub(crate) fn fmt_matrix(f: &mut fmt::Formatter, data: &[f64], cols: usize, indent: &str) -> fmt::Result {
-    let formatted: Vec<Vec<String>> = data.chunks(cols)
+fn fmt_matrix(f: &mut fmt::Formatter, values: &[f64], cols: usize, indent: &str) -> fmt::Result {
+    let formatted: Vec<Vec<String>> = values.chunks(cols)
         .map(|row| row.iter().map(|x| format!("{:.4}", x)).collect())
         .collect();
     let col_widths: Vec<usize> = (0..cols)
@@ -19,26 +18,35 @@ pub(crate) fn fmt_matrix(f: &mut fmt::Formatter, data: &[f64], cols: usize, inde
     Ok(())
 }
 
-impl fmt::Debug for RawTensor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "RawTensor {{ shape: {:?}, data: ", self.shape)?;
-        let vals: Vec<String> = self.data.iter().map(|x| format!("{:.4}", x)).collect();
-        write!(f, "[{}]", vals.join(", "))?;
-        write!(f, " }}")
+impl RawTensor {
+    // Writes the data section in logical order, indented. Used by Tensor's Display.
+    pub(crate) fn fmt_data(&self, f: &mut fmt::Formatter, indent: &str) -> fmt::Result {
+        if self.shape.len() == 2 {
+            let logical: Vec<f64> = self.iter().collect();
+            fmt_matrix(f, &logical, self.shape[1], indent)
+        } else {
+            let vals: Vec<String> = self.iter().map(|x| format!("{:.4}", x)).collect();
+            writeln!(f, "{}[{}]", indent, vals.join(", "))
+        }
     }
 }
 
+// Brute-force: shape, strides, and raw backing data in memory order
+impl fmt::Debug for RawTensor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let vals: Vec<String> = self.data.iter().map(|x| format!("{:.4}", x)).collect();
+        write!(f, "RawTensor {{ shape: {:?}, strides: {:?}, data: [{}] }}",
+            self.shape, self.strides, vals.join(", "))
+    }
+}
+
+// Logical order: shape and data. 2D tensors are shown as a matrix.
 impl fmt::Display for RawTensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "RawTensor {{")?;
         writeln!(f, "    shape: {:?}", self.shape)?;
-        if self.shape.len() == 2 {
-            writeln!(f, "    data:")?;
-            fmt_matrix(f, &self.data, self.shape[1], "        ")?;
-        } else {
-            let vals: Vec<String> = self.data.iter().map(|x| format!("{:.4}", x)).collect();
-            writeln!(f, "    data: [{}]", vals.join(", "))?;
-        }
+        if self.shape.len() == 2 { writeln!(f, "    data:")?; }
+        self.fmt_data(f, "        ")?;
         write!(f, "}}")
     }
 }

@@ -13,6 +13,7 @@ pub struct RawTensor {
 
 impl RawTensor {
     pub fn shape(&self)    -> &[usize] { &self.shape }
+    pub fn strides(&self)  -> &[usize] { &self.strides }
     pub fn data(&self)     -> &[f64]   { &self.data }
     pub fn ndim(&self)     -> usize    { self.shape.len() }
     pub fn len(&self)      -> usize    { self.shape.iter().product() }

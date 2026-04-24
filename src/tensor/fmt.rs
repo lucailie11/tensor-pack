@@ -2,42 +2,32 @@ use super::Tensor;
 
 use core::fmt;
 
+// Brute-force: shape, strides, raw backing data, requires_grad, raw grad data
 impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Tensor {{ data: {:?}", self.raw)?;
-        write!(f, ", requires_grad: {}", self.requires_grad)?;
+        let vals: Vec<String> = self.raw.data().iter().map(|x| format!("{:.4}", x)).collect();
+        write!(f, "Tensor {{ shape: {:?}, strides: {:?}, requires_grad: {}, data: [{}]",
+            self.shape(), self.raw.strides(), self.requires_grad, vals.join(", "))?;
         if let Some(grad) = self.grad.borrow().as_ref() {
-            write!(f, ", grad: {:?}", grad)?;
+            let gvals: Vec<String> = grad.data().iter().map(|x| format!("{:.4}", x)).collect();
+            write!(f, ", grad: [{}]", gvals.join(", "))?;
         }
         write!(f, " }}")
     }
 }
 
+// Logical order: shape, requires_grad, data, and grad if present. 2D tensors are shown as a matrix.
 impl fmt::Display for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::rawtensor::fmt_matrix;
         writeln!(f, "Tensor {{")?;
-        writeln!(f, "    shape:         {:?}", self.raw.shape())?;
+        writeln!(f, "    shape:         {:?}", self.shape())?;
         writeln!(f, "    requires_grad: {}", self.requires_grad)?;
-        writeln!(f, "    op: {:?}", self.op)?;
-        if self.raw.shape().len() == 2 {
-            writeln!(f, "    data:")?;
-            fmt_matrix(f, self.raw.data(), self.raw.shape()[1], "        ")?;
-        } else {
-            let vals: Vec<String> = self.raw.data().iter().map(|x| format!("{:.4}", x)).collect();
-            writeln!(f, "    data:          [{}]", vals.join(", "))?;
-        }
+        writeln!(f, "    data:")?;
+        self.raw.fmt_data(f, "        ")?;
         if let Some(grad) = self.grad.borrow().as_ref() {
-            if grad.shape().len() == 2 {
-                writeln!(f, "    grad:")?;
-                fmt_matrix(f, grad.data(), grad.shape()[1], "        ")?;
-            } else {
-                let vals: Vec<String> = grad.data().iter().map(|x| format!("{:.4}", x)).collect();
-                writeln!(f, "    grad:          [{}]", vals.join(", "))?;
-            }
+            writeln!(f, "    grad:")?;
+            grad.fmt_data(f, "        ")?;
         }
         write!(f, "}}")
     }
 }
-
-

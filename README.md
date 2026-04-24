@@ -99,8 +99,7 @@ println!("{:?}", y);
 ```
 
 ## To do
-- dot, reduce_all -> Tensor(&[])
-- Redo FMT
+- Change set_requires_grad logic
 - Fix reductions for non-contiguous tensors
 - Fix normalizations
 - Reduce all
