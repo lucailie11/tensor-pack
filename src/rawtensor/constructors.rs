@@ -1,5 +1,6 @@
 use super::RawTensor;
 use super::structure::strides_contiguous;
+
 use std::rc::Rc;
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};

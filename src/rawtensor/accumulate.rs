@@ -1,7 +1,8 @@
-use std::rc::Rc;
 use super::RawTensor;
 use super::iter::LogicalIndices;
 use super::structure::broadcast_shape;
+
+use std::rc::Rc;
 
 // In-place gradient accumulation: self += f(a, b, c, ...) with broadcasting
 // Used by grad/ to accumulate gradients

@@ -1,7 +1,7 @@
-use std::rc::Rc;
-
 use super::RawTensor;
 use crate::utils::stride::{sum, mean, var, std_dev};
+
+use std::rc::Rc;
 
 // Reduction operations along a single axis
 // Core primitive is reduce_axis

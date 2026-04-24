@@ -1,5 +1,6 @@
-use std::fmt;
 use super::RawTensor;
+
+use std::fmt;
 
 // Writes a 2D slice as column-aligned rows, each indented by `indent`
 pub(crate) fn fmt_matrix(f: &mut fmt::Formatter, data: &[f64], cols: usize, indent: &str) -> fmt::Result {

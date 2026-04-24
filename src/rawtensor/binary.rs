@@ -1,9 +1,10 @@
 use super::RawTensor;
 use super::structure::broadcast_shape;
+
 use std::ops::{Add, Sub, Mul, Div};
 use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 
-// Binary elementwise operations on two Tensors with broadcasting support
+// Binary elementwise operations on two RawTensors with broadcasting support
 // The core building block is elementwise_op
 // Assign operations replace the left-hand side with the result (not in-place)
 //
