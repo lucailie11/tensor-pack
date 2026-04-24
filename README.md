@@ -80,12 +80,8 @@ Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variant
 use rml::Tensor;
 
 // construct tensors
-let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-let mut y = Tensor::randn(&[3], 0.0, 1.0);
-
-// enable gradient tracking on leaf tensors
-x.set_requires_grad(true);
-y.set_requires_grad(true);
+let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
+let y = Tensor::randn(&[3], 0.0, 1.0).requires_grad();
 
 // build a computation graph with normal operators
 let z = &x * &y;           // element-wise multiply
@@ -94,12 +90,11 @@ let loss = &z.exp() + 1.0; // exp then add scalar
 // run backprop — populates x.grad and y.grad
 loss.backward();
 
-println!("{:?}", x);
-println!("{:?}", y);
+println!("{}", x);
+println!("{}", y);
 ```
 
 ## To do
-- Change set_requires_grad logic
 - Fix reductions for non-contiguous tensors
 - Fix normalizations
 - Reduce all

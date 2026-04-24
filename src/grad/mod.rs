@@ -22,10 +22,8 @@ mod tests {
 
     #[test]
     fn add_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let mut y = Tensor::from_slice(&[3], &[4.0, 5.0, 6.0]);
-        x.set_requires_grad(true);
-        y.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
+        let y = Tensor::from_slice(&[3], &[4.0, 5.0, 6.0]).requires_grad();
         (&x + &y).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g, 1.0)));
         assert!(grad_of(&y).iter().all(|&g| approx(g, 1.0)));
@@ -33,10 +31,8 @@ mod tests {
 
     #[test]
     fn sub_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let mut y = Tensor::from_slice(&[3], &[4.0, 5.0, 6.0]);
-        x.set_requires_grad(true);
-        y.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
+        let y = Tensor::from_slice(&[3], &[4.0, 5.0, 6.0]).requires_grad();
         (&x - &y).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g,  1.0)));
         assert!(grad_of(&y).iter().all(|&g| approx(g, -1.0)));
@@ -44,10 +40,8 @@ mod tests {
 
     #[test]
     fn mul_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let mut y = Tensor::from_slice(&[3], &[4.0, 5.0, 6.0]);
-        x.set_requires_grad(true);
-        y.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
+        let y = Tensor::from_slice(&[3], &[4.0, 5.0, 6.0]).requires_grad();
         (&x * &y).backward();
         assert_eq!(grad_of(&x), vec![4.0, 5.0, 6.0]);
         assert_eq!(grad_of(&y), vec![1.0, 2.0, 3.0]);
@@ -55,10 +49,8 @@ mod tests {
 
     #[test]
     fn div_backward() {
-        let mut x = Tensor::from_slice(&[3], &[2.0, 4.0, 6.0]);
-        let mut y = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
-        y.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[2.0, 4.0, 6.0]).requires_grad();
+        let y = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (&x / &y).backward();
         let gx = grad_of(&x);
         let gy = grad_of(&y);
@@ -68,48 +60,42 @@ mod tests {
 
     #[test]
     fn add_scalar_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (&x + 5.0).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g, 1.0)));
     }
 
     #[test]
     fn sub_scalar_rhs_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (&x - 5.0).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g, 1.0)));
     }
 
     #[test]
     fn sub_scalar_lhs_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (5.0 - &x).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g, -1.0)));
     }
 
     #[test]
     fn mul_scalar_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (&x * 3.0).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g, 3.0)));
     }
 
     #[test]
     fn div_scalar_rhs_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (&x / 4.0).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g, 0.25)));
     }
 
     #[test]
     fn div_scalar_lhs_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]).requires_grad();
         (4.0 / &x).backward();
         let gx = grad_of(&x);
         assert!(approx(gx[0], -4.0) && approx(gx[1], -1.0) && approx(gx[2], -0.25));
@@ -117,8 +103,7 @@ mod tests {
 
     #[test]
     fn exp_backward() {
-        let mut x = Tensor::from_slice(&[3], &[0.0, 1.0, 2.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[0.0, 1.0, 2.0]).requires_grad();
         x.exp().backward();
         let gx = grad_of(&x);
         assert!(approx(gx[0], 1.0));
@@ -128,8 +113,7 @@ mod tests {
 
     #[test]
     fn ln_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]).requires_grad();
         x.ln().backward();
         let gx = grad_of(&x);
         assert!(approx(gx[0], 1.0) && approx(gx[1], 0.5) && approx(gx[2], 0.25));
@@ -137,8 +121,7 @@ mod tests {
 
     #[test]
     fn sqrt_backward() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 4.0, 9.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 4.0, 9.0]).requires_grad();
         x.sqrt().backward();
         let gx = grad_of(&x);
         assert!(approx(gx[0], 0.5) && approx(gx[1], 0.25) && approx(gx[2], 1.0 / 6.0));
@@ -147,8 +130,7 @@ mod tests {
     #[test]
     #[ignore = "sigmoid backprop not yet implemented"]
     fn sigmoid_backward() {
-        let mut x = Tensor::from_slice(&[3], &[0.0, 1.0, -1.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[0.0, 1.0, -1.0]).requires_grad();
         x.sigmoid().backward();
         let s = |v: f64| 1.0 / (1.0 + (-v).exp());
         let gx = grad_of(&x);
@@ -160,8 +142,7 @@ mod tests {
     #[test]
     #[ignore = "tanh backprop not yet implemented"]
     fn tanh_backward() {
-        let mut x = Tensor::from_slice(&[3], &[0.0, 1.0, -1.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[0.0, 1.0, -1.0]).requires_grad();
         x.tanh().backward();
         let gx = grad_of(&x);
         for (g, &xi) in gx.iter().zip(&[0.0, 1.0, -1.0_f64]) {
@@ -172,8 +153,7 @@ mod tests {
     #[test]
     #[ignore = "abs backprop not yet implemented"]
     fn abs_backward() {
-        let mut x = Tensor::from_slice(&[3], &[-2.0, 1.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[-2.0, 1.0, 3.0]).requires_grad();
         x.abs().backward();
         let gx = grad_of(&x);
         assert!(approx(gx[0], -1.0) && approx(gx[1], 1.0) && approx(gx[2], 1.0));
@@ -182,8 +162,7 @@ mod tests {
     #[test]
     #[ignore = "relu backprop not yet implemented"]
     fn relu_backward() {
-        let mut x = Tensor::from_slice(&[4], &[-2.0, -0.5, 1.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[4], &[-2.0, -0.5, 1.0, 3.0]).requires_grad();
         x.relu().backward();
         let gx = grad_of(&x);
         assert!(approx(gx[0], 0.0) && approx(gx[1], 0.0) && approx(gx[2], 1.0) && approx(gx[3], 1.0));
@@ -191,10 +170,8 @@ mod tests {
 
     #[test]
     fn chain_mul_add() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let mut y = Tensor::from_slice(&[3], &[2.0, 3.0, 4.0]);
-        x.set_requires_grad(true);
-        y.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
+        let y = Tensor::from_slice(&[3], &[2.0, 3.0, 4.0]).requires_grad();
         (&(&x * &y) + &x).backward();
         assert_eq!(grad_of(&x), vec![3.0, 4.0, 5.0]);
         assert_eq!(grad_of(&y), vec![1.0, 2.0, 3.0]);
@@ -202,10 +179,8 @@ mod tests {
 
     #[test]
     fn chain_exp_mul() {
-        let mut x = Tensor::from_slice(&[2], &[0.0, 1.0]);
-        let mut y = Tensor::from_slice(&[2], &[2.0, 3.0]);
-        x.set_requires_grad(true);
-        y.set_requires_grad(true);
+        let x = Tensor::from_slice(&[2], &[0.0, 1.0]).requires_grad();
+        let y = Tensor::from_slice(&[2], &[2.0, 3.0]).requires_grad();
         (&x.exp() * &y).backward();
         let gx = grad_of(&x);
         let gy = grad_of(&y);
@@ -215,10 +190,8 @@ mod tests {
 
     #[test]
     fn chain_div_ln() {
-        let mut x = Tensor::from_slice(&[2], &[2.0, 4.0]);
-        let mut y = Tensor::from_slice(&[2], &[2.0, 2.0]);
-        x.set_requires_grad(true);
-        y.set_requires_grad(true);
+        let x = Tensor::from_slice(&[2], &[2.0, 4.0]).requires_grad();
+        let y = Tensor::from_slice(&[2], &[2.0, 2.0]).requires_grad();
         (&x.ln() / &y).backward();
         let gx = grad_of(&x);
         let gy = grad_of(&y);
@@ -228,25 +201,22 @@ mod tests {
 
     #[test]
     fn grad_accumulates_when_used_twice() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (&x + &x).backward();
         assert!(grad_of(&x).iter().all(|&g| approx(g, 2.0)));
     }
 
     #[test]
     fn no_grad_tensor_gets_no_gradient() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         let y = Tensor::from_slice(&[3], &[4.0, 5.0, 6.0]);
-        x.set_requires_grad(true);
         (&x + &y).backward();
         assert!(y.grad.borrow().is_none());
     }
 
     #[test]
     fn same_var_twice() {
-        let mut x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        x.set_requires_grad(true);
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
         (&x * &x).backward();
         (&x / &x).backward();
     }

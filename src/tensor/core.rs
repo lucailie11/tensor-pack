@@ -36,13 +36,12 @@ impl Tensor {
     pub fn data(&self) -> &[f64] { self.raw.data() }
     pub fn ndim(&self)     -> usize    { self.raw.ndim() }
     pub fn len(&self)      -> usize    { self.raw.len() }
+}
 
-    pub fn set_requires_grad(&mut self, requires_grad: bool) {
-        if let Some(tensor) = Rc::get_mut(&mut self.0) {
-            tensor.requires_grad = requires_grad;
-        } else {
-            panic!("Can't change requires_grad on a tensor with at least one out edge");
-        }
+impl Tensor {
+    pub fn requires_grad(mut self) -> Tensor {
+        let inner = Rc::get_mut(&mut self.0).expect("can't set requires_grad on a shared tensor");
+        inner.requires_grad = true; 
+        self
     }
-
 }

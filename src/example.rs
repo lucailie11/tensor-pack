@@ -1,9 +1,8 @@
 use rml::Tensor;
 
 fn main() {
-    let x: Tensor = Tensor::linspace(1.0, 12.0, 12);
-    let mut x = x.reshape(&[3, 4]);
-    x.set_requires_grad(true);
+    let x: Tensor = Tensor::linspace(1.0, 12.0, 12).requires_grad();
+    let x = x.reshape(&[3, 4]);
     x.backward();
     println!("1-dim debug {:?}", x);
     println!("1-dim pretty {}", x);
