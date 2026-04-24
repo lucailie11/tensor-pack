@@ -1,80 +1,45 @@
 use super::RawTensor;
+use super::structure::strides_contiguous;
 use std::rc::Rc;
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};
-use super::structure::get_strides_contiguous;
 
 impl RawTensor {
-    // All constructors take the desired shape as a slice and copy it, unless specified otherwise
-
-    // Creates a RawTensor from by copying data from a slice
-    // Panics if shape and data don't match lengths
-    pub fn from_slice(shape: &[usize], data: &[f64]) -> RawTensor {
+    // Returns a contiguous RawTensor from a shape and a shared reference of the data
+    fn new(shape: &[usize], data: Rc<[f64]>) -> RawTensor {
         assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
-        assert_eq!(
-            shape.iter().product::<usize>(),
-            data.len(),
-            "Data length doesn't match shape"
-        );
+        assert_eq!(shape.iter().product::<usize>(), data.len(), "data length doesn't match shape");
 
         RawTensor {
-            shape: Box::from(shape),
-            strides: get_strides_contiguous(shape),
-            data: Rc::from(data),
+            shape: Box::from(shape), 
+            strides: strides_contiguous(shape),
+            data,
         }
     }
 
-    // Creates a RawTensor from by using data from a Rc (no copying done here)
-    // Panics if shape and data don't match lengths
+    // Returns a contiguous RawTensor from a shape and a reference to an Rc (no copying)
     pub fn from_rc(shape: &[usize], data: &Rc<[f64]>) -> RawTensor {
-        assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
-        assert_eq!(
-            shape.iter().product::<usize>(),
-            data.len(),
-            "Data length doesn't match shape"
-        );
-
-        RawTensor {
-            shape: Box::from(shape),
-            strides: get_strides_contiguous(shape),
-            data: Rc::clone(data),
-        }
+        RawTensor::new(shape, Rc::clone(data))
     }
 
-    // Creates a RawTensor from by using data from a Vec (no copying done here)
-    // Panics if shape and data don't match lengths
-    // The Vec loses its ownership of the data
-    pub fn from_vec(shape: &[usize], data: Vec<f64>) -> RawTensor {
-        assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
-        assert_eq!(
-            shape.iter().product::<usize>(),
-            data.len(),
-            "Data length doesn't match shape"
-        );
-
-        RawTensor {
-            shape: Box::from(shape),
-            strides: get_strides_contiguous(shape),
-            data: Rc::from(data),
-        }
-    }
-
-    // Creates a RawTensor from by using data from a Box (no copying done here)
-    // Panics if shape and data don't match lengths
-    // The Box loses its ownership of the data
+    // Returns a contiguous RawTensor from a shape and a Box (no copying)
     pub fn from_box(shape: &[usize], data: Box<[f64]>) -> RawTensor {
-        assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
-        assert_eq!(
-            shape.iter().product::<usize>(),
-            data.len(),
-            "Data length doesn't match shape"
-        );
+        RawTensor::new(shape, Rc::from(data))
+    }
 
-        RawTensor {
-            shape: Box::from(shape),
-            strides: get_strides_contiguous(shape),
-            data: Rc::from(data),
-        }
+    // Returns a contiguous RawTensor from a shape and a vec (no copying)
+    pub fn from_vec(shape: &[usize], data: Vec<f64>) -> RawTensor {
+        RawTensor::new(shape, Rc::from(data.into_boxed_slice()))
+    }
+
+    // Returns a contiguous RawTensor from a shape and a slice (copying data)
+    pub fn from_slice(shape: &[usize], data: &[f64]) -> RawTensor {
+        RawTensor::new(shape, Rc::from(data))
+    }
+
+    // Returns a new RawTensor with data in logical order
+    pub fn contiguous(&self) -> RawTensor {
+        RawTensor::from_rc(&self.shape, &self.contiguous_data())
     }
 
     // Creates a RawTensor filled with value
@@ -107,6 +72,7 @@ impl RawTensor {
         RawTensor::from_box(&[n], data)
     }
 
+    // Creates a RawTensor equal to I_n (the idendity matrix of size [n x n])
     pub fn identity(n: usize) -> RawTensor {
         let data: Box<[f64]> = (0..n * n)
             .map(|i| if i % n == i / n {1.0} else {0.0})
@@ -118,6 +84,7 @@ impl RawTensor {
     // Creates a RawTensor filled with random samples from U([l, r)).
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> RawTensor {
         assert!(l < r, "[l, r) should be a non-empty interval");
+
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
         let uniform = Uniform::new(l, r);
@@ -132,6 +99,8 @@ impl RawTensor {
 
     // Creates a RawTensor filled with random samples from N(mean, std_dev).
     pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> RawTensor {
+        assert!(std_dev > 0.0, "std_dev should be grater than 0");
+
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
         let normal = Normal::new(mean, std_dev).unwrap();
