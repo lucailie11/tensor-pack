@@ -1,6 +1,7 @@
+use super::RawTensor;
+
 use std::rc::Rc;
 use std::ops::Index;
-use super::RawTensor;
 
 fn are_dimensions_compatible(d1: usize, d2: usize) -> bool {
     (d1 == d2) || (d1 == 1) || (d2 == 1)
@@ -105,7 +106,7 @@ impl RawTensor {
     }
 
     // Removes a single size-1 axis
-    pub fn squeeze(&self, axis: usize) -> RawTensor {
+    pub fn squeeze_axis(&self, axis: usize) -> RawTensor {
         self.squeeze_axes(&[axis])
     }
 
@@ -246,7 +247,7 @@ mod tests {
     #[test]
     fn squeeze_removes_size1_dim() {
         let t = RawTensor::from_slice(&[2, 1, 3], &[0.0; 6]);
-        let s = t.squeeze(1);
+        let s = t.squeeze_axis(1);
         assert_eq!(s.shape(), &[2, 3]);
     }
 
@@ -254,7 +255,7 @@ mod tests {
     #[should_panic]
     fn squeeze_non_unit_dim_panics() {
         let t = RawTensor::from_slice(&[2, 3], &[0.0; 6]);
-        t.squeeze(0);
+        t.squeeze_axis(0);
     }
 
     #[test]

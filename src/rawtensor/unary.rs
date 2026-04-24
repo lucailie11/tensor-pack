@@ -1,5 +1,7 @@
 use super::RawTensor;
-use std::{ops::Neg, rc::Rc};
+
+use std::ops::Neg;
+use std::rc::Rc;
 
 // Unary operations on Tensors
 // Core primitive is map
