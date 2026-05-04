@@ -32,10 +32,11 @@ impl PartialEq for Tensor {
 }
 
 impl Tensor {
-    pub fn shape(&self) -> &[usize] { self.raw.shape() }
-    pub fn data(&self) -> &[f64] { self.raw.data() }
+    pub fn shape(&self)    -> &[usize] { self.raw.shape() }
+    pub fn data(&self)     -> &[f64]   { self.raw.data() }
     pub fn ndim(&self)     -> usize    { self.raw.ndim() }
     pub fn len(&self)      -> usize    { self.raw.len() }
+    pub fn is_empty(&self) -> bool     { self.raw.is_empty() }
 }
 
 impl Tensor {
