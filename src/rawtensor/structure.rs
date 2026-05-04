@@ -30,10 +30,14 @@ pub(super) fn strides_contiguous(shape: &[usize]) -> Box<[usize]> {
     strides
 }
 
+pub(super) fn is_stride_contiguous(strides: &[usize]) -> bool {
+    strides.iter().all(|&x| x > 0) && strides.windows(2).all(|w| w[0] >= w[1])
+}
+
 impl RawTensor {
     // Returns true if the data in memory has the same order as the logical order
     pub fn is_contiguous(&self) -> bool {
-        self.strides.iter().all(|&x| x > 0) && self.strides.windows(2).all(|w| w[0] >= w[1])
+        is_stride_contiguous(&self.strides)
     }
 
     // Returns the data in logical order. Clones the Rc if already contiguous

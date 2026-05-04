@@ -1,3 +1,5 @@
+use crate::rawtensor::structure::is_stride_contiguous;
+
 use super::RawTensor;
 
 // Iterates elements in logical order in O(self.len())
@@ -8,7 +10,9 @@ pub struct LogicalIndices {
     strides: Box<[usize]>,
     indices: Box<[usize]>,
     flat: usize,
+    len: usize,
     done: bool,
+    is_contiguous: bool,
 }
 
 impl Iterator for LogicalIndices {
@@ -16,22 +20,30 @@ impl Iterator for LogicalIndices {
 
     fn next(&mut self) -> Option<usize> {
         if self.done { return None; }
+        
 
         let res: usize = self.flat;
 
-        let mut i: usize = self.indices.len();
-        while i > 0 && self.indices[i - 1] + 1 == self.shape[i - 1] {
-            i -= 1;
-            self.flat -= self.indices[i] * self.strides[i];
-            self.indices[i] = 0;
-        }
-        
-        if i == 0 {
-            self.done = true;
+        if self.is_contiguous { 
+            self.flat += 1 ;
+            if self.flat == self.len {
+                self.done = true;
+            }
         } else {
-            i -= 1;
-            self.indices[i] += 1;
-            self.flat += self.strides[i];
+            let mut i: usize = self.indices.len();
+            while i > 0 && self.indices[i - 1] + 1 == self.shape[i - 1] {
+                i -= 1;
+                self.flat -= self.indices[i] * self.strides[i];
+                self.indices[i] = 0;
+            }
+            
+            if i == 0 {
+                self.done = true;
+            } else {
+                i -= 1;
+                self.indices[i] += 1;
+                self.flat += self.strides[i];
+            }
         }
 
         Some(res)
@@ -43,8 +55,10 @@ impl LogicalIndices {
         LogicalIndices {
             done: shape.contains(&0),
             indices: vec![0; shape.len()].into_boxed_slice(),
-            shape,
+            len: shape.iter().product(),
+            is_contiguous: is_stride_contiguous(&strides),
             strides,
+            shape,
             flat: 0,
         }
     }
