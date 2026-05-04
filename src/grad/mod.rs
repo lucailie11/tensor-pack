@@ -128,13 +128,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "sigmoid backprop not yet implemented"]
     fn sigmoid_backward() {
         let x = Tensor::from_slice(&[3], &[0.0, 1.0, -1.0]).requires_grad();
         x.sigmoid().backward();
         let s = |v: f64| 1.0 / (1.0 + (-v).exp());
         let gx = grad_of(&x);
-        for (g, &xi) in gx.iter().zip(&[0.0, 1.0, -1.0_f64]) {
+        for (g, &xi) in gx.iter().zip(&[0.0, 1.0, -1.0]) {
             assert!(approx(*g, s(xi) * (1.0 - s(xi))));
         }
     }
@@ -151,7 +150,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "abs backprop not yet implemented"]
     fn abs_backward() {
         let x = Tensor::from_slice(&[3], &[-2.0, 1.0, 3.0]).requires_grad();
         x.abs().backward();
@@ -160,7 +158,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "relu backprop not yet implemented"]
     fn relu_backward() {
         let x = Tensor::from_slice(&[4], &[-2.0, -0.5, 1.0, 3.0]).requires_grad();
         x.relu().backward();
