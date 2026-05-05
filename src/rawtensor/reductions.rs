@@ -36,11 +36,11 @@ impl RawTensor {
             }
         }
 
-        let new_data: Box<[f64]> = self.iter().enumerate()
+        let new_data: Rc<[f64]> = self.iter().enumerate()
             .filter(|(i, _)| (i / self.strides[axis]).is_multiple_of(self.shape[axis]))
             .map(|(i, _)| f(&self.data[i..], self.strides[axis], n)).collect();
 
-        RawTensor::from_box(&new_shape, new_data)
+        RawTensor::from_rc(&new_shape, new_data)
     }
 
     pub fn sum_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, sum) }

@@ -25,7 +25,7 @@ impl Tensor {
     }
 
     // Returns a Tensor from a reference to an Rc (no copying)
-    pub fn from_rc(shape: &[usize], data: &Rc<[f64]>) -> Tensor {
+    pub fn from_rc(shape: &[usize], data: Rc<[f64]>) -> Tensor {
         Tensor::no_grad_tensor(RawTensor::from_rc(shape, data))
     }
     // Returns a Tensor from a Box (no copying)

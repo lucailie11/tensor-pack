@@ -69,7 +69,7 @@ impl RawTensor {
             self.data.len(),
             "new shape must have the same number of elements"
         );
-        RawTensor::from_rc(new_shape, &self.data)
+        RawTensor::from_rc(new_shape, Rc::clone(&self.data))
     }
 
     // Returns a new RawTensor with dimensions permuted according to perm
@@ -106,7 +106,12 @@ impl RawTensor {
             .filter(|(i, _)| !axes.contains(i)).map(|(_, &d)| d).collect();
         let new_strides: Box<[usize]> = self.strides.iter().enumerate()
             .filter(|(i, _)| !axes.contains(i)).map(|(_, &s)| s).collect();
-        RawTensor { shape: new_shape, strides: new_strides, data: Rc::clone(&self.data) }
+
+        RawTensor { 
+            shape: new_shape,
+            strides: new_strides,
+            data: Rc::clone(&self.data)
+        }
     }
 
     // Removes a single size-1 axis
@@ -133,7 +138,13 @@ impl RawTensor {
         let new_strides: Box<[usize]> = (0..=self.strides.len())
             .map(|i| if i == axis { new_stride } else if i < axis { self.strides[i] } else { self.strides[i - 1] })
             .collect();
-        RawTensor { shape: new_shape, strides: new_strides, data: Rc::clone(&self.data) }
+
+        RawTensor { 
+            shape: new_shape,
+            strides: new_strides,
+            data: Rc::clone(&self.data)
+        }
+
     }
 
 }

@@ -6,7 +6,8 @@ use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};
 
 impl RawTensor {
-    fn new(shape: &[usize], data: Rc<[f64]>) -> RawTensor {
+    // Returns a contiguous RawTensor from a reference to an Rc (no copying)
+    pub fn from_rc(shape: &[usize], data: Rc<[f64]>) -> RawTensor {
         assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
         assert_eq!(shape.iter().product::<usize>(), data.len(), "data length doesn't match shape");
 
@@ -17,24 +18,19 @@ impl RawTensor {
         }
     }
 
-    // Returns a contiguous RawTensor from a reference to an Rc (no copying)
-    pub fn from_rc(shape: &[usize], data: &Rc<[f64]>) -> RawTensor {
-        RawTensor::new(shape, Rc::clone(data))
-    }
-
-    // Returns a contiguous RawTensor from a Box (no copying)
+    // Returns a contiguous RawTensor from a Box (copies data)
     pub fn from_box(shape: &[usize], data: Box<[f64]>) -> RawTensor {
-        RawTensor::new(shape, Rc::from(data))
+        RawTensor::from_rc(shape, Rc::from(data))
     }
 
-    // Returns a contiguous RawTensor from a Vec (no copying)
+    // Returns a contiguous RawTensor from a Vec (copies data)
     pub fn from_vec(shape: &[usize], data: Vec<f64>) -> RawTensor {
-        RawTensor::new(shape, Rc::from(data.into_boxed_slice()))
+        RawTensor::from_rc(shape, Rc::from(data))
     }
 
     // Returns a contiguous RawTensor from a slice (copies data)
     pub fn from_slice(shape: &[usize], data: &[f64]) -> RawTensor {
-        RawTensor::new(shape, Rc::from(data))
+        RawTensor::from_rc(shape, Rc::from(data))
     }
 
     // Returns a 0D RawTensor from a scalar (f64)
@@ -44,7 +40,7 @@ impl RawTensor {
 
     // Returns a new RawTensor with data in logical order
     pub fn contiguous(&self) -> RawTensor {
-        RawTensor::from_rc(&self.shape, &self.contiguous_data())
+        RawTensor::from_rc(&self.shape, self.contiguous_data())
     }
 
     // Creates a RawTensor filled with value

@@ -70,7 +70,6 @@ mod tests {
 
     #[test]
     fn accumulate_2_div_backward_a() {
-        // forward: out = a / b, backward for a: out.grad / b
         let mut grad = RawTensor::zeros(&[3]);
         let g = RawTensor::from_slice(&[3], &[1.0, 1.0, 1.0]);
         let b = RawTensor::from_slice(&[3], &[2.0, 4.0, 5.0]);
@@ -80,7 +79,6 @@ mod tests {
 
     #[test]
     fn accumulate_3_div_backward_b() {
-        // forward: out = a / b, backward for b: out.grad * (-a) / (b * b)
         let mut grad = RawTensor::zeros(&[3]);
         let g = RawTensor::from_slice(&[3], &[1.0, 1.0, 1.0]);
         let a = RawTensor::from_slice(&[3], &[6.0, 4.0, 9.0]);
@@ -91,7 +89,6 @@ mod tests {
 
     #[test]
     fn accumulate_is_additive() {
-        // calling twice accumulates, doesn't overwrite
         let mut grad = RawTensor::from_slice(&[2], &[1.0, 1.0]);
         let g = RawTensor::from_slice(&[2], &[2.0, 3.0]);
         grad.accumulate_1(&g, |gv| gv);

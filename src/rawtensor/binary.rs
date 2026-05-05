@@ -4,6 +4,8 @@ use super::structure::broadcast_shape;
 use std::ops::{Add, Sub, Mul, Div};
 use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 
+use std::rc::Rc;
+
 // Binary elementwise operations on two RawTensors with broadcasting support
 // The core building block is elementwise_op
 // Assign operations replace the left-hand side with the result (not in-place)
@@ -20,10 +22,10 @@ impl RawTensor {
         let out_shape = broadcast_shape(&self.shape, &other.shape);
         let a = self.expand(&out_shape);
         let b = other.expand(&out_shape);
-        let new_data: Box<[f64]> = a.iter().zip(b.iter())
+        let new_data: Rc<[f64]> = a.iter().zip(b.iter())
             .map(|(x, y)| f(x, y))
             .collect(); 
-        RawTensor::from_box(&out_shape, new_data)
+        RawTensor::from_rc(&out_shape, new_data)
     }
 }
 
