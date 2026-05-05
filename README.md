@@ -68,9 +68,7 @@ Gradients are tracked automatically during the forward pass. Call `.backward()` 
 
 `.backward()` seeds the gradient with all-ones. It is intended for scalar outputs — calling it on a non-scalar is valid but equivalent to summing all output elements before backpropagating.
 
-Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`.
-
-> **Not yet implemented:** `tanh`, backprop (forward works, gradient is wrong).
+Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`, `tanh`.
 
 ## Usage
 

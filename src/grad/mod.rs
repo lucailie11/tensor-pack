@@ -139,7 +139,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "tanh backprop not yet implemented"]
     fn tanh_backward() {
         let x = Tensor::from_slice(&[3], &[0.0, 1.0, -1.0]).requires_grad();
         x.tanh().backward();

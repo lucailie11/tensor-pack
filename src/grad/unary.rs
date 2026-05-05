@@ -24,10 +24,9 @@ pub fn sigmoid_backprop(out: &Tensor, a: &Tensor) {
     }
 }
 
-// NOT IMPLEMENTED — currently passes gradient through unchanged (wrong)
 pub fn tanh_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
-        a_grad.accumulate_1(out_grad, |g| g);
+        a_grad.accumulate_2(out_grad, &out.raw, |g, a| g * (1.0 - a * a));
     }
 }
 
