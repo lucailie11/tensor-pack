@@ -8,6 +8,7 @@ mod fmt;            // Debug and Display
 mod normalizations; // normalization along an axis (softmax, ...)
 mod reductions;     // reductions along an axis (sum, mean, var, std_dev, ...)
 mod scalar;         // arithmetic between a RawTensor and an f64
+mod stridedops;     // helper function on strided references for reductions and normalizations
 mod structure;      // shape operations (reshape, transpose, expand, squeeze, unsqueeze, ...)
 mod unary;          // elementwise unary operations (exp, ln, relu, ...)
 

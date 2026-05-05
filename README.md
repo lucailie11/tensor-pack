@@ -11,14 +11,12 @@ The library has four layers:
 - **`rawtensor/`** — Core math layer: arithmetic, broadcasting, reductions, structural ops. No gradient awareness.
 - **`tensor/`** — Wraps `RawTensor` and carries the computation graph for automatic differentiation.
 - **`grad/`** — Autograd engine. Builds the computation graph during the forward pass and runs backpropagation via topological sort.
-- **`utils/`** — Shared helpers (strided slice operations for reductions).
 
 ```
 src/
   rawtensor/   — RawTensor: core math layer (no grad)
   tensor/      — Tensor: grad-aware public type
   grad/        — autograd engine (backward pass)
-  utils/       — strided slice helpers
 ```
 
 The only public type is `Tensor`. `RawTensor` and the grad internals are crate-private.
@@ -70,9 +68,9 @@ Gradients are tracked automatically during the forward pass. Call `.backward()` 
 
 `.backward()` seeds the gradient with all-ones. It is intended for scalar outputs — calling it on a non-scalar is valid but equivalent to summing all output elements before backpropagating.
 
-Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`.
+Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`.
 
-> **Not yet implemented:** `abs`, `tanh`, `sigmoid`, `relu` backprop (forward works, gradient is wrong).
+> **Not yet implemented:** `tanh`, backprop (forward works, gradient is wrong).
 
 ## Usage
 
@@ -95,9 +93,6 @@ println!("{}", y);
 ```
 
 ## To do
-- Fix reductions for non-contiguous tensors
-- Fix normalizations
-- Reduce all
 - More module tests
 - Gradient supports
 - Concurrency support
