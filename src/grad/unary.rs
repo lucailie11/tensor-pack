@@ -32,7 +32,7 @@ pub fn tanh_backprop(out: &Tensor, a: &Tensor) {
 
 pub fn abs_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
-        a_grad.accumulate_2(out_grad, &a.raw, |g, a| g * (if a > 0.0 { 1.0 } else { -1.0 }));
+        a_grad.accumulate_2(out_grad, &a.raw, |g, a| g * (if a > 0.0 { 1.0 } else if a < 0.0 { -1.0 } else { 0.0 }));
     }
 }
 
