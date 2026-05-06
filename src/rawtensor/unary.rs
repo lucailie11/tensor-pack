@@ -21,7 +21,11 @@ fn relu(x: f64) -> f64 {
 impl RawTensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> RawTensor {
         let new_data: Rc<[f64]> = self.data().iter().map(|x| f(*x)).collect();
-        RawTensor::from_rc(&self.shape, new_data)
+        RawTensor {
+            shape: self.shape.clone(),
+            strides: self.strides.clone(),
+            data: new_data,
+        }
     }
 
     pub fn exp(&self) -> RawTensor     { self.map(f64::exp)  }
