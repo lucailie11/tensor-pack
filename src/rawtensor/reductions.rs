@@ -24,11 +24,12 @@ impl RawTensor {
         let n = self.shape[axis];
         let new_shape: Box<[usize]> = self.shape.iter().enumerate().
             filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
+        let new_strides: Box<[usize]> = self.strides.iter().enumerate().
+            filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
 
         if self.strides[axis] == 0 {
-            let new_strides: Box<[usize]> = self.shape.iter().enumerate().
-                filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
             let new_data: Rc<[f64]> = self.data.iter().map(|&x| f(&[x], 0, n)).collect();
+
             return RawTensor {
                 shape: new_shape,
                 strides: new_strides,
@@ -36,11 +37,16 @@ impl RawTensor {
             }
         }
 
-        let new_data: Rc<[f64]> = self.iter().enumerate()
+        let new_data: Rc<[f64]> = self.data.iter().enumerate()
             .filter(|(i, _)| (i / self.strides[axis]).is_multiple_of(self.shape[axis]))
             .map(|(i, _)| f(&self.data[i..], self.strides[axis], n)).collect();
 
-        RawTensor::from_rc(&new_shape, new_data)
+        RawTensor {
+            shape: new_shape,
+            strides: new_strides,
+            data: new_data,
+        }
+
     }
 
     pub fn sum_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, sum) }
