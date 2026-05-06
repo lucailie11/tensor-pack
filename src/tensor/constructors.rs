@@ -28,12 +28,12 @@ impl Tensor {
     pub fn from_rc(shape: &[usize], data: Rc<[f64]>) -> Tensor {
         Tensor::no_grad_tensor(RawTensor::from_rc(shape, data))
     }
-    // Returns a Tensor from a Box (no copying)
+    // Returns a Tensor from a Box (copies data)
     pub fn from_box(shape: &[usize], data: Box<[f64]>) -> Tensor {
         Tensor::no_grad_tensor(RawTensor::from_box(shape, data))
     }
 
-    // Returns a Tensor from a Vec (no copying)
+    // Returns a Tensor from a Vec (copies data)
     pub fn from_vec(shape: &[usize], data: Vec<f64>) -> Tensor {
         Tensor::no_grad_tensor(RawTensor::from_vec(shape, data))
     }
