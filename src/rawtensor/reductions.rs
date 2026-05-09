@@ -56,7 +56,9 @@ impl RawTensor {
 
     pub fn sum_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, sum) }
     pub fn mean_axis(&self, axis: usize)    -> RawTensor { self.reduce_axis(axis, mean) }
+    /// Population variance (divides by n)
     pub fn var_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, var) }
+    /// Population standard deviation (sqrt of variance divided by n)
     pub fn std_dev_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, std_dev) }
 }
 
