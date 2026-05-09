@@ -1,7 +1,7 @@
 use super::RawTensor;
 
-use std::rc::Rc;
 use std::ops::Index;
+use std::rc::Rc;
 
 fn are_dimensions_compatible(d1: usize, d2: usize) -> bool {
     (d1 == d2) || (d1 == 1) || (d2 == 1)
@@ -12,9 +12,20 @@ pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Box<[usize]
     let len = usize::max(shape1.len(), shape2.len());
     let mut out = vec![1; len].into_boxed_slice();
     for i in 0..len {
-        let d1 = if i < shape1.len() { shape1[shape1.len() - 1 - i] } else { 1 };
-        let d2 = if i < shape2.len() { shape2[shape2.len() - 1 - i] } else { 1 };
-        assert!(are_dimensions_compatible(d1, d2), "shapes are not broadcastable");
+        let d1 = if i < shape1.len() {
+            shape1[shape1.len() - 1 - i]
+        } else {
+            1
+        };
+        let d2 = if i < shape2.len() {
+            shape2[shape2.len() - 1 - i]
+        } else {
+            1
+        };
+        assert!(
+            are_dimensions_compatible(d1, d2),
+            "shapes are not broadcastable"
+        );
         out[len - 1 - i] = usize::max(d1, d2);
     }
     out
@@ -22,7 +33,9 @@ pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Box<[usize]
 
 // Returns the row-major strides for a contiguous tensor of the given shape
 pub(super) fn strides_contiguous(shape: &[usize]) -> Box<[usize]> {
-    if shape.is_empty() { return Box::from([]); }
+    if shape.is_empty() {
+        return Box::from([]);
+    }
     let mut strides: Box<[usize]> = vec![1; shape.len()].into_boxed_slice();
     for i in (0..shape.len() - 1).rev() {
         strides[i] = strides[i + 1] * shape[i + 1];
@@ -42,19 +55,28 @@ impl RawTensor {
 
     // Returns the data in logical order. Clones the Rc if already contiguous
     pub(super) fn contiguous_data(&self) -> Rc<[f64]> {
-        if self.is_contiguous() { return Rc::clone(&self.data); }
+        if self.is_contiguous() {
+            return Rc::clone(&self.data);
+        }
         self.iter().collect()
     }
 
     // Returns the strides self would have if expanded to new_shape
     pub(super) fn expand_strides(&self, new_shape: &[usize]) -> Box<[usize]> {
-        assert_eq!(&*broadcast_shape(&self.shape, new_shape), new_shape, "shape not broadcastable to new_shape");
+        assert_eq!(
+            &*broadcast_shape(&self.shape, new_shape),
+            new_shape,
+            "shape not broadcastable to new_shape"
+        );
 
         let new_strides: Box<[usize]> = (0..new_shape.len())
             .rev()
             .map(|i| {
-                if i >= self.shape.len() || self.shape[self.shape.len() - 1 - i] == 1 { 0 }
-                else { self.strides[self.shape.len() - 1 - i] }
+                if i >= self.shape.len() || self.shape[self.shape.len() - 1 - i] == 1 {
+                    0
+                } else {
+                    self.strides[self.shape.len() - 1 - i]
+                }
             })
             .collect();
 
@@ -63,7 +85,10 @@ impl RawTensor {
 
     // Returns a new RawTensor with a new shape. Panics if tensor is not contiguous
     pub fn reshape(&self, new_shape: &[usize]) -> RawTensor {
-        assert!(self.is_contiguous(), "cannot reshape a non-contiguous tensor. call .contiguous() first");
+        assert!(
+            self.is_contiguous(),
+            "cannot reshape a non-contiguous tensor. call .contiguous() first"
+        );
         assert_eq!(
             new_shape.iter().product::<usize>(),
             self.data.len(),
@@ -74,23 +99,31 @@ impl RawTensor {
 
     // Returns a new RawTensor with dimensions permuted (new dim_i comes from old dim_perm[i])
     pub fn transpose(&self, perm: &[usize]) -> RawTensor {
-        assert_eq!(perm.len(), self.ndim(), "permutation length doesn't match tensor ndim");
         assert_eq!(
-            { let mut v = perm.to_vec(); v.sort(); v },
+            perm.len(),
+            self.ndim(),
+            "permutation length doesn't match tensor ndim"
+        );
+        assert_eq!(
+            {
+                let mut v = perm.to_vec();
+                v.sort();
+                v
+            },
             (0..perm.len()).collect::<Vec<usize>>(),
             "permutation is not valid"
         );
         RawTensor {
-            shape:   perm.iter().map(|&i| self.shape[i]).collect(),
+            shape: perm.iter().map(|&i| self.shape[i]).collect(),
             strides: perm.iter().map(|&i| self.strides[i]).collect(),
-            data:    Rc::clone(&self.data),
+            data: Rc::clone(&self.data),
         }
     }
 
     // Expands self to new_shape. Panics if self is not broadcastable to new_shape
     pub fn expand(&self, new_shape: &[usize]) -> RawTensor {
-        RawTensor { 
-            shape: Box::from(new_shape), 
+        RawTensor {
+            shape: Box::from(new_shape),
             strides: self.expand_strides(new_shape),
             data: Rc::clone(&self.data),
         }
@@ -100,17 +133,30 @@ impl RawTensor {
     pub fn squeeze_axes(&self, axes: &[usize]) -> RawTensor {
         for &axis in axes {
             assert!(axis < self.shape.len(), "axis {axis} out of bounds");
-            assert_eq!(self.shape[axis], 1, "cannot squeeze axis {axis} with size != 1");
+            assert_eq!(
+                self.shape[axis], 1,
+                "cannot squeeze axis {axis} with size != 1"
+            );
         }
-        let new_shape: Box<[usize]> = self.shape.iter().enumerate()
-            .filter(|(i, _)| !axes.contains(i)).map(|(_, &d)| d).collect();
-        let new_strides: Box<[usize]> = self.strides.iter().enumerate()
-            .filter(|(i, _)| !axes.contains(i)).map(|(_, &s)| s).collect();
+        let new_shape: Box<[usize]> = self
+            .shape
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| !axes.contains(i))
+            .map(|(_, &d)| d)
+            .collect();
+        let new_strides: Box<[usize]> = self
+            .strides
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| !axes.contains(i))
+            .map(|(_, &s)| s)
+            .collect();
 
-        RawTensor { 
+        RawTensor {
             shape: new_shape,
             strides: new_strides,
-            data: Rc::clone(&self.data)
+            data: Rc::clone(&self.data),
         }
     }
 
@@ -121,7 +167,10 @@ impl RawTensor {
 
     // Removes all size-1 axes
     pub fn squeeze_all(&self) -> RawTensor {
-        let axes: Vec<usize> = self.shape.iter().enumerate()
+        let axes: Vec<usize> = self
+            .shape
+            .iter()
+            .enumerate()
             .filter(|&(_, &d)| d == 1)
             .map(|(i, _)| i)
             .collect();
@@ -132,18 +181,28 @@ impl RawTensor {
     pub fn unsqueeze(&self, axis: usize) -> RawTensor {
         assert!(axis <= self.shape.len(), "axis {axis} out of bounds");
 
-        let new_stride = if axis < self.shape.len() { self.shape[axis] * self.strides[axis] } else { 1 };
+        let new_stride = if axis < self.shape.len() 
+            { self.shape[axis] * self.strides[axis] } else { 1 };
+
         let new_shape: Box<[usize]> = (0..=self.shape.len())
-            .map(|i| if i == axis { 1 } else if i < axis { self.shape[i] } else { self.shape[i - 1] })
+            .map(|i| {
+                if i == axis { 1 }
+                else if i < axis { self.shape[i] } 
+                else { self.shape[i - 1] }
+            })
             .collect();
         let new_strides: Box<[usize]> = (0..=self.strides.len())
-            .map(|i| if i == axis { new_stride } else if i < axis { self.strides[i] } else { self.strides[i - 1] })
+            .map(|i| {
+                if i == axis { new_stride } 
+                else if i < axis { self.strides[i] } 
+                else { self.strides[i - 1] }
+            })
             .collect();
 
-        RawTensor { 
+        RawTensor {
             shape: new_shape,
             strides: new_strides,
-            data: Rc::clone(&self.data)
+            data: Rc::clone(&self.data),
         }
     }
 }
@@ -151,8 +210,12 @@ impl RawTensor {
 impl RawTensor {
     // Returns None if indices are out of bounds or wrong number of dims.
     pub fn get(&self, indices: &[usize]) -> Option<f64> {
-        if self.shape.len() != indices.len() { return None; }
-        if indices.iter().zip(self.shape.iter()).any(|(i, s)| i >= s) { return None; }
+        if self.shape.len() != indices.len() {
+            return None;
+        }
+        if indices.iter().zip(self.shape.iter()).any(|(i, s)| i >= s) {
+            return None;
+        }
         Some(self[indices])
     }
 }
@@ -164,10 +227,14 @@ impl Index<&[usize]> for RawTensor {
     fn index(&self, indices: &[usize]) -> &f64 {
         assert_eq!(indices.len(), self.ndim(), "wrong number of indices");
 
-        let physical: usize = indices.iter().enumerate().map(|(i, &ind)| {
-            assert!(ind < self.shape[i], "index out of bounds");
-            ind * self.strides[i]
-        }).sum();
+        let physical: usize = indices
+            .iter()
+            .enumerate()
+            .map(|(i, &ind)| {
+                assert!(ind < self.shape[i], "index out of bounds");
+                ind * self.strides[i]
+            })
+            .sum();
 
         &self.data[physical]
     }
