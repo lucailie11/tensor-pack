@@ -22,10 +22,15 @@ impl RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
 
         let n = self.shape[axis];
-        let new_shape: Box<[usize]> = self.shape.iter().enumerate().
-            filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
-        let new_strides: Box<[usize]> = self.strides.iter().enumerate().
-            filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
+        let new_shape: Box<[usize]> = self.shape.iter().enumerate()
+            .filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
+
+        let new_strides: Box<[usize]> = self.strides.iter().enumerate()
+            .filter(|(i, _)| *i != axis)
+            .map(|(_, &x)| 
+                if x > self.strides[axis] && self.strides[axis] != 0 { x / self.shape[axis] }
+                else { x }
+            ).collect();
 
         if self.strides[axis] == 0 {
             let new_data: Rc<[f64]> = self.data.iter().map(|&x| f(&[x], 0, n)).collect();
@@ -49,9 +54,9 @@ impl RawTensor {
 
     }
 
-    pub fn sum_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, sum) }
-    pub fn mean_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, mean) }
-    pub fn var_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, var) }
+    pub fn sum_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, sum) }
+    pub fn mean_axis(&self, axis: usize)    -> RawTensor { self.reduce_axis(axis, mean) }
+    pub fn var_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, var) }
     pub fn std_dev_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, std_dev) }
 }
 
@@ -141,5 +146,14 @@ mod tests {
         let c = b.sum_axis(0);
         assert_eq!(c.shape(), &[2, 3]);
         assert_eq!(c.data(), &[5.0, 10.0, 15.0, 20.0, 25.0, 30.0]);
+    }
+
+    #[test]
+    fn reduce_transposed_3d() {
+        let a = RawTensor::linspace(1.0, 24.0, 24);
+        let b = a.reshape(&[2, 3, 4]);
+        let c = b.transpose(&[1, 2, 0]);
+        let d = c.sum_axis(1);
+        assert_eq!(*d.contiguous_data(), [10.0, 58.0, 26.0, 74.0, 42.0, 90.0]);
     }
 }
