@@ -100,7 +100,7 @@ impl RawTensor {
 
     // Creates a RawTensor filled with random samples from N(mean, std_dev)
     pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> RawTensor {
-        assert!(std_dev > 0.0, "std_dev should be grater than 0");
+        assert!(std_dev > 0.0, "std_dev should be greater than 0");
 
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
