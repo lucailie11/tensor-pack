@@ -72,7 +72,7 @@ impl RawTensor {
         RawTensor::from_rc(new_shape, Rc::clone(&self.data))
     }
 
-    // Returns a new RawTensor with dimensions permuted according to perm
+    // Returns a new RawTensor with dimensions permuted (new dim_i comes from old dim_perm[i])
     pub fn transpose(&self, perm: &[usize]) -> RawTensor {
         assert_eq!(perm.len(), self.shape.len(), "permutation length doesn't match tensor ndim");
         assert_eq!(
