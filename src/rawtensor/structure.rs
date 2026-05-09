@@ -72,7 +72,7 @@ impl RawTensor {
         RawTensor::from_rc(new_shape, Rc::clone(&self.data))
     }
 
-    // Returns a new RawTensor with dimensions permuted according to perm (dim i goes to perm[i])
+    // Returns a new RawTensor with dimensions permuted according to perm
     pub fn transpose(&self, perm: &[usize]) -> RawTensor {
         assert_eq!(perm.len(), self.shape.len(), "permutation length doesn't match tensor ndim");
         assert_eq!(
@@ -80,11 +80,9 @@ impl RawTensor {
             (0..perm.len()).collect::<Vec<usize>>(),
             "permutation is not valid"
         );
-        let mut inv_perm: Box<[usize]> = vec![0; perm.len()].into_boxed_slice();
-        for i in 0..perm.len() { inv_perm[perm[i]] = i; }
         RawTensor {
-            shape:   inv_perm.iter().map(|&i| self.shape[i]).collect(),
-            strides: inv_perm.iter().map(|&i| self.strides[i]).collect(),
+            shape:   perm.iter().map(|&i| self.shape[i]).collect(),
+            strides: perm.iter().map(|&i| self.strides[i]).collect(),
             data:    Rc::clone(&self.data),
         }
     }
@@ -210,6 +208,13 @@ mod tests {
     }
 
     #[test]
+    fn contiguous_after_transpose_reorders_data() {
+        let t = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let data = t.transpose(&[1, 0]).contiguous_data();
+        assert_eq!(&*data, &[1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
+    }
+
+    #[test]
     fn contiguous_already_contiguous_no_copy() {
         let t = RawTensor::from_slice(&[2, 3], &[1.0; 6]);
         let data = t.contiguous_data();
@@ -220,8 +225,8 @@ mod tests {
     fn transpose_permutes_shape_and_strides() {
         let t = RawTensor::from_slice(&[2, 3, 4], &[0.0; 24]);
         let tt = t.transpose(&[2, 0, 1]);
-        assert_eq!(tt.shape(), &[3, 4, 2]);
-        assert_eq!(&*tt.strides, &[4, 1, 12]);
+        assert_eq!(tt.shape(), &[4, 2, 3]);
+        assert_eq!(&*tt.strides, &[1, 12, 4]);
     }
 
     #[test]
