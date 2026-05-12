@@ -1,5 +1,5 @@
 use super::RawTensor;
-use super::stridedops::{sum, mean, var, std_dev};
+// use super::stridedops::{sum, mean, var, std_dev};
 
 use std::rc::Rc;
 
@@ -11,6 +11,38 @@ use std::rc::Rc;
 // - mean
 // - var (population, divides by n)
 // - std_dev (from population var)
+
+fn sum(data: &[f64], step: usize, n: usize) -> f64 {
+    if step == 0 { return data[0] * n as f64; }
+    data.iter().step_by(step).take(n).sum()
+}
+
+fn mean(data: &[f64], step: usize, n: usize) -> f64 {
+    if n == 0 { return f64::NAN; }
+    sum(data, step, n) / n as f64
+}
+
+fn mean_and_var(data: &[f64], step: usize, n: usize) -> (f64, f64) {
+    if n == 0 { return (f64::NAN, f64::NAN); }
+    if step == 0 { return (data[0], 0.0); }
+
+    let mut mean: f64 = 0.0;
+    let mut var: f64 = 0.0;
+    for (i, x) in data.iter().step_by(step).take(n).enumerate() {
+        let delta = x - mean;
+        mean += delta / (i + 1) as f64;
+        var += delta * (x - mean);
+    }
+    (mean, var / n as f64)
+}
+
+fn var(data: &[f64], step: usize, n: usize) -> f64 {
+    mean_and_var(data, step, n).1
+}
+
+fn std_dev(data: &[f64], step: usize, n: usize) -> f64 {
+    f64::sqrt(var(data, step, n))
+}
 
 impl RawTensor {
     // Returns a new RawTensor with a fresh data allocation, 

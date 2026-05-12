@@ -97,11 +97,8 @@ println!("{}", y);
 ```
 
 ## To do
-- Rewrite tests for structure.rs
-- Stride struct 
 - Random seed
-- More module tests
+- return None / assert for expand_strides??
 - Gradient supports
 - Concurrency support
 - Python bindings
-- return None / assert
