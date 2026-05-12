@@ -1,5 +1,5 @@
+use crate::grad::BackpropOp;
 use super::Tensor;
-
 use std::ops::Index;
 
 // Delegate all ops to RawTensor 
@@ -9,19 +9,19 @@ impl Tensor {
     // Returns a new Tensor with a new shape. Panics if tensor is not contiguous
     pub fn reshape(&self, new_shape: &[usize]) -> Tensor {
         let raw = self.raw.reshape(new_shape);
-        Tensor::no_grad_tensor(raw)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Reshape)
     }
 
     // Returns a new RawTensor with dimensions permuted (new dim_i comes from old dim_perm[i])
     pub fn transpose(&self, perm: &[usize]) -> Tensor {
         let raw = self.raw.transpose(perm);
-        Tensor::no_grad_tensor(raw)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Transpose)
     }
 
     // Expands self to new_shape. Panics if self is not broadcastable to new_shape
     pub fn expand(&self, new_shape: &[usize]) -> Tensor {
         let raw = self.raw.expand(new_shape);
-        Tensor::no_grad_tensor(raw)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Expand)
     }
 
     // Removes a set of size-1 axes from the shape
@@ -33,7 +33,7 @@ impl Tensor {
     // Removes a single size-1 axis
     pub fn squeeze_axis(&self, axis: usize) -> Tensor {
         let raw = self.raw.squeeze_axis(axis);
-        Tensor::no_grad_tensor(raw)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Squeeze(axis))
     }
 
     // Removes all size-1 axes
@@ -45,7 +45,7 @@ impl Tensor {
     // Inserts a size-1 axis at the given position
     pub fn unsqueeze_axis(&self, axis: usize) -> Tensor {
         let raw = self.raw.unsqueeze_axis(axis);
-        Tensor::no_grad_tensor(raw)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Unsqueeze(axis))
     }
 
 }

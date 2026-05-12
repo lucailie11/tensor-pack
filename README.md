@@ -97,6 +97,7 @@ println!("{}", y);
 ```
 
 ## To do
+- Multiple backward passes
 - Finish all gradient supports
 - Concurrency support
 - Python bindings

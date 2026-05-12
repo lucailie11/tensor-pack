@@ -1,4 +1,5 @@
 use super::Tensor;
+use crate::grad::BackpropOp;
 use crate::rawtensor::RawTensor;
 
 // Delegate all ops to RawTensor 
@@ -7,7 +8,7 @@ use crate::rawtensor::RawTensor;
 impl Tensor {
     pub fn softmax(&self, axis: usize) -> Tensor {
         let raw: RawTensor = self.raw.softmax_axis(axis);
-        Tensor::no_grad_tensor(raw)
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Softmax(axis))
     }
 }
 
