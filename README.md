@@ -6,7 +6,7 @@ Tensors store data in a flat array in row-major order. Arithmetic operators are 
 
 ## Architecture
 
-The library has four layers:
+The library has three layers:
 
 - **`rawtensor/`** — Core math layer: arithmetic, broadcasting, reductions, structural ops. No gradient awareness.
 - **`tensor/`** — Wraps `RawTensor` and carries the computation graph for automatic differentiation.
@@ -34,7 +34,7 @@ The only public type is `Tensor`. `RawTensor` and the grad internals are crate-p
 
 ### Structure ops
 - `reshape(new_shape)`, `transpose(perm)`, `expand(new_shape)`
-- `squeeze_axes(axes)` / `squeeze(axis)` / `squeeze_all()` / `unsqueeze(axis)`
+- `squeeze_axes(axes)` / `squeeze_axis(axis)` / `squeeze_all()` / `unsqueeze_axis(axis)`
 
 ### Binary ops
 Elementwise operations with broadcasting. Assign ops are not in-place.
@@ -60,6 +60,8 @@ Arithmetic between a tensor and an `f64`, both orderings supported. Assign ops a
 Reduce along one axis, dropping it from the output shape.
 - `sum_axis(axis)`, `mean_axis(axis)`, `var_axis(axis)`, `std_dev_axis(axis)`
 
+`var` and `std_dev` use population variance (divides by n, not n-1).
+
 ### Normalizations
 - `softmax(axis)`
 
@@ -68,7 +70,11 @@ Gradients are tracked automatically during the forward pass. Call `.backward()` 
 
 `.backward()` seeds the gradient with all-ones. It is intended for scalar outputs — calling it on a non-scalar is valid but equivalent to summing all output elements before backpropagating.
 
+`.backward()` must only be called once per graph. Calling it again accumulates on top of existing gradients rather than recomputing from scratch.
+
 Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`, `tanh`.
+
+Reductions, normalizations, linalg, and structure ops do not have gradient support yet — they detach from the computation graph.
 
 ## Usage
 
@@ -91,7 +97,11 @@ println!("{}", y);
 ```
 
 ## To do
+- Rewrite tests for structure.rs
+- Stride struct 
+- Random seed
 - More module tests
 - Gradient supports
 - Concurrency support
 - Python bindings
+- return None / assert

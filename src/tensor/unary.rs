@@ -10,7 +10,7 @@ use std::ops::Neg;
 // Defined operations:
 //   general map (has no grad)
 //   exp, ln, sqrt, abs, tanh, sigmoid, relu
-//   -&RawTensor — negation
+//   -&Tensor — negation
 
 impl Tensor {
     pub fn map(&self, f: impl Fn(f64) -> f64) -> Tensor {

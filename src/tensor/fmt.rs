@@ -6,8 +6,8 @@ use core::fmt;
 impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let vals: Vec<String> = self.raw.data().iter().map(|x| format!("{:.4}", x)).collect();
-        write!(f, "Tensor {{ shape: {:?}, strides: {:?}, requires_grad: {}, data: [{}]",
-            self.shape(), self.raw.strides(), self.requires_grad, vals.join(", "))?;
+        write!(f, "Tensor {{ shape: {:?}, requires_grad: {}, data: [{}]",
+            self.shape(), self.requires_grad, vals.join(", "))?;
         if let Some(grad) = self.grad.borrow().as_ref() {
             let gvals: Vec<String> = grad.data().iter().map(|x| format!("{:.4}", x)).collect();
             write!(f, ", grad: [{}]", gvals.join(", "))?;

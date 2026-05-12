@@ -39,10 +39,3 @@ impl Tensor {
     pub fn is_empty(&self) -> bool     { self.raw.is_empty() }
 }
 
-impl Tensor {
-    pub fn requires_grad(mut self) -> Tensor {
-        let inner = Rc::get_mut(&mut self.0).expect("can't set requires_grad on a shared tensor");
-        inner.requires_grad = true; 
-        self
-    }
-}

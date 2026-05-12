@@ -5,6 +5,10 @@ use std::rc::Rc;
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal, Uniform};
 
+// A set of basic tensor constructors
+// Constructors take desired shape as a parameter unless specified otherwise
+// and return contiguous RawTensors
+
 impl RawTensor {
     // Returns a contiguous RawTensor from a reference to an Rc (no copying)
     pub fn from_rc(shape: &[usize], data: Rc<[f64]>) -> RawTensor {
@@ -62,35 +66,38 @@ impl RawTensor {
     // Creates a 1D RawTensor of n evenly spaced values in [start, end] (inclusive on both ends).
     // If n = 1, returns a shape-[1] tensor containing just start
     pub fn linspace(start: f64, end: f64, n: usize) -> RawTensor {
+        assert_ne!(n, 0, "can't have a 0 dimenstion");
+
         if n == 1 {
             return RawTensor::from_vec(&[1], vec![start]);
         }
 
-        let data: Box<[f64]> = (0..n)
+        let data: Rc<[f64]> = (0..n)
             .map(|i| start + i as f64 * (end - start) / (n - 1) as f64)
             .collect();
 
-        RawTensor::from_box(&[n], data)
+        RawTensor::from_rc(&[n], data)
     }
 
     // Creates a RawTensor equal to I_n (the identity matrix of size [n x n])
     pub fn identity(n: usize) -> RawTensor {
-        let data: Box<[f64]> = (0..n * n)
+        let data: Rc<[f64]> = (0..n * n)
             .map(|i| if i % n == i / n {1.0} else {0.0})
             .collect();
-        RawTensor::from_box(&[n, n], data)
+        RawTensor::from_rc(&[n, n], data)
     }
 
 
     // Creates a RawTensor filled with random samples from U([l, r))
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> RawTensor {
+        assert!(l.is_finite() && r.is_finite(), "l and r must be finite");
         assert!(l < r, "[l, r) should be a non-empty interval");
 
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
         let uniform = Uniform::new(l, r);
-        let data: Box<[f64]> = (0..len).map(|_| uniform.sample(&mut rng)).collect();
-        RawTensor::from_box(shape, data)
+        let data: Rc<[f64]> = (0..len).map(|_| uniform.sample(&mut rng)).collect();
+        RawTensor::from_rc(shape, data)
     }
 
     // Creates a RawTensor filled with random samples from U([0, 1))
@@ -100,13 +107,14 @@ impl RawTensor {
 
     // Creates a RawTensor filled with random samples from N(mean, std_dev)
     pub fn randn(shape: &[usize], mean: f64, std_dev: f64) -> RawTensor {
-        assert!(std_dev > 0.0, "std_dev should be greater than 0");
+        assert!(mean.is_finite(), "mean must be finite");
+        assert!(std_dev > 0.0 && std_dev.is_finite(), "std_dev must be finite and greater than 0");
 
         let len: usize = shape.iter().product();
         let mut rng = thread_rng();
         let normal = Normal::new(mean, std_dev).unwrap();
-        let data: Box<[f64]> = (0..len).map(|_| normal.sample(&mut rng)).collect();
-        RawTensor::from_box(shape, data)
+        let data: Rc<[f64]> = (0..len).map(|_| normal.sample(&mut rng)).collect();
+        RawTensor::from_rc(shape, data)
     }
 }
 
@@ -115,79 +123,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new_from_slice() {
-        let t = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
-        assert_eq!(t.shape(), &[2, 2]);
-        assert_eq!(t.data(), &[1.0, 2.0, 3.0, 4.0]);
+    fn from_slice_shape_and_data() {
+        let t = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        assert_eq!(*t.shape, [2, 3]);
+        assert_eq!(*t.contiguous_data(), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
     }
-
 
     #[test]
     #[should_panic]
-    fn new_from_slice_lens_dont_match() {
-        let _t = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0]);
-    }
-
-    #[test]
-    fn new_from_vec() {
-        let x: Vec<f64> = vec![1.0; 4];
-        let t = RawTensor::from_vec(&[2, 2], x);
-        assert_eq!(t.shape(), &[2, 2]);
-        assert_eq!(t.data(), &[1.0, 1.0, 1.0, 1.0]);
-    }
-
-    #[test]
-    fn zeros_shape_and_data() {
-        let t = RawTensor::zeros(&[2, 3]);
-        assert_eq!(t.shape(), &[2, 3]);
-        assert!(t.data().iter().all(|&x| x == 0.0));
-    }
-
-    #[test]
-    fn ones_shape_and_data() {
-        let t = RawTensor::ones(&[2, 3]);
-        assert_eq!(t.shape(), &[2, 3]);
-        assert!(t.data().iter().all(|&x| x == 1.0));
-    }
-
-    #[test]
-    fn full_fills_value() {
-        let t = RawTensor::full(&[3], 7.0);
-        assert_eq!(t.shape(), &[3]);
-        assert!(t.data().iter().all(|&x| x == 7.0));
-    }
-
-    #[test]
-    fn linspace_endpoints() {
-        let t = RawTensor::linspace(0.0, 1.0, 6);
-        let d = t.data();
-        assert!((d[0] - 0.0).abs() < 1e-9);
-        assert!((d[1] - 0.2).abs() < 1e-9);
-        assert!((d[2] - 0.4).abs() < 1e-9);
-        assert!((d[3] - 0.6).abs() < 1e-9);
-        assert!((d[4] - 0.8).abs() < 1e-9);
-        assert!((d[5] - 1.0).abs() < 1e-9);
-    }
-
-
-    #[test]
-    fn rand_in_range() {
-        let t = RawTensor::rand(&[100]);
-        assert!(t.data().iter().all(|&x| (0.0..1.0).contains(&x))); 
-    }
-
-    #[test]
-    fn linspace_n1_returns_start() {
-        let t = RawTensor::linspace(3.0, 99.0, 1);
-        assert_eq!(t.shape(), &[1]);
-        assert_eq!(t.data(), &[3.0]);
-    }
-
-    #[test]
-    fn linspace_n2_endpoints_only() {
-        let t = RawTensor::linspace(0.0, 1.0, 2);
-        assert!((t.data()[0] - 0.0).abs() < 1e-9);
-        assert!((t.data()[1] - 1.0).abs() < 1e-9);
+    fn from_slice_shape_mismatch_panics() {
+        let _ = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0]);
     }
 
     #[test]
@@ -197,29 +142,146 @@ mod tests {
     }
 
     #[test]
+    fn from_scalar_is_0d() {
+        let t = RawTensor::from_scalar(7.0);
+        assert_eq!(*t.shape, []);
+        assert_eq!(t.ndim(), 0);
+        assert_eq!(*t.contiguous_data(), [7.0]);
+    }
+
+    #[test]
+    fn zeros_shape_and_data() {
+        let t = RawTensor::zeros(&[2, 3]);
+        assert_eq!(*t.shape, [2, 3]);
+        assert!(t.iter().all(|x| x == 0.0));
+    }
+
+    #[test]
+    fn ones_shape_and_data() {
+        let t = RawTensor::ones(&[2, 3]);
+        assert_eq!(*t.shape, [2, 3]);
+        assert!(t.iter().all(|x| x == 1.0));
+    }
+
+    #[test]
+    fn full_fills_value() {
+        let t = RawTensor::full(&[2, 3], 7.0);
+        assert_eq!(*t.shape, [2, 3]);
+        assert!(t.iter().all(|x| x == 7.0));
+    }
+
+    #[test]
+    fn linspace_values_and_length() {
+        let t = RawTensor::linspace(0.0, 5.0, 6);
+        assert_eq!(*t.shape, [6]);
+        assert_eq!(&*t.contiguous_data(), &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]);
+        let t = RawTensor::linspace(3.0, 99.0, 1);
+        assert_eq!(*t.shape, [1]);
+        assert_eq!(&*t.contiguous_data(), &[3.0]);
+    }
+
+    #[test]
+    fn identity_diagonal_and_off_diagonal() {
+        let t = RawTensor::identity(3);
+        assert_eq!(t.shape(), &[3, 3]);
+        for i in 0..3 {
+            for j in 0..3 {
+                let expected = if i == j { 1.0 } else { 0.0 };
+                assert_eq!(t.get(&[i, j]), Some(expected));
+            }
+        }
+    }
+
+    #[test]
+    fn rand_in_unit_range() {
+        let t = RawTensor::rand(&[1000]);
+        assert!(t.iter().all(|x| (0.0..1.0).contains(&x)));
+    }
+
+    #[test]
+    fn rand_range_in_bounds() {
+        let t = RawTensor::rand_range(&[1000], -2.0, 5.0);
+        assert!(t.iter().all(|x| (-2.0..5.0).contains(&x)));
+    }
+
+    #[test]
     #[should_panic]
     fn rand_range_empty_interval_panics() {
         let _ = RawTensor::rand_range(&[10], 5.0, 5.0);
     }
 
     #[test]
-    fn randn_mean_and_std() {                                    
+    #[should_panic]
+    fn rand_range_inf_l_panics() {
+        let _ = RawTensor::rand_range(&[10], f64::NEG_INFINITY, 5.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn rand_range_inf_r_panics() {
+        let _ = RawTensor::rand_range(&[10], 0.0, f64::INFINITY);
+    }
+
+    #[test]
+    #[should_panic]
+    fn randn_zero_std_dev_panics() {
+        let _ = RawTensor::randn(&[10], 5.0, 0.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn randn_inf_std_dev_panics() {
+        let _ = RawTensor::randn(&[10], 0.0, f64::INFINITY);
+    }
+
+    #[test]
+    #[should_panic]
+    fn randn_nan_mean_panics() {
+        let _ = RawTensor::randn(&[10], f64::NAN, 1.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn randn_inf_mean_panics() {
+        let _ = RawTensor::randn(&[10], f64::INFINITY, 1.0);
+    }
+
+    #[test]
+    fn randn_mean_and_std() {
         let n = 10_000;
-        let mean = 2.0;                                          
-        let std_dev = 1.5;                                       
+        let mean = 2.0;
+        let std_dev = 1.5;
         let k = 3.0;
-        let t = RawTensor::randn(&[n], mean, std_dev);          
-        let data = t.data();                                     
-                    
-        let sample_mean = data.iter().sum::<f64>() / n as f64;   
-        let sample_var = data.iter().map(|x| (x - sample_mean).powi(2)).sum::<f64>() / n as f64;               
+        let data: Vec<f64> = RawTensor::randn(&[n], mean, std_dev).iter().collect();
+
+        let sample_mean = data.iter().sum::<f64>() / n as f64;
+        let sample_var = data.iter().map(|x| (x - sample_mean).powi(2)).sum::<f64>() / n as f64;
         let sample_std = sample_var.sqrt();
-                                                                 
-        let eps_mean = k * std_dev / (n as f64).sqrt();
-        let eps_std = k * std_dev / (2.0 * n as f64).sqrt();
-                                                                
-        assert!((sample_mean - mean).abs() < eps_mean);          
-        assert!((sample_std - std_dev).abs() < eps_std);
-    }             
+
+        assert!((sample_mean - mean).abs() < k * std_dev / (n as f64).sqrt());
+        assert!((sample_std - std_dev).abs() < k * std_dev / (2.0 * n as f64).sqrt());
+    }
+
+    #[test]
+    fn contiguous_on_transposed() {
+        let t = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]).transpose(&[1, 0]);
+        assert!(!t.is_contiguous());
+        let c = t.contiguous();
+        assert!(c.is_contiguous());
+        assert_eq!(*c.shape, [3, 2]);
+        assert_eq!(*c.strides, [2, 1]);
+        assert_eq!(*c.contiguous_data(), [1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
+    }
+
+    #[test]
+    fn contiguous_on_expanded() {
+        let t = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]).expand(&[4, 3]);
+        assert!(!t.is_contiguous());
+        let c = t.contiguous();
+        assert!(c.is_contiguous());
+        assert_eq!(*c.shape, [4, 3]);
+        assert_eq!(*c.strides, [3, 1]);
+        assert_eq!(*c.contiguous_data(), [1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
+    }
 }
 

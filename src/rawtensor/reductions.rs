@@ -6,18 +6,15 @@ use std::rc::Rc;
 // Reduction operations along a single axis
 // Core primitive is reduce_axis
 //
-// Returns a new RawTensor with fresh new data
-// If the reduced axis was actually an expanded axis (self.strides[axis] == 0)
-// the new data keep their old strides
-// If not, the data returned is contiguous
-//
 // Defined operations
 // - sum
 // - mean
-// - var
-// - std_dev
+// - var (population, divides by n)
+// - std_dev (from population var)
 
 impl RawTensor {
+    // Returns a new RawTensor with a fresh data allocation, 
+    // keeping the old strides structure (only removing the desired axis)
     pub fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize, usize) -> f64) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
 
@@ -56,9 +53,7 @@ impl RawTensor {
 
     pub fn sum_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, sum) }
     pub fn mean_axis(&self, axis: usize)    -> RawTensor { self.reduce_axis(axis, mean) }
-    /// Population variance (divides by n)
     pub fn var_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, var) }
-    /// Population standard deviation (sqrt of variance divided by n)
     pub fn std_dev_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, std_dev) }
 }
 
@@ -66,96 +61,72 @@ impl RawTensor {
 mod tests {
     use super::*;
 
-    fn approx_eq(a: f64, b: f64) -> bool { (a - b).abs() < 1e-9 }
-
     #[test]
-    fn sum_axis0() {
-        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+    fn basic_axis() {
+        let a = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]);
         let b = a.sum_axis(0);
-        assert_eq!(b.shape(), &[3]);
-        assert_eq!(b.data(), &[5.0, 7.0, 9.0]);
+        assert_eq!(*b.contiguous_data(), [5.0, 7.0, 9.0]);
+        let c = a.mean_axis(0);
+        assert_eq!(*c.contiguous_data(), [2.5, 3.5, 4.5]);
+        let d = a.var_axis(0);
+        assert_eq!(*d.contiguous_data(), [2.25; 3]);
+        let e = a.std_dev_axis(0);
+        assert_eq!(*e.contiguous_data(), [1.5; 3]);
     }
 
     #[test]
-    fn sum_axis1() {
-        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = a.sum_axis(1);
-        assert_eq!(b.shape(), &[2]);
-        assert_eq!(b.data(), &[6.0, 15.0]);
-    } 
-
-    #[test]
-    fn mean_axis0() {
-        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
-        let b = a.mean_axis(0);
-        assert!(b.data().iter().zip(&[2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
-    }
-
-    #[test]
-    fn var_axis0() {
-        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
-        let b = a.var_axis(0);
-        assert_eq!(b.shape(), &[2]);
-        assert!(b.data().iter().zip(&[1.0, 1.0]).all(|(&x, &y)| approx_eq(x, y)));
-    }
-
-    #[test]
-    fn std_dev_axis0() {
-        let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
-        let b = a.std_dev_axis(0);
-        assert_eq!(b.shape(), &[2]);
-        assert!(b.data().iter().zip(&[1.0, 1.0]).all(|(&x, &y)| approx_eq(x, y)));
-    }
-
-    #[test]
-    fn var_axis1_known_values() {
+    fn reduce_axis_1() {
         let a = RawTensor::from_slice(&[1, 3], &[2.0, 4.0, 6.0]);
         let b = a.var_axis(1);
-        assert_eq!(b.shape(), &[1]);
-        assert!(approx_eq(b.data()[0], 8.0 / 3.0));
+        assert_eq!(*b.shape, [1]);
+        assert_eq!(*b.contiguous_data(), [8.0 / 3.0]);
     }
 
     #[test]
-    fn sum_axis_3d() {
-        let data: Vec<f64> = (0..24).map(|x| x as f64).collect();
-        let a = RawTensor::from_vec(&[2, 3, 4], data);
+    fn reduce_axis_3d() {
+        let a = RawTensor::linspace(0.0, 23.0, 24).reshape(&[2, 3, 4]);
         let b = a.sum_axis(1);
-        assert_eq!(b.shape(), &[2, 4]);
-        assert_eq!(b.data()[0], 0.0 + 4.0 + 8.0);
-        assert_eq!(b.data()[1], 1.0 + 5.0 + 9.0);
+        assert_eq!(*b.shape, [2, 4]);
+        assert_eq!(*b.contiguous_data(), [12.0, 15.0, 18.0, 21.0, 48.0, 51.0, 54.0, 57.0]);
     }
 
     #[test]
     #[should_panic]
     fn reduce_axis_out_of_bounds() {
-        let a = RawTensor::from_slice(&[2, 3], &[1.0; 6]);
-        let _ = a.sum_axis(2);
+        let _ = RawTensor::zeros(&[2, 3]).sum_axis(2);
     }
 
     #[test]
     fn reduce_transposed() {
-        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = a.transpose(&[1, 0]);
-        let c = b.sum_axis(0);
-        assert_eq!(c.shape(), &[2]);
-        assert_eq!(c.data(), &[6.0, 15.0]);
+        let a = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]);
+        let c = a.transpose(&[1, 0]).sum_axis(0);
+        assert_eq!(*c.shape, [2]);
+        assert_eq!(*c.contiguous_data(), [6.0, 15.0]);
     }
 
     #[test]
     fn reduce_expanded() {
-        let a = RawTensor::from_slice(&[2, 3], &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b = a.expand(&[5, 2, 3]);
-        let c = b.sum_axis(0);
-        assert_eq!(c.shape(), &[2, 3]);
-        assert_eq!(c.data(), &[5.0, 10.0, 15.0, 20.0, 25.0, 30.0]);
+        let a = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]);
+        let c = a.expand(&[5, 2, 3]).sum_axis(0);
+        assert_eq!(*c.shape, [2, 3]);
+        assert_eq!(*c.contiguous_data(), [5.0, 10.0, 15.0, 20.0, 25.0, 30.0]);
     }
 
     #[test]
-    fn reduce_transposed_3d() {
-        let a = RawTensor::linspace(1.0, 24.0, 24);
-        let b = a.reshape(&[2, 3, 4]);
-        let c = b.transpose(&[1, 2, 0]);
-        let d = c.sum_axis(1);
-        assert_eq!(*d.contiguous_data(), [10.0, 58.0, 26.0, 74.0, 42.0, 90.0]);
+    fn unsqueeze_expand_reduce() {
+        let a = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]);
+        let b = a.unsqueeze_axis(1).expand(&[2, 5, 3]).sum_axis(1);
+        assert_eq!(*b.contiguous_data(), [5.0, 10.0, 15.0, 20.0, 25.0, 30.0]);
+        let c = b.transpose(&[1, 0]).sum_axis(1);
+        assert_eq!(*c.contiguous_data(), [25.0, 35.0, 45.0]);
+    }
+
+    #[test]
+    fn expand_transpose_reduce() {
+        let a = RawTensor::linspace(1.0, 12.0, 12).reshape(&[3, 4]);
+        let b = a.unsqueeze_axis(2).expand(&[3, 4, 2]).sum_axis(2);
+        assert_eq!(*b.contiguous_data(), [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0]);
+        let c = b.transpose(&[1, 0]).mean_axis(1);
+        assert_eq!(*c.contiguous_data(), [10.0, 12.0, 14.0, 16.0]);
     }
 }

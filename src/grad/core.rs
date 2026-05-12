@@ -5,6 +5,7 @@ use crate::rawtensor::RawTensor;
 use crate::tensor::core::TensorInner;
 use crate::Tensor;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum BackpropOp {
@@ -29,6 +30,12 @@ pub enum BackpropOp {
 impl Tensor {
     pub(super) fn tracks_grad(&self) -> bool {
         self.requires_grad || self.op != BackpropOp::None
+    }
+
+    pub fn requires_grad(mut self) -> Tensor {
+        let inner = Rc::get_mut(&mut self.0).expect("can't set requires_grad on a shared tensor");
+        inner.requires_grad = true; 
+        self
     }
 
     pub(super) fn backprop(&self) {

@@ -5,7 +5,7 @@ use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 
 // Arithmetics between a RawTensor and a scalar f64
 // Every operation applies the scalar uniformly to all elements via map
-// Assign operations replace the left-hand side with the result (not in-place)
+// Assign operations replace the lhs with the result (not in-place)
 //
 // Defined operations:
 //   &RawTensor + f64   -> RawTensor      f64 + &RawTensor  -> RawTensor      RawTensor += f64
@@ -106,86 +106,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn add_scalar() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let b = &a + 1.0;
-        assert_eq!(b.data(), &[2.0, 3.0, 4.0]);
+    fn basic_ops() {
+        let t = RawTensor::from_slice(&[4], &[1.0, 2.0, 4.0, 8.0]);
+        assert_eq!(*(&t + 10.0).contiguous_data(), [11.0, 12.0, 14.0, 18.0]);
+        assert_eq!(*(10.0 + &t).contiguous_data(), [11.0, 12.0, 14.0, 18.0]);
+        assert_eq!(*(&t - 1.0).contiguous_data(), [0.0, 1.0, 3.0, 7.0]);
+        assert_eq!(*(10.0 - &t).contiguous_data(), [9.0, 8.0, 6.0, 2.0]);
+        assert_eq!(*(&t * 2.0).contiguous_data(), [2.0, 4.0, 8.0, 16.0]);
+        assert_eq!(*(2.0 * &t).contiguous_data(), [2.0, 4.0, 8.0, 16.0]);
+        assert_eq!(*(&t / 2.0).contiguous_data(), [0.5, 1.0, 2.0, 4.0]);
+        assert_eq!(*(8.0 / &t).contiguous_data(), [8.0, 4.0, 2.0, 1.0]);
     }
 
     #[test]
-    fn scalar_add_tensor() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let b = 1.0 + &a;
-        assert_eq!(b.data(), &[2.0, 3.0, 4.0]);
-    }
-
-    #[test]
-    fn sub_scalar() {
-        let a = RawTensor::from_slice(&[3], &[3.0, 4.0, 5.0]);
-        let b = &a - 1.0;
-        assert_eq!(b.data(), &[2.0, 3.0, 4.0]);
-    }
-
-    #[test]
-    fn mul_scalar() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let b = &a * 2.0;
-        assert_eq!(b.data(), &[2.0, 4.0, 6.0]);
-    }
-
-    #[test]
-    fn div_scalar() {
-        let a = RawTensor::from_slice(&[3], &[2.0, 4.0, 6.0]);
-        let b = &a / 2.0;
-        assert_eq!(b.data(), &[1.0, 2.0, 3.0]);
-    }
-
-    #[test]
-    fn scalar_sub_tensor() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let b = 10.0 - &a;
-        assert_eq!(b.data(), &[9.0, 8.0, 7.0]);
-    }
-
-    #[test]
-    fn scalar_mul_tensor() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let b = 3.0 * &a;
-        assert_eq!(b.data(), &[3.0, 6.0, 9.0]);
-    }
-
-    #[test]
-    fn scalar_div_tensor() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 4.0]);
-        let b = 8.0 / &a;
-        assert_eq!(b.data(), &[8.0, 4.0, 2.0]);
-    }
-
-    #[test]
-    fn add_assign_scalar() {
-        let mut a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        a += 10.0;
-        assert_eq!(a.data(), &[11.0, 12.0, 13.0]);
-    }
-
-    #[test]
-    fn sub_assign_scalar() {
-        let mut a = RawTensor::from_slice(&[3], &[5.0, 6.0, 7.0]);
-        a -= 2.0;
-        assert_eq!(a.data(), &[3.0, 4.0, 5.0]);
-    }
-
-    #[test]
-    fn mul_assign_scalar() {
-        let mut a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        a *= 2.0;
-        assert_eq!(a.data(), &[2.0, 4.0, 6.0]);
-    }
-
-    #[test]
-    fn div_assign_scalar() {
-        let mut a = RawTensor::from_slice(&[3], &[4.0, 6.0, 8.0]);
-        a /= 2.0;
-        assert_eq!(a.data(), &[2.0, 3.0, 4.0]);
+    fn assign_ops() {
+        let mut t = RawTensor::from_slice(&[4], &[1.0, 2.0, 4.0, 8.0]);
+        t += 1.0;
+        assert_eq!(*t.contiguous_data(), [2.0, 3.0, 5.0, 9.0]);
+        t -= 1.0;
+        assert_eq!(*t.contiguous_data(), [1.0, 2.0, 4.0, 8.0]);
+        t *= 2.0;
+        assert_eq!(*t.contiguous_data(), [2.0, 4.0, 8.0, 16.0]);
+        t /= 2.0;
+        assert_eq!(*t.contiguous_data(), [1.0, 2.0, 4.0, 8.0]);
     }
 }
+

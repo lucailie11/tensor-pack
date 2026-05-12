@@ -12,7 +12,7 @@ impl Tensor {
         Tensor::no_grad_tensor(raw)
     }
 
-    // Returns a new Tensor with dimensions permuted according to perm
+    // Returns a new RawTensor with dimensions permuted (new dim_i comes from old dim_perm[i])
     pub fn transpose(&self, perm: &[usize]) -> Tensor {
         let raw = self.raw.transpose(perm);
         Tensor::no_grad_tensor(raw)
@@ -43,8 +43,8 @@ impl Tensor {
     }
 
     // Inserts a size-1 axis at the given position
-    pub fn unsqueeze(&self, axis: usize) -> Tensor {
-        let raw = self.raw.unsqueeze(axis);
+    pub fn unsqueeze_axis(&self, axis: usize) -> Tensor {
+        let raw = self.raw.unsqueeze_axis(axis);
         Tensor::no_grad_tensor(raw)
     }
 

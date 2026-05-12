@@ -18,5 +18,8 @@ fn main() {
     let x: Tensor = Tensor::linspace(1.0, 6.0, 12);
     let y: Tensor = Tensor::linspace(1.0, 6.0, 12);
     println!("{:?}\n{:?}\n{:?}", x, y, &x + &y);
+
+    let wtf: Tensor = Tensor::rand_range(&[6], f64::NEG_INFINITY, 5.0);
+    println!("{:?}\n", wtf);
 }
 

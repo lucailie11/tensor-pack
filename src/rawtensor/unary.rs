@@ -19,6 +19,7 @@ fn relu(x: f64) -> f64 {
 }
 
 impl RawTensor {
+    // Returns a new RawTensor with a fresh data allocation keeping all strides structure
     pub fn map(&self, f: impl Fn(f64) -> f64) -> RawTensor {
         let new_data: Rc<[f64]> = self.data().iter().map(|x| f(*x)).collect();
         RawTensor {
@@ -50,72 +51,46 @@ mod tests {
     use super::*;
 
     fn approx_eq(a: f64, b: f64) -> bool { (a - b).abs() < 1e-9 }
-
-    #[test]
-    fn neg() {
-        let a = RawTensor::from_slice(&[3], &[1.0, -2.0, 3.0]);
-        let b = -&a;
-        assert_eq!(b.data(), &[-1.0, 2.0, -3.0]);
+    fn approx_eq_all(a: &[f64], b: &[f64]) -> bool { 
+        assert_eq!(a.len(), b.len());
+        a.iter().zip(b.iter()).all(|(&x, &y)| approx_eq(x, y))
     }
 
     #[test]
-    fn exp_and_ln_inverses() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let b = a.exp().ln();
-        assert!(b.data().iter().zip(&[1.0, 2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
+    fn basic_ops() {
+        assert_eq!(*RawTensor::from_slice(&[4], &[0.0, 1.0, 4.0, 9.0]).sqrt().contiguous_data(), [0.0, 1.0, 2.0, 3.0]);
+        assert_eq!(*RawTensor::from_slice(&[5], &[-3.0, -1.0, 0.0, 1.0, 3.0]).abs().contiguous_data(), [3.0, 1.0, 0.0, 1.0, 3.0]);
+        assert_eq!(*RawTensor::from_slice(&[5], &[-2.0, -1.0, 0.0, 1.0, 2.0]).relu().contiguous_data(), [0.0, 0.0, 0.0, 1.0, 2.0]);
+        assert_eq!(*(-&RawTensor::from_slice(&[4], &[1.0, -2.0, 0.0, 3.0])).contiguous_data(), [-1.0, 2.0, 0.0, -3.0]);
+
+        let t = RawTensor::from_slice(&[4], &[-1.0, 0.0, 1.0, 2.0]);
+        assert!(approx_eq_all(&t.exp().contiguous_data(), &[-1.0, 0.0, 1.0, 2.0].map(f64::exp)));
+        assert!(approx_eq_all(&t.tanh().contiguous_data(), &[-1.0, 0.0, 1.0, 2.0].map(f64::tanh)));
+
+        let ln_in = [0.5, 1.0, 2.0, 10.0];
+        assert!(approx_eq_all(&RawTensor::from_slice(&[4], &ln_in).ln().contiguous_data(), &ln_in.map(f64::ln)));
+
+        let sig_in = [-2.0, 0.0, 1.0, 2.0];
+        assert!(approx_eq_all(&RawTensor::from_slice(&[4], &sig_in).sigmoid().contiguous_data(), &sig_in.map(|x| 1.0 / ((-x).exp() + 1.0))));
     }
+   
+    #[test]
+    fn map_on_transposed() {
+        let t = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]);
+        let tt = t.transpose(&[1, 0]);
+        let r = tt.map(|x| x * 2.0);
+        assert_eq!(*r.shape, [3, 2]);
+        assert_eq!(*r.strides, [1, 3]);
+        assert_eq!(*r.contiguous_data(), [2.0, 8.0, 4.0, 10.0, 6.0, 12.0]);
+    } 
 
     #[test]
-    fn relu_zeroes_negatives() {
-        let a = RawTensor::from_slice(&[4], &[-2.0, -1.0, 0.0, 1.0]);
-        let b = a.relu();
-        assert_eq!(b.data(), &[0.0, 0.0, 0.0, 1.0]);
-    }
-
-    #[test]
-    fn sigmoid_range() {
-        let a = RawTensor::from_slice(&[3], &[-100.0, 0.0, 100.0]);
-        let b = a.sigmoid();
-        let data = b.data();
-        assert!(data[0] > 0.0 && data[0] < 0.01);
-        assert!(approx_eq(data[1], 0.5));
-        assert!(data[2] > 0.99 && data[2] <= 1.0);
-    }
-
-    #[test]
-    fn sqrt() {
-        let a = RawTensor::from_slice(&[3], &[1.0, 4.0, 9.0]);
-        let b = a.sqrt();
-        assert!(b.data().iter().zip(&[1.0, 2.0, 3.0]).all(|(&x, &y)| approx_eq(x, y)));
-    }
-
-    #[test]
-    fn tanh_known_values() {
-        let a = RawTensor::from_slice(&[3], &[0.0, 1.0, -1.0]);
-        let b = a.tanh();
-        assert!(approx_eq(b.data()[0], 0.0));
-        assert!(approx_eq(b.data()[1], 1.0_f64.tanh()));
-        assert!(approx_eq(b.data()[2], (-1.0_f64).tanh()));
-    }
-
-    #[test]
-    fn abs_removes_sign() {
-        let a = RawTensor::from_slice(&[4], &[-3.0, -1.0, 0.0, 2.0]);
-        let b = a.abs();
-        assert_eq!(b.data(), &[3.0, 1.0, 0.0, 2.0]);
-    }
-
-    #[test]
-    fn relu_boundary() {
-        // Exactly 0.0 should pass through (>= 0 branch)
-        let a = RawTensor::from_slice(&[1], &[0.0]);
-        assert_eq!(a.relu().data(), &[0.0]);
-    }
-
-    #[test]
-    fn neg_double_is_identity() {
-        let a = RawTensor::from_slice(&[3], &[1.0, -2.0, 0.0]);
-        let b = -&(-&a);
-        assert_eq!(b.data(), a.data());
-    }
+    fn map_on_transposed_and_expanded() {
+        let t = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]);
+        let tt = t.transpose(&[1, 0]);
+        let te = tt.expand(&[3, 3, 2]);
+        let r = te.map(|x| x * 2.0);
+        assert_eq!(*r.shape, [3, 3, 2]);
+        assert_eq!(*r.contiguous_data(), [2.0, 8.0, 4.0, 10.0, 6.0, 12.0, 2.0, 8.0, 4.0, 10.0, 6.0, 12.0, 2.0, 8.0, 4.0, 10.0, 6.0, 12.0]);
+    } 
 }

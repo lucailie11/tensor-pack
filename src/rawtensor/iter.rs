@@ -1,4 +1,4 @@
-use crate::rawtensor::structure::is_stride_contiguous;
+use super::structure::is_data_contiguous;
 
 use super::RawTensor;
 
@@ -20,7 +20,6 @@ impl Iterator for LogicalIndices {
 
     fn next(&mut self) -> Option<usize> {
         if self.done { return None; }
-        
 
         let res: usize = self.flat;
 
@@ -56,7 +55,7 @@ impl LogicalIndices {
             done: shape.contains(&0),
             indices: vec![0; shape.len()].into_boxed_slice(),
             len: shape.iter().product(),
-            is_contiguous: is_stride_contiguous(&strides),
+            is_contiguous: is_data_contiguous(&strides),
             strides,
             shape,
             flat: 0,
