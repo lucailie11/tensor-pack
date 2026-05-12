@@ -80,6 +80,25 @@ mod tests {
     }
 
     #[test]
+    fn same_tensor_backward() {
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]).requires_grad();
+        (&x + &x).backward();
+        assert_eq!(grad_of(&x), [2.0, 2.0, 2.0]);
+
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]).requires_grad();
+        (&x - &x).backward();
+        assert_eq!(grad_of(&x), [0.0, 0.0, 0.0]);
+
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]).requires_grad();
+        (&x * &x).backward();
+        assert_eq!(grad_of(&x), [2.0, 4.0, 8.0]);
+
+        let x = Tensor::from_slice(&[3], &[1.0, 2.0, 4.0]).requires_grad();
+        (&x / &x).backward();
+        assert_eq!(grad_of(&x), [0.0, 0.0, 0.0]);
+    }
+
+    #[test]
     fn unary_chain_backward() {
         let x = Tensor::from_slice(&[3], &[-2.0, 1.0, -3.0]).requires_grad();
         let y = Tensor::from_slice(&[3], &[-1.0, 2.0, 3.0]).requires_grad();
