@@ -10,52 +10,45 @@ use std::rc::Rc;
 // Requires self to be the sole owner of its data (which is the case with gradients)
 
 impl RawTensor {
-    pub(crate) fn accumulate_1(&mut self, a: &RawTensor, f: impl Fn(f64) -> f64) {
-        let out_shape: Box<[usize]> = broadcast_shape(&self.shape, &a.shape);
+    fn accumulate_n(&mut self, inputs: &[&RawTensor], f: impl Fn(&[f64]) -> f64) {
+        let out_shape = inputs.iter().fold(
+            self.shape.clone(),
+            |acc, t| broadcast_shape(&acc, &t.shape).expect("shapes not broadcastable"),
+        );
 
-        let self_strides: Box<[usize]> = expanded_strides(self, &out_shape);
-        let a_strides: Box<[usize]> = expanded_strides(a, &out_shape);
+        let self_strides = expanded_strides(self, &out_shape).expect("self strides not expandable");
+        let input_strides: Vec<Box<[usize]>> = inputs.iter()
+            .map(|t| expanded_strides(t, &out_shape).expect("input strides not expandable"))
+            .collect();
 
         let data = Rc::get_mut(&mut self.data).expect("couldn't borrow mutable data from the tensor");
 
-        LogicalIndices::new(out_shape.clone(), self_strides)
-            .zip(LogicalIndices::new(out_shape.clone(), a_strides))
-            .for_each(|(i, j)| data[i] += f(a.data[j]));
+        let mut iters: Vec<_> = input_strides.iter()
+            .map(|s| LogicalIndices::new(out_shape.clone(), s.clone()))
+            .collect();
+
+        LogicalIndices::new(out_shape, self_strides).for_each(|i| {
+            let vals: Vec<f64> = iters.iter_mut()
+                .zip(inputs.iter())
+                .map(|(it, t)| t.data[it.next().unwrap()])
+                .collect();
+            data[i] += f(&vals);
+        });
+    }
+
+    pub(crate) fn accumulate_1(&mut self, a: &RawTensor, f: impl Fn(f64) -> f64) {
+        self.accumulate_n(&[a], |v| f(v[0]));
     }
 
     pub(crate) fn accumulate_2(&mut self, a: &RawTensor, b: &RawTensor, f: impl Fn(f64, f64) -> f64) {
-        let out_shape: Box<[usize]> = broadcast_shape(&self.shape, &broadcast_shape(&a.shape, &b.shape));
-
-        let self_strides: Box<[usize]> = expanded_strides(self, &out_shape);
-        let a_strides: Box<[usize]> = expanded_strides(a, &out_shape);
-        let b_strides: Box<[usize]> = expanded_strides(b, &out_shape);
-
-        let data = Rc::get_mut(&mut self.data).expect("couldn't borrow mutable data from the tensor");
-
-        LogicalIndices::new(out_shape.clone(), self_strides)
-            .zip(LogicalIndices::new(out_shape.clone(), a_strides)
-            .zip(LogicalIndices::new(out_shape.clone(), b_strides)))
-            .for_each(|(i, (j, k))| data[i] += f(a.data[j], b.data[k]));
-
+        self.accumulate_n(&[a, b], |v| f(v[0], v[1]));
     }
 
     pub(crate) fn accumulate_3(&mut self, a: &RawTensor, b: &RawTensor, c: &RawTensor, f: impl Fn(f64, f64, f64) -> f64) {
-        let out_shape: Box<[usize]> = broadcast_shape(&self.shape, &broadcast_shape(&a.shape, &broadcast_shape(&b.shape, &c.shape)));
-
-        let self_strides: Box<[usize]> = expanded_strides(self, &out_shape);
-        let a_strides: Box<[usize]> = expanded_strides(a, &out_shape);
-        let b_strides: Box<[usize]> = expanded_strides(b, &out_shape);
-        let c_strides: Box<[usize]> = expanded_strides(c, &out_shape);
-
-        let data = Rc::get_mut(&mut self.data).expect("couldn't borrow mutable data from the tensor");
- 
-        LogicalIndices::new(out_shape.clone(), self_strides)
-            .zip(LogicalIndices::new(out_shape.clone(), a_strides)
-            .zip(LogicalIndices::new(out_shape.clone(), b_strides)
-            .zip(LogicalIndices::new(out_shape.clone(), c_strides))))
-            .for_each(|(i, (j, (k, l)))| data[i] += f(a.data[j], b.data[k], c.data[l]));
+        self.accumulate_n(&[a, b, c], |v| f(v[0], v[1], v[2]));
     }
 }
+
 
 #[cfg(test)]
 mod tests {

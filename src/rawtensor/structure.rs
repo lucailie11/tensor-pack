@@ -11,16 +11,16 @@ fn are_dimensions_broadcastable(d1: usize, d2: usize) -> bool {
 }
 
 // Returns the shape resulting from broadcasting shape1 and shape2. Panics if incompatible
-pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Box<[usize]> {
+pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Box<[usize]>> {
     let len = usize::max(shape1.len(), shape2.len());
     let mut out = vec![1; len].into_boxed_slice();
     for i in 0..len {
         let d1 = if i < shape1.len() { shape1[shape1.len() - 1 - i] } else { 1 };
         let d2 = if i < shape2.len() { shape2[shape2.len() - 1 - i] } else { 1 };
-        assert!(are_dimensions_broadcastable(d1, d2), "shapes are not broadcastable");
+        if !are_dimensions_broadcastable(d1, d2) { return None }
         out[len - 1 - i] = usize::max(d1, d2);
     }
-    out
+    Some(out)
 }
 
 // Returns the row-major strides for a contiguous tensor of the given shape
@@ -32,8 +32,12 @@ pub(super) fn strides_contiguous(shape: &[usize]) -> Box<[usize]> {
 }
 
 // Returns the strides t will have after being expanded to new_shape
-pub(super) fn expanded_strides(t: &RawTensor, new_shape: &[usize]) -> Box<[usize]> {
-    assert_eq!(*broadcast_shape(&t.shape, new_shape), *new_shape, "shape not broadcastable to new_shape");
+pub(super) fn expanded_strides(t: &RawTensor, new_shape: &[usize]) -> Option<Box<[usize]>> {
+    let broadcast_shape: Option<Box<[usize]>> = broadcast_shape(&t.shape, new_shape);
+    match broadcast_shape {
+        None => return None,
+        Some(s) => { if *s != *new_shape { return None } },
+    }
 
     let new_strides: Box<[usize]> = (0..new_shape.len()).rev()
         .map(|i| {
@@ -42,7 +46,7 @@ pub(super) fn expanded_strides(t: &RawTensor, new_shape: &[usize]) -> Box<[usize
         })
         .collect();
 
-    new_strides
+    Some(new_strides)
 }
 
 pub(super) fn is_data_contiguous(strides: &[usize]) -> bool {
@@ -86,7 +90,7 @@ impl RawTensor {
     pub fn expand(&self, new_shape: &[usize]) -> RawTensor {
         RawTensor {
             shape: Box::from(new_shape),
-            strides: expanded_strides(self, new_shape),
+            strides: expanded_strides(self, new_shape).expect("old shape not broadcastable into new shape"),
             data: Rc::clone(&self.data),
         }
     }
@@ -202,19 +206,14 @@ mod tests {
     }
 
     #[test]
-    fn broadcast_rules_hold() {
-        assert_eq!(*broadcast_shape(   &[5, 4],    &[5, 4]),    [5, 4]);
-        assert_eq!(*broadcast_shape(&[1, 2, 3], &[5, 2, 1]), [5, 2, 3]);
-        assert_eq!(*broadcast_shape(   &[2, 3], &[5, 2, 1]), [5, 2, 3]);
-        assert_eq!(*broadcast_shape(&[5, 2, 3], &[5, 2, 1]), [5, 2, 3]);
-    }
-
-    #[test]
-    #[should_panic]
-    fn broadcast_rules_break() {
-        let _ = broadcast_shape(   &[5, 4], &[5, 3]);
-        let _ = broadcast_shape(   &[2, 4], &[2, 2]);
-        let _ = broadcast_shape(&[1, 2, 3], &[5, 2]);
+    fn broadcast_rules() {
+        assert_eq!(*broadcast_shape(   &[5, 4],    &[5, 4]).unwrap(),    [5, 4]);
+        assert_eq!(*broadcast_shape(&[1, 2, 3], &[5, 2, 1]).unwrap(), [5, 2, 3]);
+        assert_eq!(*broadcast_shape(   &[2, 3], &[5, 2, 1]).unwrap(), [5, 2, 3]);
+        assert_eq!(*broadcast_shape(&[5, 2, 3], &[5, 2, 1]).unwrap(), [5, 2, 3]);
+        assert!(broadcast_shape(   &[5, 4], &[5, 3]).is_none());
+        assert!(broadcast_shape(   &[2, 4], &[2, 2]).is_none());
+        assert!(broadcast_shape(&[1, 2, 3], &[5, 2]).is_none());
     }
 
     #[test]
@@ -228,17 +227,15 @@ mod tests {
     }
 
     #[test]
-    fn expanded_strides_broadcast_new_dim() {
-        // [3] -> [2, 3]: new leading dim gets stride 0, existing dim keeps stride 1
-        let t = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        assert_eq!(*expanded_strides(&t, &[2, 3]), [0, 1]);
-    }
-
-    #[test]
-    fn expanded_strides_size1_and_new_dim() {
-        // [1, 4] -> [3, 2, 4]: size-1 dim gets 0, new leading dim gets 0, dim 4 keeps stride 1
-        let t = RawTensor::from_slice(&[1, 4], &[1.0, 2.0, 3.0, 4.0]);
-        assert_eq!(*expanded_strides(&t, &[3, 2, 4]), [0, 0, 1]);
+    fn expanded_strides_test() {
+        let t = RawTensor::zeros(&[3]);
+        assert_eq!(*expanded_strides(&t, &[2, 3]).unwrap(), [0, 1]);
+        let t = RawTensor::zeros(&[1, 4]);
+        assert_eq!(*expanded_strides(&t, &[3, 2, 4]).unwrap(), [0, 0, 1]);
+        let t = RawTensor::zeros(&[3]);
+        assert!(expanded_strides(&t, &[3, 2]).is_none());
+        let t = RawTensor::zeros(&[1, 2, 2]);
+        assert!(expanded_strides(&t, &[3, 2, 4]).is_none());
     }
 
     #[test]

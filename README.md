@@ -98,7 +98,6 @@ println!("{}", y);
 
 ## To do
 - Random seed
-- return None / assert for expand_strides??
-- Gradient supports
+- Finish all gradient supports
 - Concurrency support
 - Python bindings

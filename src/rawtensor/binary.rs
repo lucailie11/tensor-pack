@@ -20,7 +20,7 @@ impl RawTensor {
     // Panics if the shapes are incompatible for broadcasting
     // Returns a contiguous RawTensor with a fresh data allocation
     pub fn elementwise_op(&self, other: &RawTensor, f: impl Fn(f64, f64) -> f64) -> RawTensor {
-        let out_shape = broadcast_shape(&self.shape, &other.shape);
+        let out_shape: Box<[usize]> = broadcast_shape(&self.shape, &other.shape).expect("shapes not broadcastable");
         let a = self.expand(&out_shape);
         let b = other.expand(&out_shape);
         let new_data: Rc<[f64]> = a.iter().zip(b.iter())
