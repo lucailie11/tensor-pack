@@ -94,17 +94,16 @@ impl RawTensor {
             data: Rc::clone(&self.data),
         }
     }
+    //
+    // Removes a single size-1 axis
+    pub fn squeeze(&self, axis: usize) -> RawTensor {
+        assert!(axis < self.shape.len(), "axis {axis} out of bounds");
+        assert_eq!(self.shape[axis], 1, "cannot squeeze axis {axis} with size != 1");
 
-    // Removes a set of size-1 axes from the shape
-    pub fn squeeze_axes(&self, axes: &[usize]) -> RawTensor {
-        for &axis in axes {
-            assert!(axis < self.shape.len(), "axis {axis} out of bounds");
-            assert_eq!(self.shape[axis], 1, "cannot squeeze axis {axis} with size != 1");
-        }
         let new_shape: Box<[usize]> = self.shape.iter().enumerate()
-            .filter(|(i, _)| !axes.contains(i)).map(|(_, &d)| d).collect();
+            .filter(|(i, _)| axis != *i).map(|(_, &d)| d).collect();
         let new_strides: Box<[usize]> = self .strides.iter().enumerate()
-            .filter(|(i, _)| !axes.contains(i)).map(|(_, &s)| s).collect();
+            .filter(|(i, _)| axis != *i).map(|(_, &s)| s).collect();
 
         RawTensor {
             shape: new_shape,
@@ -113,20 +112,8 @@ impl RawTensor {
         }
     }
 
-    // Removes a single size-1 axis
-    pub fn squeeze_axis(&self, axis: usize) -> RawTensor {
-        self.squeeze_axes(&[axis])
-    }
-
-    // Removes all size-1 axes
-    pub fn squeeze_all(&self) -> RawTensor {
-        let axes: Vec<usize> = self.shape.iter().enumerate()
-            .filter(|&(_, &d)| d == 1).map(|(i, _)| i).collect();
-        self.squeeze_axes(&axes)
-    }
-
     // Inserts a size-1 axis at the given position
-    pub fn unsqueeze_axis(&self, axis: usize) -> RawTensor {
+    pub fn unsqueeze(&self, axis: usize) -> RawTensor {
         assert!(axis <= self.shape.len(), "axis {axis} out of bounds");
 
         let new_stride = if axis < self.shape.len() 
@@ -222,8 +209,8 @@ mod tests {
         assert!(!RawTensor::zeros(&[2, 3]).transpose(&[1, 0]).is_contiguous());
         assert!(RawTensor::zeros(&[2, 3]).transpose(&[1, 0]).transpose(&[1, 0]).is_contiguous());
         assert!(!RawTensor::zeros(&[2, 3]).expand(&[5, 2, 3]).is_contiguous());
-        assert!(RawTensor::zeros(&[2, 3]).unsqueeze_axis(2).is_contiguous());
-        assert!(RawTensor::zeros(&[2, 3]).unsqueeze_axis(2).squeeze_axis(2).is_contiguous());
+        assert!(RawTensor::zeros(&[2, 3]).unsqueeze(2).is_contiguous());
+        assert!(RawTensor::zeros(&[2, 3]).unsqueeze(2).squeeze(2).is_contiguous());
     }
 
     #[test]
@@ -246,10 +233,10 @@ mod tests {
         let t = t.transpose(&[1, 0]);
         assert_eq!(*t.contiguous_data(), [1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
 
-        let t = t.unsqueeze_axis(2);
+        let t = t.unsqueeze(2);
         assert_eq!(*t.contiguous_data(), [1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
 
-        let t = t.squeeze_axis(2);
+        let t = t.squeeze(2);
         assert_eq!(*t.contiguous_data(), [1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
 
         let t = t.expand(&[3, 3, 2]);
@@ -382,21 +369,15 @@ mod tests {
     #[test]
     fn squeeze_axis_removes_dim_and_strides() {
         let t = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 1, 3]);
-        let s = t.squeeze_axis(1);
+        let s = t.squeeze(1);
         assert_eq!(*s.shape, [2, 3]);
         assert_eq!(*s.strides, [3, 1]);
     }
 
     #[test]
-    fn squeeze_all_removes_all_size1_dims() {
-        let t = RawTensor::from_slice(&[1, 2, 1, 3, 1], &[0.0; 6]);
-        assert_eq!(*t.squeeze_all().shape, [2, 3]);
-    }
-
-    #[test]
     fn squeeze_axis_preserves_logical_values() {
         let t = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 1, 3]);
-        let s = t.squeeze_axis(1);
+        let s = t.squeeze(1);
         assert_eq!(*s.shape, [2, 3]);
         assert_eq!(*s.strides, [3, 1]);
         assert_eq!(*s.contiguous_data(), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
@@ -406,34 +387,34 @@ mod tests {
     #[test]
     #[should_panic]
     fn squeeze_non_unit_dim_panics() {
-        RawTensor::zeros(&[2, 3]).squeeze_axis(0);
+        RawTensor::zeros(&[2, 3]).squeeze(0);
     }
 
     #[test]
     #[should_panic]
     fn squeeze_out_of_bounds_panics() {
-        RawTensor::zeros(&[2, 3]).squeeze_axis(2);
+        RawTensor::zeros(&[2, 3]).squeeze(2);
     }
 
     #[test]
     fn unsqueeze_inserts_at_front_mid_end() {
         let t = RawTensor::zeros(&[3, 4]);
-        assert_eq!(*t.unsqueeze_axis(0).shape, [1, 3, 4]);
-        assert_eq!(*t.unsqueeze_axis(1).shape, [3, 1, 4]);
-        assert_eq!(*t.unsqueeze_axis(2).shape, [3, 4, 1]);
+        assert_eq!(*t.unsqueeze(0).shape, [1, 3, 4]);
+        assert_eq!(*t.unsqueeze(1).shape, [3, 1, 4]);
+        assert_eq!(*t.unsqueeze(2).shape, [3, 4, 1]);
     }
 
     #[test]
     fn unsqueeze_preserves_logical_values() {
         let t = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
-        let s = t.unsqueeze_axis(1);
+        let s = t.unsqueeze(1);
         assert_eq!(*s.contiguous_data(), [1.0, 2.0, 3.0]);
     }
 
     #[test]
     #[should_panic]
     fn unsqueeze_out_of_bounds_panics() {
-        RawTensor::zeros(&[3, 4]).unsqueeze_axis(3);
+        RawTensor::zeros(&[3, 4]).unsqueeze(3);
     }
 
     #[test]

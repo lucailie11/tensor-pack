@@ -24,27 +24,15 @@ impl Tensor {
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Expand)
     }
 
-    // Removes a set of size-1 axes from the shape
-    pub fn squeeze_axes(&self, axes: &[usize]) -> Tensor {
-        let raw = self.raw.squeeze_axes(axes);
-        Tensor::no_grad_tensor(raw)
-    }
-
     // Removes a single size-1 axis
-    pub fn squeeze_axis(&self, axis: usize) -> Tensor {
-        let raw = self.raw.squeeze_axis(axis);
+    pub fn squeeze(&self, axis: usize) -> Tensor {
+        let raw = self.raw.squeeze(axis);
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Squeeze(axis))
-    }
-
-    // Removes all size-1 axes
-    pub fn squeeze_all(&self) -> Tensor {
-        let raw = self.raw.squeeze_all();
-        Tensor::no_grad_tensor(raw)
     }
 
     // Inserts a size-1 axis at the given position
     pub fn unsqueeze_axis(&self, axis: usize) -> Tensor {
-        let raw = self.raw.unsqueeze_axis(axis);
+        let raw = self.raw.unsqueeze(axis);
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Unsqueeze(axis))
     }
 

@@ -1,5 +1,4 @@
 use super::RawTensor;
-// use super::stridedops::{sum, mean, var, std_dev};
 
 use std::rc::Rc;
 
@@ -147,7 +146,7 @@ mod tests {
     #[test]
     fn unsqueeze_expand_reduce() {
         let a = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]);
-        let b = a.unsqueeze_axis(1).expand(&[2, 5, 3]).sum_axis(1);
+        let b = a.unsqueeze(1).expand(&[2, 5, 3]).sum_axis(1);
         assert_eq!(*b.contiguous_data(), [5.0, 10.0, 15.0, 20.0, 25.0, 30.0]);
         let c = b.transpose(&[1, 0]).sum_axis(1);
         assert_eq!(*c.contiguous_data(), [25.0, 35.0, 45.0]);
@@ -156,7 +155,7 @@ mod tests {
     #[test]
     fn expand_transpose_reduce() {
         let a = RawTensor::linspace(1.0, 12.0, 12).reshape(&[3, 4]);
-        let b = a.unsqueeze_axis(2).expand(&[3, 4, 2]).sum_axis(2);
+        let b = a.unsqueeze(2).expand(&[3, 4, 2]).sum_axis(2);
         assert_eq!(*b.contiguous_data(), [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0]);
         let c = b.transpose(&[1, 0]).mean_axis(1);
         assert_eq!(*c.contiguous_data(), [10.0, 12.0, 14.0, 16.0]);
