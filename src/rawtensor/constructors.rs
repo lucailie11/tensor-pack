@@ -2,8 +2,14 @@ use super::RawTensor;
 use super::structure::strides_contiguous;
 
 use std::rc::Rc;
-use rand::thread_rng;
+use std::cell::RefCell;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use rand_distr::{Distribution, Normal, Uniform};
+
+thread_local! {
+    static RNG: RefCell<StdRng> = RefCell::new(StdRng::from_entropy());
+}
 
 // A set of basic tensor constructors
 // Constructors take desired shape as a parameter unless specified otherwise
@@ -88,15 +94,20 @@ impl RawTensor {
     }
 
 
+    pub fn set_seed(seed: u64) {
+        RNG.with(|rng| *rng.borrow_mut() = StdRng::seed_from_u64(seed));
+    }
+
     // Creates a RawTensor filled with random samples from U([l, r))
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> RawTensor {
         assert!(l.is_finite() && r.is_finite(), "l and r must be finite");
         assert!(l < r, "[l, r) should be a non-empty interval");
 
         let len: usize = shape.iter().product();
-        let mut rng = thread_rng();
         let uniform = Uniform::new(l, r);
-        let data: Rc<[f64]> = (0..len).map(|_| uniform.sample(&mut rng)).collect();
+        let data: Rc<[f64]> = RNG.with(|rng| {
+            (0..len).map(|_| uniform.sample(&mut *rng.borrow_mut())).collect()
+        });
         RawTensor::from_rc(shape, data)
     }
 
@@ -111,9 +122,10 @@ impl RawTensor {
         assert!(std_dev > 0.0 && std_dev.is_finite(), "std_dev must be finite and greater than 0");
 
         let len: usize = shape.iter().product();
-        let mut rng = thread_rng();
         let normal = Normal::new(mean, std_dev).unwrap();
-        let data: Rc<[f64]> = (0..len).map(|_| normal.sample(&mut rng)).collect();
+        let data: Rc<[f64]> = RNG.with(|rng| {
+            (0..len).map(|_| normal.sample(&mut *rng.borrow_mut())).collect()
+        });
         RawTensor::from_rc(shape, data)
     }
 }
@@ -203,6 +215,22 @@ mod tests {
         let t = RawTensor::rand_range(&[1000], -2.0, 5.0);
         assert!(t.iter().all(|x| (-2.0..5.0).contains(&x)));
     }
+
+    #[test]
+    fn seed_reproducibility() {
+        RawTensor::set_seed(21);
+        let a = RawTensor::rand_range(&[6], 0.0, 5.0);
+
+        RawTensor::set_seed(52);
+        let b = RawTensor::rand_range(&[6], 0.0, 5.0);
+
+        RawTensor::set_seed(21);
+        let c = RawTensor::rand_range(&[6], 0.0, 5.0);
+
+        assert_eq!(a.contiguous_data(), c.contiguous_data());
+        assert_ne!(a.contiguous_data(), b.contiguous_data());
+    }
+
 
     #[test]
     #[should_panic]

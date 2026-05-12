@@ -97,7 +97,6 @@ println!("{}", y);
 ```
 
 ## To do
-- Random seed
 - Finish all gradient supports
 - Concurrency support
 - Python bindings

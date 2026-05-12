@@ -79,6 +79,11 @@ impl Tensor {
         Tensor::no_grad_tensor(RawTensor::identity(n))
     }
 
+    // Seeds the global RNG used by all random constructors
+    pub fn set_seed(seed: u64) {
+        RawTensor::set_seed(seed);
+    }
+
     // Creates a Tensor filled with random samples from U([l, r))
     pub fn rand_range(shape: &[usize], l: f64, r: f64) -> Tensor {
         Tensor::no_grad_tensor(RawTensor::rand_range(shape, l, r))
@@ -94,3 +99,4 @@ impl Tensor {
         Tensor::no_grad_tensor(RawTensor::randn(shape, mean, std_dev))
     }
 }
+

@@ -19,7 +19,14 @@ fn main() {
     let y: Tensor = Tensor::linspace(1.0, 6.0, 12);
     println!("{:?}\n{:?}\n{:?}", x, y, &x + &y);
 
-    let wtf: Tensor = Tensor::rand_range(&[6], f64::NEG_INFINITY, 5.0);
-    println!("{:?}\n", wtf);
+    Tensor::set_seed(21);
+    let a: Tensor = Tensor::rand_range(&[6], 0.0, 5.0);
+
+    Tensor::set_seed(52);
+    let b: Tensor = Tensor::rand_range(&[6], 0.0, 5.0);
+
+    Tensor::set_seed(21);
+    let c: Tensor = Tensor::rand_range(&[6], 0.0, 5.0);
+    println!("{:?}\n{:?}\n{:?}\n", a, b, c);
 }
 
