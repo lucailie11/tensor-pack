@@ -17,6 +17,7 @@ impl RawTensor {
     pub fn ndim(&self)     -> usize    { self.shape.len() }
     pub fn len(&self)      -> usize    { self.shape.iter().product() }
     pub fn is_empty(&self) -> bool     { self.shape.contains(&0) }
+    pub(crate) fn strides(&self)  -> &[usize] { &self.strides }
 }
 
 impl PartialEq for RawTensor {

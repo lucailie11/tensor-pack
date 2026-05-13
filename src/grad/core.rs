@@ -97,15 +97,15 @@ impl Tensor {
 
             // Linalg ops
             BackpropOp::Dot    => { dot_backprop(self, &self.inputs[0], &self.inputs[1]); }
-            BackpropOp::Matmul => { matmul_backprop(self, &self.inputs[0], &self.inputs[1]); }  // Does nothing
+            BackpropOp::Matmul => { matmul_backprop(self, &self.inputs[0], &self.inputs[1]); }
 
             // Normalization ops
             BackpropOp::Softmax(axis) => { softmax_backprop(self, &self.inputs[0], axis); }     // Does nothing
             
             // Structure ops
-            BackpropOp::Reshape   => { reshape_backprop(self, &self.inputs[0]); }               // Does nothing
-            BackpropOp::Transpose => { transpose_backprop(self, &self.inputs[0]); }             // Does nothing
-            BackpropOp::Expand    => { expand_backprop(self, &self.inputs[0]); }                // Does nothing 
+            BackpropOp::Reshape   => { reshape_backprop(self, &self.inputs[0]); }
+            BackpropOp::Transpose => { transpose_backprop(self, &self.inputs[0]); }
+            BackpropOp::Expand    => { expand_backprop(self, &self.inputs[0]); }
             BackpropOp::Squeeze(axis)   => { squeeze_backprop(self, &self.inputs[0], axis); }
             BackpropOp::Unsqueeze(axis) => { unsqueeze_backprop(self, &self.inputs[0], axis); }
         }
