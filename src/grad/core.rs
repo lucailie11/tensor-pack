@@ -18,7 +18,6 @@ use crate::rawtensor::RawTensor;
 use crate::tensor::core::TensorInner;
 use std::cell::Cell;
 use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum BackpropOp {
@@ -58,14 +57,21 @@ pub enum BackpropOp {
 }
 
 impl Tensor {
+    // Checks if the Tensor needs to compute gradient
     pub(super) fn tracks_grad(&self) -> bool {
         self.requires_grad || self.op.get() != BackpropOp::None
     }
 
-    pub fn requires_grad(mut self) -> Tensor {
-        let inner = Rc::get_mut(&mut self.0).expect("can't set requires_grad on a shared tensor");
-        inner.requires_grad = true;
-        self
+    // Returns a new Tensor which requires gradient
+    // Points to the same RawTensor as the old one
+    pub fn requires_grad(self) -> Tensor {
+        Tensor::from_inner(TensorInner {
+            raw: self.raw.clone(),
+            grad: RefCell::new(None),
+            requires_grad: true,
+            inputs: RefCell::new(Box::from([])),
+            op: Cell::new(BackpropOp::None),
+        })
     }
     
     // Clears the gradient on this tensor. Call before a new backward pass on reused leaves.
