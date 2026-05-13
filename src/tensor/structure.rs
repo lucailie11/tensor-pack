@@ -6,13 +6,19 @@ use std::ops::Index;
 // Delegates data logic to RawTensor and autograd logic to grad/
 //
 // Defined operations:
+// - contiguous
 // - reshape (only for contiguous Tensor)
-// - transpose 
+// - transpose
 // - expand
 // - squeeze
 // - unsqueeze
 
 impl Tensor {
+    // Returns a new Tensor with data in logical order
+    pub fn contiguous(&self) -> Tensor {
+        Tensor::no_grad_tensor(self.raw.contiguous())
+    }
+
     // Returns a new Tensor with a new shape. Panics if tensor is not contiguous
     pub fn reshape(&self, new_shape: &[usize]) -> Tensor {
         let raw = self.raw.reshape(new_shape);
@@ -38,7 +44,7 @@ impl Tensor {
     }
 
     // Inserts a size-1 axis at the given position
-    pub fn unsqueeze_axis(&self, axis: usize) -> Tensor {
+    pub fn unsqueeze(&self, axis: usize) -> Tensor {
         let raw = self.raw.unsqueeze(axis);
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Unsqueeze(axis))
     }

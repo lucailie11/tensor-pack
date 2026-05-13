@@ -65,6 +65,11 @@ impl RawTensor {
         self.iter().collect()
     }
 
+    // Returns a new RawTensor with data in logical order
+    pub fn contiguous(&self) -> RawTensor {
+        RawTensor::from_rc(&self.shape, self.contiguous_data())
+    }
+
     // Returns a new RawTensor with a new shape. Panics if tensor is not contiguous
     pub fn reshape(&self, new_shape: &[usize]) -> RawTensor {
         assert!(self.is_contiguous(), "cannot reshape a non-contiguous tensor. call .contiguous() first");
@@ -485,5 +490,27 @@ mod tests {
     fn get_0d_tensor() {
         let t = RawTensor::from_scalar(42.0);
         assert_eq!(t.get(&[]), Some(42.0));
+    }
+
+    #[test]
+    fn contiguous_on_transposed() {
+        let t = RawTensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]).transpose(&[1, 0]);
+        assert!(!t.is_contiguous());
+        let c = t.contiguous();
+        assert!(c.is_contiguous());
+        assert_eq!(*c.shape, [3, 2]);
+        assert_eq!(*c.strides, [2, 1]);
+        assert_eq!(*c.contiguous_data(), [1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
+    }
+
+    #[test]
+    fn contiguous_on_expanded() {
+        let t = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]).expand(&[4, 3]);
+        assert!(!t.is_contiguous());
+        let c = t.contiguous();
+        assert!(c.is_contiguous());
+        assert_eq!(*c.shape, [4, 3]);
+        assert_eq!(*c.strides, [3, 1]);
+        assert_eq!(*c.contiguous_data(), [1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
     }
 }

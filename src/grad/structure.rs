@@ -145,10 +145,10 @@ mod tests {
     }
 
     #[test]
-    fn unsqueeze_axis_mid() {
+    fn unsqueeze_mid() {
         let a = Tensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]).requires_grad();
         let b = Tensor::from_slice(&[2, 1, 3], &[6.0, 5.0, 4.0, 3.0, 2.0, 1.0]).requires_grad();
-        (&a.unsqueeze_axis(1) * &b).backward();
+        (&a.unsqueeze(1) * &b).backward();
         assert_eq!(grad_of(&a), [6.0, 5.0, 4.0, 3.0, 2.0, 1.0]);
         assert_eq!(grad_of(&b), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
     }

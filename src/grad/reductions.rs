@@ -35,7 +35,6 @@ mod tests {
         assert_eq!(grad_of(&x), [1.0 / 3.0; 6]);
     }
 
-    // TODO
 }
 
 

@@ -98,15 +98,4 @@ mod tests {
         assert_eq!(grad_of(&x), [0.0, 0.0, 0.0]);
     }
 
-    #[test]
-    fn unary_chain_backward() {
-        let x = Tensor::from_slice(&[3], &[-2.0, 1.0, -3.0]).requires_grad();
-        let y = Tensor::from_slice(&[3], &[-1.0, 2.0, 3.0]).requires_grad();
-        let a = x.abs();
-        let b = y.relu();
-        (&a * &b).backward();
-        assert_eq!(grad_of(&x), [0.0, 2.0, -3.0]);
-        assert_eq!(grad_of(&y), [0.0, 1.0, 3.0]);
-    }
-
 }

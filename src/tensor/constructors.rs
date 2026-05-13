@@ -49,11 +49,6 @@ impl Tensor {
         Tensor::from_slice(&[], &[scalar])
     }
 
-    // Returns a new Tensor with data in logical order
-    pub fn contiguous(&self) -> Tensor {
-        Tensor::no_grad_tensor(self.raw.contiguous())
-    }
-
     // Creates a Tensor filled with value
     pub fn full(shape: &[usize], value: f64) -> Tensor {
         Tensor::no_grad_tensor(RawTensor::full(shape, value))
