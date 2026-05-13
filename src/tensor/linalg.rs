@@ -2,8 +2,8 @@ use super::Tensor;
 use crate::rawtensor::RawTensor;
 use crate::grad::BackpropOp;
 
-// Delegate all ops to RawTensor 
-// No gradient support so far
+// Dot product and matrix multiplication between two Tensor
+// Delegates data logic to RawTensor and autograd logic to grad/
 
 impl Tensor {
     pub fn dot(&self, other: &Tensor) -> Tensor {

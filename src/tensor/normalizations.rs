@@ -2,8 +2,12 @@ use super::Tensor;
 use crate::grad::BackpropOp;
 use crate::rawtensor::RawTensor;
 
-// Delegate all ops to RawTensor 
-// No gradient support so far
+// Reduction operations along a single axis
+// Delegates data logic to RawTensor and autograd logic to grad/ (not fully supported yet)
+//
+// Defined operations
+// - softmax
+
 
 impl Tensor {
     pub fn softmax(&self, axis: usize) -> Tensor {

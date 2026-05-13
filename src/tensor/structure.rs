@@ -2,8 +2,15 @@ use crate::grad::BackpropOp;
 use super::Tensor;
 use std::ops::Index;
 
-// Delegate all ops to RawTensor 
-// No gradient support so far
+// Structure operations
+// Delegates data logic to RawTensor and autograd logic to grad/
+//
+// Defined operations:
+// - reshape (only for contiguous Tensor)
+// - transpose 
+// - expand
+// - squeeze
+// - unsqueeze
 
 impl Tensor {
     // Returns a new Tensor with a new shape. Panics if tensor is not contiguous

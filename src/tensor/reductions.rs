@@ -2,8 +2,15 @@ use crate::grad::BackpropOp;
 
 use super::Tensor;
 
-// Delegate all ops to RawTensor 
-// No gradient support so far
+// Reduction operations along a single axis
+// Delegates data logic to RawTensor and autograd logic to grad/
+//
+// Defined operations
+// - sum
+// - mean
+// - var (population, divides by n) (not supported yet)
+// - std_dev (from population var)  (not supported yet)
+
 
 impl Tensor {
     pub fn sum_axis(&self, axis: usize) -> Tensor {

@@ -98,6 +98,6 @@ println!("{}", y);
 
 ## To do
 - Multiple backward passes
-- Finish all gradient supports
+- Gradient support for softmax, var, std_dev
 - Concurrency support
 - Python bindings
