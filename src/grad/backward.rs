@@ -11,7 +11,7 @@ fn topo_sort_dfs(tensor: &Tensor, sorted: &mut Vec<Tensor>, visited: &mut HashSe
 
     if !tensor.tracks_grad() { return };
 
-    for input in tensor.inputs.iter() {
+    for input in tensor.inputs.borrow().iter() {
         topo_sort_dfs(input, sorted, visited);
     }
     sorted.push(tensor.clone());
@@ -26,25 +26,20 @@ fn topo_sort(root: &Tensor) -> Vec<Tensor> {
 }
 
 impl Tensor {
-    // Runs backpropagation from this tensor
-    // Starting gradient is all ones
-    // Must only be called once per graph - calling it twice undefined behaviour for now
+    // Runs backpropagation from this tensor. Starting gradient is all ones.
+    // Consumes the graph: grad, inputs and op are cleared on every node after backprop.
+    // Only leaf gradients (.requires_grad) are preserved
     pub fn backward(&self) {
         *self.grad.borrow_mut() = Some(RawTensor::ones(self.raw.shape()));
-
         let topo = topo_sort(self);
-        for tensor in topo.iter().rev() {
-            tensor.backprop();
-            if !tensor.requires_grad {
-                *tensor.grad.borrow_mut() = None;
-            }
-        }
+        for tensor in topo.iter().rev() { tensor.backprop(); }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::Tensor;
+    use crate::grad::BackpropOp;
 
     fn grad_of(t: &Tensor) -> Vec<f64> {
         t.grad.borrow().as_ref().expect("no grad").contiguous_data().to_vec()
@@ -105,6 +100,28 @@ mod tests {
         assert!(y.grad.borrow().is_none());
         assert!(r.grad.borrow().is_none());
         assert!(z.grad.borrow().is_none());
+    }
+
+    #[test]
+    fn graph_data_behaviour() {
+        let x = Tensor::from_slice(&[2], &[1.0, 2.0]).requires_grad();
+        let y = &x * 2.0;
+        let z = y.relu();
+        z.backward();
+        assert_eq!(z.op.get(), BackpropOp::None);
+        assert!(z.inputs.borrow().is_empty());
+        assert_eq!(y.op.get(), BackpropOp::None);
+        assert!(y.inputs.borrow().is_empty());
+        assert_eq!(grad_of(&x), [2.0, 2.0]);
+
+        z.backward();
+        assert_eq!(grad_of(&x), [2.0, 2.0]);
+
+        x.zero_grad();
+        assert!(x.grad.borrow().is_none());
+
+        (&x * &y).backward();
+        assert_eq!(grad_of(&x), [2.0, 4.0]);
     }
 }
 

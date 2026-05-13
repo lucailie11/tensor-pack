@@ -4,6 +4,7 @@ use crate::rawtensor::RawTensor;
 use crate::tensor::core::TensorInner;
 
 use std::rc::Rc;
+use std::cell::Cell;
 use std::cell::RefCell;
 
 impl Tensor {
@@ -17,8 +18,8 @@ impl Tensor {
             TensorInner {
                 raw,
                 grad: RefCell::new(None),
-                inputs: Box::from([]),
-                op: BackpropOp::None,
+                inputs: RefCell::new(Box::from([])),
+                op: Cell::new(BackpropOp::None),
                 requires_grad: false,
             }
         )

@@ -34,7 +34,7 @@ The only public type is `Tensor`. `RawTensor` and the grad internals are crate-p
 
 ### Structure ops
 - `reshape(new_shape)`, `transpose(perm)`, `expand(new_shape)`
-- `squeeze_axes(axes)` / `squeeze_axis(axis)` / `squeeze_all()` / `unsqueeze_axis(axis)`
+- `squeeze(axis)`, `unsqueeze_axis(axis)`
 
 ### Binary ops
 Elementwise operations with broadcasting. Assign ops are not in-place.
@@ -68,13 +68,28 @@ Reduce along one axis, dropping it from the output shape.
 ### Autograd
 Gradients are tracked automatically during the forward pass. Call `.backward()` on any tensor to populate `.grad` on all leaf tensors that have `requires_grad = true`.
 
-`.backward()` seeds the gradient with all-ones. It is intended for scalar outputs — calling it on a non-scalar is valid but equivalent to summing all output elements before backpropagating.
+`.backward()` seeds the gradient with all-ones. It is intended for scalar outputs — calling it on a non-scalar is equivalent to summing all output elements before backpropagating.
 
-`.backward()` must only be called once per graph. Calling it again accumulates on top of existing gradients rather than recomputing from scratch.
+**Graph consumption:** `.backward()` consumes the computation graph. After it returns, `inputs` and `op` are cleared on every intermediate node, and intermediate gradients are freed. Only leaf gradients (`.requires_grad = true`) are kept. To run another backward pass on the same leaves, call `.zero_grad()` on each leaf first and rebuild the graph by rerunning the forward pass.
 
-Supported ops for backprop: `+`, `-`, `*`, `/` (tensor-tensor and scalar variants), `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`, `tanh`.
+```rust
+x.zero_grad();
+let loss = forward(&x);
+loss.backward();
+// x.grad now holds the fresh gradient
+```
 
-Reductions, normalizations, linalg, and structure ops do not have gradient support yet — they detach from the computation graph.
+**Supported ops for backprop:**
+
+| Category   | Ops |
+|------------|-----|
+| Binary     | `+`, `-`, `*`, `/` (tensor–tensor and scalar variants) |
+| Unary      | `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`, `tanh` |
+| Reductions | `sum_axis`, `mean_axis` |
+| Linalg     | `dot`, `matmul` |
+| Structure  | `reshape`, `transpose`, `expand`, `squeeze`, `unsqueeze_axis` |
+
+`softmax`, `var_axis`, and `std_dev_axis` detach from the computation graph — gradients do not flow through them.
 
 ## Usage
 
@@ -86,18 +101,20 @@ let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
 let y = Tensor::randn(&[3], 0.0, 1.0).requires_grad();
 
 // build a computation graph with normal operators
-let z = &x * &y;           // element-wise multiply
-let loss = &z.exp() + 1.0; // exp then add scalar
+let z = (&x * &y).relu();
+let loss = z.sum_axis(0);
 
 // run backprop — populates x.grad and y.grad
 loss.backward();
 
-println!("{}", x);
-println!("{}", y);
+// reuse leaves: clear old grads, rerun forward
+x.zero_grad();
+y.zero_grad();
+let loss2 = (&x * &y).relu().sum_axis(0);
+loss2.backward();
 ```
 
 ## To do
-- Multiple backward passes
-- Gradient support for softmax, var, std_dev
+- Gradient support for `softmax`, `var_axis`, `std_dev_axis`
 - Concurrency support
 - Python bindings

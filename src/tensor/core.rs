@@ -3,14 +3,15 @@ use crate::grad::BackpropOp;
 
 use std::ops::Deref;
 use std::rc::Rc;
+use std::cell::Cell;
 use std::cell::RefCell;
 
 #[derive(Clone)]
 pub struct TensorInner {
     pub(crate) raw: RawTensor,
     pub(crate) grad: RefCell<Option<RawTensor>>,
-    pub(crate) inputs: Box<[Tensor]>,
-    pub(crate) op: BackpropOp,
+    pub(crate) inputs: RefCell<Box<[Tensor]>>,
+    pub(crate) op: Cell<BackpropOp>,
     pub(crate) requires_grad: bool,
 }
 
