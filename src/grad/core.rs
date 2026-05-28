@@ -1,17 +1,10 @@
-use super::binary::{
-    add_tensor_backprop, div_tensor_backprop, mul_tensor_backprop, sub_tensor_backprop,
-};
+use super::binary::{add_tensor_backprop, div_tensor_backprop, mul_tensor_backprop, sub_tensor_backprop};
 use super::linalg::{dot_backprop, matmul_backprop};
 use super::normalizations::softmax_backprop;
 use super::reductions::{mean_backprop, sum_backprop};
-use super::scalar::{
-    add_scalar_backprop, div_scalar_backprop, mul_scalar_backprop, sub_scalar_backprop,
-};
+use super::scalar::{add_scalar_backprop, div_scalar_backprop, mul_scalar_backprop, sub_scalar_backprop};
 use super::structure::{expand_backprop, squeeze_backprop, transpose_backprop, unsqueeze_backprop};
-use super::unary::{
-    abs_backprop, exp_backprop, ln_backprop, relu_backprop, sigmoid_backprop, sqrt_backprop,
-    tanh_backprop,
-};
+use super::unary::{abs_backprop, exp_backprop, ln_backprop, relu_backprop, sigmoid_backprop, sqrt_backprop, tanh_backprop};
 use crate::Tensor;
 use crate::grad::structure::reshape_backprop;
 use crate::rawtensor::RawTensor;

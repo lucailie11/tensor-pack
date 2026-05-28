@@ -72,7 +72,7 @@ Gradients are tracked automatically during the forward pass. Call `.backward()` 
 
 **Graph consumption:** `.backward()` consumes the computation graph. After it returns, `inputs` and `op` are cleared on every intermediate node, and intermediate gradients are freed. Only leaf gradients (`.requires_grad = true`) are kept. To run another backward pass on the same leaves, call `.zero_grad()` on each leaf first and rebuild the graph by rerunning the forward pass.
 
-```rust
+```
 x.zero_grad();
 let loss = forward(&x);
 loss.backward();
@@ -93,7 +93,7 @@ loss.backward();
 
 ## Usage
 
-```rust
+```
 use rml::Tensor;
 
 // construct tensors
@@ -113,8 +113,3 @@ y.zero_grad();
 let loss2 = (&x * &y).relu().sum_axis(0);
 loss2.backward();
 ```
-
-## To do
-- Gradient support for `softmax`, `var_axis`, `std_dev_axis`
-- Concurrency support
-- Python bindings

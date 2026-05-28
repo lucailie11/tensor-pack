@@ -29,4 +29,3 @@ fn main() {
     let c: Tensor = Tensor::rand_range(&[6], 0.0, 5.0);
     println!("{:?}\n{:?}\n{:?}\n", a, b, c);
 }
-
