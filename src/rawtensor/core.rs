@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
-// RawTensor is a multidimensional array of f64 stored flat in data.
+// RawTensor is a multidimensional array of f64 stored flat in data
+// the dimension of the array are non-zero
 // data is shared via Rc and may not be in logical order
 // strides[i] gives the step in data for a unit increment along dimension i
 

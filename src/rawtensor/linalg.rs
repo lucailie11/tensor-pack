@@ -57,8 +57,6 @@ mod tests {
         assert_eq!(*a.dot(&b).contiguous_data(), [20.0]);
     }
 
-
-
     #[test]
     fn matmul_id() {
         let a = RawTensor::from_slice(&[2, 2], &[1.0, 2.0, 3.0, 4.0]);
@@ -67,7 +65,6 @@ mod tests {
         assert_eq!(*c.shape, [2, 2]);
         assert_eq!(*c.contiguous_data(), [1.0, 2.0, 3.0, 4.0]);
     }
-
 
     #[test]
     fn matmul_values() {

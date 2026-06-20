@@ -12,11 +12,12 @@ thread_local! {
 }
 
 // A set of basic tensor constructors
-// Constructors take desired shape as a parameter unless specified otherwise
-// and return contiguous RawTensors
+// Constructors take desired shape as a parameter and return contiguous RawTensors
+// unless specified otherwise
+
 
 impl RawTensor {
-    // Returns a contiguous RawTensor from a reference to an Rc (no copying)
+    // Returns a contiguous RawTensor from an Rc (no copying)
     pub fn from_rc(shape: &[usize], data: Rc<[f64]>) -> RawTensor {
         assert!(shape.iter().all(|&d| d > 0), "dimensions must be non-zero");
         assert_eq!(shape.iter().product::<usize>(), data.len(), "data length doesn't match shape");
@@ -70,7 +71,7 @@ impl RawTensor {
         assert_ne!(n, 0, "can't have a 0 dimenstion");
 
         if n == 1 {
-            return RawTensor::from_vec(&[1], vec![start]);
+            return RawTensor::from_rc(&[1], Rc::new([start]));
         }
 
         let data: Rc<[f64]> = (0..n)
@@ -88,7 +89,7 @@ impl RawTensor {
         RawTensor::from_rc(&[n, n], data)
     }
 
-
+    // Set seed for rand constructors 
     pub fn set_seed(seed: u64) {
         RNG.with(|rng| *rng.borrow_mut() = StdRng::seed_from_u64(seed));
     }

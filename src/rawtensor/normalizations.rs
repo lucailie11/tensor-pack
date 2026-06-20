@@ -8,33 +8,17 @@ use std::rc::Rc;
 //   - softmax(axis)
 
 pub fn softmax(old_data: &[f64], new_data: &mut [f64], step: usize, n: usize) {
-    if n == 0 {
-        return;
-    }
-    if step == 0 {
+    if n == 0 { return; }
+
+    if step == 0 { 
         new_data[0] = 1.0 / n as f64;
         return;
     }
 
-    let max: f64 = old_data
-        .iter()
-        .step_by(step)
-        .take(n)
-        .copied()
-        .fold(f64::NEG_INFINITY, f64::max);
-    let exps: Vec<f64> = old_data
-        .iter()
-        .step_by(step)
-        .take(n)
-        .map(|&x| f64::exp(x - max))
-        .collect();
+    let max: f64 = old_data.iter().step_by(step).take(n).copied().fold(f64::NEG_INFINITY, f64::max);
+    let exps: Vec<f64> = old_data.iter().step_by(step).take(n).map(|&x| f64::exp(x - max)).collect();
     let sum: f64 = exps.iter().sum();
-    new_data
-        .iter_mut()
-        .step_by(step)
-        .take(n)
-        .zip(exps)
-        .for_each(|(x, e)| *x = e / sum);
+    new_data.iter_mut().step_by(step).take(n).zip(exps).for_each(|(x, e)| *x = e / sum);
 }
 
 impl RawTensor {
@@ -50,9 +34,7 @@ impl RawTensor {
         if self.strides[axis] == 0 {
             let mut new_data: Box<[f64]> = vec![0.0; self.data.len()].into_boxed_slice();
 
-            self.data
-                .iter()
-                .enumerate()
+            self.data.iter().enumerate()
                 .for_each(|(i, _)| f(&self.data[i..], &mut new_data[i..], 0, n));
 
             return RawTensor {
@@ -64,9 +46,7 @@ impl RawTensor {
 
         let mut new_data: Box<[f64]> = vec![0.0; self.data.len()].into_boxed_slice();
 
-        self.data
-            .iter()
-            .enumerate()
+        self.data.iter().enumerate()
             .filter(|(i, _)| (i % (self.shape[axis] * self.strides[axis])) < self.strides[axis])
             .for_each(|(i, _)| f(&self.data[i..], &mut new_data[i..], self.strides[axis], n));
 

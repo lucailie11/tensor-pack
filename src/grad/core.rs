@@ -55,8 +55,7 @@ impl Tensor {
         self.requires_grad || self.op.get() != BackpropOp::None
     }
 
-    // Returns a new Tensor which requires gradient
-    // Points to the same RawTensor as the old one
+    // Returns a new Tensor which requires gradient pointing to the same RawTensor as the old one
     pub fn requires_grad(self) -> Tensor {
         Tensor::from_inner(TensorInner {
             raw: self.raw.clone(),
@@ -67,11 +66,11 @@ impl Tensor {
         })
     }
     
-    // Clears the gradient on this tensor. Call before a new backward pass on reused leaves.
+    // Clears the gradient on this tensor
+    // Call before a new backward pass on reused leaves
     pub fn zero_grad(&self) {
         *self.grad.borrow_mut() = None;
     }
-
 
     fn match_op(&self) {
         let inputs = self.inputs.borrow();
