@@ -34,7 +34,7 @@ The only public type is `Tensor`. `RawTensor` and the grad internals are crate-p
 
 ### Structure ops
 - `reshape(new_shape)`, `transpose(perm)`, `expand(new_shape)`
-- `squeeze(axis)`, `unsqueeze_axis(axis)`
+- `squeeze(axis)`, `unsqueeze(axis)`
 
 ### Binary ops
 Elementwise operations with broadcasting. Assign ops are not in-place.
@@ -87,7 +87,7 @@ loss.backward();
 | Unary      | `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`, `tanh` |
 | Reductions | `sum_axis`, `mean_axis` |
 | Linalg     | `dot`, `matmul` |
-| Structure  | `reshape`, `transpose`, `expand`, `squeeze`, `unsqueeze_axis` |
+| Structure  | `reshape`, `transpose`, `expand`, `squeeze`, `unsqueeze` |
 
 `softmax`, `var_axis`, and `std_dev_axis` detach from the computation graph — gradients do not flow through them.
 
