@@ -1,10 +1,10 @@
 [package]
-name = "trs"
+name = "tensorpack"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "trs"
+name = "tensorpack"
 path = "src/example.rs"
 
 [dependencies]

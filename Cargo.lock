@@ -115,14 +115,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rml"
-version = "0.1.0"
-dependencies = [
- "rand",
- "rand_distr",
-]
-
-[[package]]
 name = "syn"
 version = "2.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -131,6 +123,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tensorpack"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "rand_distr",
 ]
 
 [[package]]

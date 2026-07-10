@@ -1,4 +1,4 @@
-use rml::Tensor;
+use tensorpack::Tensor;
 
 fn main() {
     let x: Tensor = Tensor::linspace(1.0, 12.0, 12).requires_grad();

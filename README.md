@@ -1,4 +1,4 @@
-# tensor-rs - Rust Tensor Library
+# Tensor Pack
 
 A tensor library written in Rust from scratch, inspired by NumPy and PyTorch. Built as a learning project with a focus on clean architecture and execution speed.
 
