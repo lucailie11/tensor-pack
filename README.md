@@ -1,4 +1,4 @@
-# rml — Rust ML Tensor Library
+# tensor-rs - Rust Tensor Library
 
 A tensor library written in Rust from scratch, inspired by NumPy and PyTorch. Built as a learning project with a focus on clean architecture and execution speed.
 
@@ -59,8 +59,7 @@ Arithmetic between a tensor and an `f64`, both orderings supported. Assign ops a
 ### Reductions
 Reduce along one axis, dropping it from the output shape.
 - `sum_axis(axis)`, `mean_axis(axis)`, `var_axis(axis)`, `std_dev_axis(axis)`
-
-`var` and `std_dev` use population variance (divides by n, not n-1).
+- `var` and `std_dev` use population variance (divides by n, not n-1).
 
 ### Normalizations
 - `softmax(axis)`
