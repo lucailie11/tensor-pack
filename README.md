@@ -62,7 +62,7 @@ Reduce along one axis, dropping it from the output shape.
 - `var` and `std_dev` use population variance (divides by n, not n-1).
 
 ### Normalizations
-- `softmax(axis)`
+- `softmax_axis(axis)`
 
 ### Autograd
 Gradients are tracked automatically during the forward pass. Call `.backward()` on any tensor to populate `.grad` on all leaf tensors that have `requires_grad = true`.
@@ -93,7 +93,7 @@ loss.backward();
 ## Usage
 
 ```
-use rml::Tensor;
+use tensorpack::Tensor;
 
 // construct tensors
 let x = Tensor::from_slice(&[3], &[1.0, 2.0, 3.0]).requires_grad();
