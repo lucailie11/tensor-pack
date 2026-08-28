@@ -62,7 +62,7 @@ impl RawTensor {
     // Returns the data in logical order. Clones the Rc if already contiguous
     pub fn contiguous_data(&self) -> Rc<[f64]> {
         if self.is_contiguous() { return Rc::clone(&self.data); }
-        self.iter().collect()
+        self.iter().copied().collect()
     }
 
     // Returns a new RawTensor with data in logical order

@@ -22,7 +22,7 @@ impl RawTensor {
     // Writes the data section in logical order, indented. Used by Tensor's Display.
     pub(crate) fn fmt_data(&self, f: &mut fmt::Formatter, indent: &str) -> fmt::Result {
         if self.shape.len() == 2 {
-            let logical: Vec<f64> = self.iter().collect();
+            let logical: Vec<f64> = self.iter().copied().collect();
             fmt_matrix(f, &logical, self.shape[1], indent)
         } else {
             let vals: Vec<String> = self.iter().map(|x| format!("{:.4}", x)).collect();

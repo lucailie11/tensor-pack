@@ -68,11 +68,7 @@ impl RawTensor {
         LogicalIndices::new(self.shape.clone(), self.strides.clone())
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = f64> {
-        self.logical_indices().map(|p| self.data[p])
-    }
-                                                                                        
-    pub fn iter_indexed(&self) -> impl Iterator<Item = (usize, f64)> {
-        self.logical_indices().map(|p| (p, self.data[p]))
+    pub fn iter(&self) -> impl Iterator<Item = &f64> {
+        self.logical_indices().map(|p| &self.data[p])
     }
 }

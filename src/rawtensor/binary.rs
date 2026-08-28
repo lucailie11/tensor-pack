@@ -24,7 +24,7 @@ impl RawTensor {
         let a = self.expand(&out_shape);
         let b = other.expand(&out_shape);
         let new_data: Rc<[f64]> = a.iter().zip(b.iter())
-            .map(|(x, y)| f(x, y))
+            .map(|(&x, &y)| f(x, y))
             .collect(); 
         RawTensor::from_rc(&out_shape, new_data)
     }

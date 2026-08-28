@@ -161,21 +161,21 @@ mod tests {
     fn zeros_shape_and_data() {
         let t = RawTensor::zeros(&[2, 3]);
         assert_eq!(*t.shape, [2, 3]);
-        assert!(t.iter().all(|x| x == 0.0));
+        assert!(t.iter().all(|&x| x == 0.0));
     }
 
     #[test]
     fn ones_shape_and_data() {
         let t = RawTensor::ones(&[2, 3]);
         assert_eq!(*t.shape, [2, 3]);
-        assert!(t.iter().all(|x| x == 1.0));
+        assert!(t.iter().all(|&x| x == 1.0));
     }
 
     #[test]
     fn full_fills_value() {
         let t = RawTensor::full(&[2, 3], 7.0);
         assert_eq!(*t.shape, [2, 3]);
-        assert!(t.iter().all(|x| x == 7.0));
+        assert!(t.iter().all(|&x| x == 7.0));
     }
 
     #[test]
@@ -203,13 +203,13 @@ mod tests {
     #[test]
     fn rand_in_unit_range() {
         let t = RawTensor::rand(&[1000]);
-        assert!(t.iter().all(|x| (0.0..1.0).contains(&x)));
+        assert!(t.iter().all(|x| (0.0..1.0).contains(x)));
     }
 
     #[test]
     fn rand_range_in_bounds() {
         let t = RawTensor::rand_range(&[1000], -2.0, 5.0);
-        assert!(t.iter().all(|x| (-2.0..5.0).contains(&x)));
+        assert!(t.iter().all(|x| (-2.0..5.0).contains(x)));
     }
 
     #[test]
@@ -276,7 +276,7 @@ mod tests {
         let mean = 2.0;
         let std_dev = 1.5;
         let k = 3.0;
-        let data: Vec<f64> = RawTensor::randn(&[n], mean, std_dev).iter().collect();
+        let data: Vec<f64> = RawTensor::randn(&[n], mean, std_dev).iter().copied().collect();
 
         let sample_mean = data.iter().sum::<f64>() / n as f64;
         let sample_var = data.iter().map(|x| (x - sample_mean).powi(2)).sum::<f64>() / n as f64;
