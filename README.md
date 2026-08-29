@@ -80,15 +80,16 @@ loss.backward();
 
 **Supported ops for backprop:**
 
-| Category   | Ops |
-|------------|-----|
-| Binary     | `+`, `-`, `*`, `/` (tensor–tensor and scalar variants) |
-| Unary      | `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`, `tanh` |
-| Reductions | `sum_axis`, `mean_axis` |
-| Linalg     | `dot`, `matmul` |
-| Structure  | `reshape`, `transpose`, `expand`, `squeeze`, `unsqueeze` |
+| Category       | Ops                                                      |
+|----------------|----------------------------------------------------------|
+| Binary         | `+`, `-`, `*`, `/` (tensor–tensor and scalar variants)   |
+| Unary          | `exp`, `ln`, `sqrt`, `abs`, `relu`, `sigmoid`, `tanh`    |
+| Reductions     | `sum_axis`, `mean_axis`                                  |
+| Normalizations | `softmax_axis`                                           |
+| Linalg         | `dot`, `matmul`                                          |
+| Structure      | `reshape`, `transpose`, `expand`, `squeeze`, `unsqueeze` |
 
-`softmax`, `var_axis`, and `std_dev_axis` detach from the computation graph — gradients do not flow through them.
+`var_axis`, and `std_dev_axis` detach from the computation graph — gradients do not flow through them.
 
 ## Usage
 

@@ -1,4 +1,4 @@
 ## TODO
-- Gradient support for `softmax`, `var_axis`, `std_dev_axis`
+- Gradient support for `var_axis`, `std_dev_axis`
 - Concurrency support
 - Python bindings

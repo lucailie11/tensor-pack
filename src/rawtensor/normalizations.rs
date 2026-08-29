@@ -23,17 +23,14 @@ pub fn softmax(old_data: &[f64], new_data: &mut [f64], step: usize, n: usize) {
 
 impl RawTensor {
     // Returns a new RawTensor with a fresh data allocation keeping all strides structure
-    pub(super) fn normalize_axis(
-        &self,
-        axis: usize,
-        f: impl Fn(&[f64], &mut [f64], usize, usize),
-    ) -> RawTensor {
+    fn normalize_axis(&self, axis: usize, f: impl Fn(&[f64], &mut [f64], usize, usize)) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
 
         let n = self.shape[axis];
-        if self.strides[axis] == 0 {
-            let mut new_data: Box<[f64]> = vec![0.0; self.data.len()].into_boxed_slice();
+        let step = self.strides[axis];
 
+        if step == 0 {
+            let mut new_data: Box<[f64]> = vec![0.0; self.data.len()].into_boxed_slice();
             self.data.iter().enumerate()
                 .for_each(|(i, _)| f(&self.data[i..], &mut new_data[i..], 0, n));
 
@@ -45,10 +42,9 @@ impl RawTensor {
         }
 
         let mut new_data: Box<[f64]> = vec![0.0; self.data.len()].into_boxed_slice();
-
         self.data.iter().enumerate()
-            .filter(|(i, _)| (i % (self.shape[axis] * self.strides[axis])) < self.strides[axis])
-            .for_each(|(i, _)| f(&self.data[i..], &mut new_data[i..], self.strides[axis], n));
+            .filter(|(i, _)| (i % (n * step)) < step)
+            .for_each(|(i, _)| f(&self.data[i..], &mut new_data[i..], step, n));
 
         RawTensor {
             shape: self.shape.clone(),
