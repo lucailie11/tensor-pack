@@ -8,17 +8,26 @@ use std::rc::Rc;
 // In-place accumulation used by grad/ to accumulate gradients
 // Requires self to be the sole owner of its data (which is the case with gradients)
 
-pub fn softmax_backprop(grad: &[f64], out: &[f64], slf: &mut [f64], grad_step: usize, out_step: usize, n: usize) {
-    if out_step == 0 {
+// In-place addition on self_grad of the backpropped gradient from softmax
+pub fn softmax_backprop(out_grad: &[f64], out_raw: &[f64], self_grad: &mut [f64], grad_sride: usize, out_stride: usize, n: usize) {
+    if out_stride == 0 {
         let mut sum: f64 = 0.0;
-        (0..n).for_each(|j| { sum += grad[j * grad_step]; });
-        (0..n).for_each(|i| { slf[i * grad_step] += -sum * out[0] * out[0] + grad[i * grad_step] * out[0]; });
+        (0..n).for_each(|j| {
+            sum += out_grad[j * grad_sride];
+        });
+        (0..n).for_each(|i| {
+            self_grad[i * grad_sride] += -sum * out_raw[0] * out_raw[0] + out_grad[i * grad_sride] * out_raw[0];
+        });
         return;
     }
 
     let mut sum: f64 = 0.0;
-    out.iter().step_by(out_step).take(n).enumerate().for_each(|(j, y)| { sum += grad[j * grad_step] * y; });
-    out.iter().step_by(out_step).take(n).enumerate().for_each(|(i, x)| { slf[i * grad_step] += -sum * x + grad[i * grad_step] * x; });
+    out_raw.iter().step_by(out_stride).take(n).enumerate().for_each(|(j, y)| {
+        sum += out_grad[j * grad_sride] * y;
+    });
+    out_raw.iter().step_by(out_stride).take(n).enumerate().for_each(|(i, x)| {
+        self_grad[i * grad_sride] += -sum * x + out_grad[i * grad_sride] * x;
+    });
 }
 
 impl RawTensor {
@@ -33,7 +42,7 @@ impl RawTensor {
 
         let data = Rc::get_mut(&mut self.data).expect("couldn't borrow mutable data from the tensor");
 
-        let mut iters: Box<_> = input_strides.iter()
+        let mut iters: Box<[LogicalIndices]> = input_strides.iter()
             .map(|s| LogicalIndices::new(out_shape.clone(), s.clone()))
             .collect();
 
@@ -57,11 +66,12 @@ impl RawTensor {
         self.accumulate_n(&[a, b, c], |v| f(v[0], v[1], v[2]));
     }
 
+    // In-place accumulation for softmax backpropagation
     fn accumulate_normalization_backprop(&mut self, grad: &RawTensor, out: &RawTensor, axis: usize, f: impl Fn(&[f64], &[f64], &mut [f64], usize, usize, usize)) {
-        assert_eq!(self.shape, out.shape, "different shapes");
-        assert_eq!(out.shape, grad.shape, "different shapes");
-        assert!(self.is_contiguous(), "self grad not contigous");
-        assert!(grad.is_contiguous(), "self grad not contigous");
+        assert_eq!(self.shape, out.shape, "self gradient and out raw have different shapes");
+        assert_eq!(out.shape, grad.shape, "out gradient and out raw have different shapes");
+        assert!(self.is_contiguous(), "self gradient is not contiguous");
+        assert!(grad.is_contiguous(), "out gradient is not contiguous");
 
         let n: usize = self.shape[axis];
         let out_step = out.strides[axis];
@@ -69,7 +79,7 @@ impl RawTensor {
 
         let grad_data: &[f64] = &grad.data;
         let out_data: &[f64] = &out.data;
-        let self_data: &mut [f64] = Rc::get_mut(&mut self.data).expect("couldn't borrow");
+        let self_data: &mut [f64] = Rc::get_mut(&mut self.data).expect("couldn't borrow mutable data from the tensor");
 
         if out_step == 0 {
             out.iter_indexed().zip(
@@ -89,12 +99,11 @@ impl RawTensor {
         );
     }
 
+    // Wrapper around accumulate_normalization_backprop for softmax
     pub(crate) fn accumulate_softmax_backprop(&mut self, grad: &RawTensor, out: &RawTensor, axis: usize) {
         self.accumulate_normalization_backprop(grad, out, axis, softmax_backprop);
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
