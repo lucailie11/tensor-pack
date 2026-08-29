@@ -70,4 +70,9 @@ impl RawTensor {
     pub fn iter(&self) -> impl Iterator<Item = &f64> {
         self.logical_indices().map(|p| &self.data[p])
     }
+
+    pub fn iter_indexed(&self) -> impl Iterator<Item = usize> {
+        self.logical_indices()
+    }
+
 }
