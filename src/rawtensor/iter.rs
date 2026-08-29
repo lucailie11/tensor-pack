@@ -1,5 +1,4 @@
 use super::structure::is_data_contiguous;
-
 use super::RawTensor;
 
 // Iterates elements in logical order in O(self.len())
