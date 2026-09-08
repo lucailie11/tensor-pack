@@ -1,6 +1,5 @@
 use super::Tensor;
 use crate::grad::BackpropOp;
-
 use std::ops::Neg;
 
 // Unary operations on Tensors
@@ -8,7 +7,7 @@ use std::ops::Neg;
 // Assign operations replace the left-hand side with the result (not in-place)
 //
 // Defined operations:
-//   general map (has no grad)
+//   general map (gradient not supported)
 //   exp, ln, sqrt, abs, tanh, sigmoid, relu
 //   -&Tensor — negation
 

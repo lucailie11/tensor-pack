@@ -8,9 +8,8 @@ use super::Tensor;
 // Defined operations
 // - sum
 // - mean
-// - var (population, divides by n) (not supported yet)
-// - std_dev (from population var)  (not supported yet)
-
+// - var     (divides by n) (gradient not supported yet)
+// - std_dev (divides by n) (gradient not supported yet)
 
 impl Tensor {
     pub fn sum_axis(&self, axis: usize) -> Tensor {

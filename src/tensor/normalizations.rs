@@ -8,7 +8,6 @@ use crate::rawtensor::RawTensor;
 // Defined operations
 // - softmax_axis
 
-
 impl Tensor {
     pub fn softmax_axis(&self, axis: usize) -> Tensor {
         let raw: RawTensor = self.raw.softmax_axis(axis);

@@ -14,7 +14,6 @@ use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 //   &Tensor * f64   -> Tensor      f64 * &Tensor  -> Tensor      Tensor *= f64
 //   &Tensor / f64   -> Tensor      f64 / &Tensor  -> Tensor      Tensor /= f64
 
-
 impl Add<&Tensor> for f64 {
     type Output = Tensor;
 
