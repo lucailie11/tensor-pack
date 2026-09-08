@@ -4,6 +4,7 @@ use std::ops::Index;
 
 // Structure operations
 // Delegates data logic to RawTensor and autograd logic to grad/
+// Panic if the operation is not possible (e.g. shapes not broadcastable)
 //
 // Defined operations:
 // - contiguous
@@ -14,12 +15,17 @@ use std::ops::Index;
 // - unsqueeze
 
 impl Tensor {
+    // Returns true if the data in memory has the same order as the logical order
+    pub fn is_contiguous(&self) -> bool {
+        self.raw.is_contiguous()
+    }
+
     // Returns a new Tensor with data in logical order
     pub fn contiguous(&self) -> Tensor {
         Tensor::no_grad_tensor(self.raw.contiguous())
     }
 
-    // Returns a new Tensor with a new shape. Panics if tensor is not contiguous
+    // Returns a new Tensor with a new shape
     pub fn reshape(&self, new_shape: &[usize]) -> Tensor {
         let raw = self.raw.reshape(new_shape);
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Reshape)
@@ -31,7 +37,7 @@ impl Tensor {
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Transpose)
     }
 
-    // Expands self to new_shape. Panics if self is not broadcastable to new_shape
+    // Expands self to new_shape
     pub fn expand(&self, new_shape: &[usize]) -> Tensor {
         let raw = self.raw.expand(new_shape);
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Expand)
@@ -43,12 +49,11 @@ impl Tensor {
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Squeeze(axis))
     }
 
-    // Inserts a size-1 axis at the given position
+    // Inserts a size-1 axis at the given axis
     pub fn unsqueeze(&self, axis: usize) -> Tensor {
         let raw = self.raw.unsqueeze(axis);
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Unsqueeze(axis))
     }
-
 }
 
 impl Tensor {

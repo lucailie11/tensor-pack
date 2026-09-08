@@ -1,6 +1,6 @@
 mod binary;
 mod backward;
-pub mod core;
+mod core;
 mod linalg;
 mod normalizations;
 mod reductions;

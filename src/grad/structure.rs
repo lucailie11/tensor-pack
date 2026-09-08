@@ -1,5 +1,21 @@
 use crate::Tensor;
 
+// Helper function for detecting the transposition permutation for a transpose_backprop
+fn inv_perm_by_shape_and_strides(a_shape: &[usize], a_strides: &[usize], out_shape: &[usize], out_strides: &[usize]) -> Box<[usize]> {
+    let ndim: usize = a_shape.len();
+    let mut used: Vec<bool> = vec![false; ndim];
+    let inv_perm: Box<[usize]> = a_shape.iter().zip(a_strides.iter())
+        .map(|(&a1, &a2)| {
+            let i = out_shape.iter().zip(out_strides.iter()).enumerate()
+                .find(|&(i, (&out1, &out2))| !used[i] && a1 == out1 && a2 == out2)
+                .map(|(i, _)| i)
+                .expect("no inverse permutation matched");
+            used[i] = true;
+            i
+        }).collect();
+    inv_perm
+}
+
 pub fn reshape_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
         let out_grad_reshaped = out_grad.reshape(a_grad.shape());
@@ -9,17 +25,7 @@ pub fn reshape_backprop(out: &Tensor, a: &Tensor) {
 
 pub fn transpose_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
-        let mut used = vec![false; out.raw.ndim()];
-        let inv_perm: Box<[usize]> = a.raw.shape().iter().zip(a.raw.strides().iter())
-            .map(|(&sh_a, &st_a)| {
-                let i = out.raw.shape().iter().zip(out.raw.strides().iter()).enumerate()
-                    .find(|&(i, (&sh_o, &st_o))| !used[i] && sh_o == sh_a && st_o == st_a)
-                    .map(|(i, _)| i)
-                    .unwrap();
-                used[i] = true;
-                i
-            })
-            .collect();
+        let inv_perm: Box<[usize]> = inv_perm_by_shape_and_strides(a.raw.shape(), a.raw.strides(), out.raw.shape(), out.raw.strides());
         a_grad.accumulate_1(&out_grad.transpose(&inv_perm), |g| g);
     }
 }

@@ -28,7 +28,7 @@ fn topo_sort(root: &Tensor) -> Vec<Tensor> {
 impl Tensor {
     // Runs backpropagation from this tensor. Starting gradient is all ones.
     // Consumes the graph: grad, inputs and op are cleared on every node after backprop.
-    // Only leaf gradients (.requires_grad) are preserved
+    // Only gradients whose owning tensor has requires_grad set are kept
     pub fn backward(&self) {
         *self.grad.borrow_mut() = Some(RawTensor::ones(self.raw.shape()));
         let topo = topo_sort(self);

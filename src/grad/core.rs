@@ -65,13 +65,24 @@ impl Tensor {
             op: Cell::new(BackpropOp::None),
         })
     }
+
+    // Builds a new Tensor node for the autograd graph
+    pub(crate) fn autograd_tensor(raw: RawTensor, inputs: Box<[Tensor]>, op: BackpropOp) -> Tensor {
+        Tensor::from_inner(TensorInner {
+            raw,
+            grad: RefCell::new(None),
+            op: Cell::new(if inputs.iter().any(|x| x.tracks_grad()) { op } else { BackpropOp::None }),
+            inputs: RefCell::new(inputs),
+            requires_grad: false,
+        })
+    }
     
     // Clears the gradient on this tensor
-    // Call before a new backward pass on reused leaves
     pub fn zero_grad(&self) {
         *self.grad.borrow_mut() = None;
     }
 
+    // Dispatches to the backprop function implementing the current op
     fn match_op(&self) {
         let inputs = self.inputs.borrow();
         match self.op.get() {
@@ -107,7 +118,7 @@ impl Tensor {
             BackpropOp::Matmul => { matmul_backprop(self, &inputs[0], &inputs[1]); }
 
             // Normalization ops
-            BackpropOp::Softmax(axis) => { softmax_backprop(self, &inputs[0], axis); } // Does nothing
+            BackpropOp::Softmax(axis) => { softmax_backprop(self, &inputs[0], axis); }
             
             // Structure ops
             BackpropOp::Reshape         => { reshape_backprop(self, &inputs[0]); }
@@ -118,6 +129,7 @@ impl Tensor {
         }
     }
 
+    // Wraps a single backprop step: seeds input grads, dispatches, then tears down the node
     pub(super) fn backprop(&self) {
         for input in self.inputs.borrow().iter() {
             if input.grad.borrow().is_none() && input.tracks_grad() {
@@ -125,18 +137,8 @@ impl Tensor {
             }
         }
         self.match_op();
-        if !self.requires_grad { *self.grad.borrow_mut() = None; }
+        if !self.requires_grad { self.zero_grad(); }
         *self.inputs.borrow_mut() = Box::from([]);
         self.op.set(BackpropOp::None);
-    }
-
-    pub(crate) fn autograd_tensor(raw: RawTensor, inputs: Box<[Tensor]>, op: BackpropOp) -> Tensor {
-        Tensor::from_inner(TensorInner {
-            raw,
-            grad: RefCell::new(None),
-            op: Cell::new(if inputs.iter().any(|x| x.tracks_grad()) { op } else { BackpropOp::None }),
-            inputs: RefCell::new(inputs),
-            requires_grad: false,
-        })
     }
 }

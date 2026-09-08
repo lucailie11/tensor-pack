@@ -10,7 +10,8 @@ pub fn sum_backprop(out: &Tensor, a: &Tensor, axis: usize) {
 pub fn mean_backprop(out: &Tensor, a: &Tensor, axis: usize) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
         let out_grad_unsqueezed = out_grad.unsqueeze(axis);
-        a_grad.accumulate_1(&out_grad_unsqueezed, |g| g / a.raw.shape()[axis] as f64);
+        let n: f64 = a.raw.shape()[axis] as f64;
+        a_grad.accumulate_1(&out_grad_unsqueezed, |g| g / n);
     }
 }
 
