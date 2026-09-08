@@ -7,7 +7,12 @@ use std::rc::Rc;
 use std::cell::Cell;
 use std::cell::RefCell;
 
+// Tensor constructors that do not track gradients.
+// Each one first delegates to the matching RawTensor constructor,
+// then wraps the result with no_grad_tensor.
+
 impl Tensor {
+    // Wraps a TensorInner into a Tensor
     pub(crate) fn from_inner(tensor: TensorInner) -> Tensor {
         Tensor(Rc::new(tensor))
     }
@@ -46,7 +51,7 @@ impl Tensor {
     
     // Returns a 0D Tensor from a scalar (f64)
     pub fn from_scalar(scalar: f64) -> Tensor {
-        Tensor::from_slice(&[], &[scalar])
+        Tensor::no_grad_tensor(RawTensor::from_scalar(scalar))
     }
 
     // Creates a Tensor filled with value
@@ -56,12 +61,12 @@ impl Tensor {
 
     // Creates a Tensor filled with 0.0
     pub fn zeros(shape: &[usize]) -> Tensor {
-        Tensor::full(shape, 0.0)
+        Tensor::no_grad_tensor(RawTensor::zeros(shape))
     }
 
     // Creates a Tensor filled with 1.0
     pub fn ones(shape: &[usize]) -> Tensor {
-        Tensor::full(shape, 1.0)
+        Tensor::no_grad_tensor(RawTensor::ones(shape))
     }
 
     // Creates a 1D Tensor of n evenly spaced values in [start, end] (inclusive).
@@ -87,7 +92,7 @@ impl Tensor {
 
     // Creates a Tensor filled with random samples from U([0, 1))
     pub fn rand(shape: &[usize]) -> Tensor {
-        Tensor::rand_range(shape, 0.0, 1.0)
+        Tensor::no_grad_tensor(RawTensor::rand(shape))
     }
 
     // Creates a Tensor filled with random samples from N(mean, std_dev)
