@@ -1,5 +1,5 @@
 mod binary;
-pub(crate) mod core;
+mod core;
 mod constructors;
 mod fmt;
 mod linalg;
@@ -9,4 +9,5 @@ mod scalar;
 mod structure;
 mod unary;
 
+pub(crate) use core::TensorInner;
 pub use core::Tensor;

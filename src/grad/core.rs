@@ -8,7 +8,7 @@ use super::unary::{abs_backprop, exp_backprop, ln_backprop, relu_backprop, sigmo
 use crate::Tensor;
 use crate::grad::structure::reshape_backprop;
 use crate::rawtensor::RawTensor;
-use crate::tensor::core::TensorInner;
+use crate::tensor::TensorInner;
 use std::cell::Cell;
 use std::cell::RefCell;
 
