@@ -100,7 +100,7 @@ impl RawTensor {
     }
 
     // Wrapper around accumulate_normalization_backprop for softmax
-    pub(crate) fn accumulate_softmax_backprop(&mut self, grad: &RawTensor, out: &RawTensor, axis: usize) {
+    pub(crate) fn accumulate_softmax_grad(&mut self, grad: &RawTensor, out: &RawTensor, axis: usize) {
         self.accumulate_normalization_backprop(grad, out, axis, softmax_backprop);
     }
 }
@@ -164,7 +164,7 @@ mod tests {
         let b = a.softmax_axis(0);
         let g = RawTensor::ones(&[6]); 
         let mut grad = RawTensor::ones(&[6]);
-        grad.accumulate_softmax_backprop(&g, &b, 0);
+        grad.accumulate_softmax_grad(&g, &b, 0);
         assert!(approx_eq_all(&grad.contiguous_data(), &[1.0; 6]));
     }
 
@@ -174,7 +174,7 @@ mod tests {
         let b = a.softmax_axis(0);
         let g = RawTensor::ones(&[3, 3]); 
         let mut grad = RawTensor::ones(&[3, 3]);
-        grad.accumulate_softmax_backprop(&g, &b, 0);
+        grad.accumulate_softmax_grad(&g, &b, 0);
         assert!(approx_eq_all(&grad.contiguous_data(), &[1.0; 9]));
     }
 
@@ -184,93 +184,93 @@ mod tests {
         let b = a.softmax_axis(1);
         let g = RawTensor::ones(&[24]).reshape(&[2, 4, 3]);
         let mut grad = RawTensor::ones(&[24]).reshape(&[2, 4, 3]);
-        grad.accumulate_softmax_backprop(&g, &b, 1);
+        grad.accumulate_softmax_grad(&g, &b, 1);
         assert!(approx_eq_all(&grad.contiguous_data(), &[1.0; 24]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_dense_grad() {
+    fn accumulate_softmax_dense_grad() {
         let a = RawTensor::from_slice(&[3], &[0.0, 2.0f64.ln(), 3.0f64.ln()]);
         let b = a.softmax_axis(0);
         let g = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
         let mut grad = RawTensor::zeros(&[3]);
-        grad.accumulate_softmax_backprop(&g, &b, 0);
+        grad.accumulate_softmax_grad(&g, &b, 0);
         assert!(approx_eq_all(&grad.contiguous_data(), &[-2.0 / 9.0, -1.0 / 9.0, 1.0 / 3.0]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_singleton_axis() {
+    fn accumulate_softmax_singleton_axis() {
         let a = RawTensor::from_slice(&[3, 1], &[2.0, -5.0, 100.0]);
         let b = a.softmax_axis(1);
         let g = RawTensor::from_slice(&[3, 1], &[7.0, -2.0, 42.0]);
         let mut grad = RawTensor::from_slice(&[3, 1], &[1.0, 2.0, 3.0]);
-        grad.accumulate_softmax_backprop(&g, &b, 1);
+        grad.accumulate_softmax_grad(&g, &b, 1);
         assert!(approx_eq_all(&grad.contiguous_data(), &[1.0, 2.0, 3.0]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_ties() {
+    fn accumulate_softmax_ties() {
         let a = RawTensor::from_slice(&[3], &[5.0, 5.0, 5.0]);
         let b = a.softmax_axis(0);
         let g = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
         let mut grad = RawTensor::zeros(&[3]);
-        grad.accumulate_softmax_backprop(&g, &b, 0);
+        grad.accumulate_softmax_grad(&g, &b, 0);
         assert!(approx_eq_all(&grad.contiguous_data(), &[-1.0 / 3.0, 0.0, 1.0 / 3.0]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_numerically_extreme() {
+    fn accumulate_softmax_numerically_extreme() {
         let shift_up = RawTensor::from_slice(&[3], &[1e6, 1e6 + 2.0f64.ln(), 1e6 + 3.0f64.ln()]);
         let b_up = shift_up.softmax_axis(0);
         let g = RawTensor::from_slice(&[3], &[1.0, 2.0, 3.0]);
         let mut grad_up = RawTensor::zeros(&[3]);
-        grad_up.accumulate_softmax_backprop(&g, &b_up, 0);
+        grad_up.accumulate_softmax_grad(&g, &b_up, 0);
         assert!(approx_eq_all(&grad_up.contiguous_data(), &[-2.0 / 9.0, -1.0 / 9.0, 1.0 / 3.0]));
 
         let shift_down = RawTensor::from_slice(&[3], &[-1e6, -1e6 + 2.0f64.ln(), -1e6 + 3.0f64.ln()]);
         let b_down = shift_down.softmax_axis(0);
         let mut grad_down = RawTensor::zeros(&[3]);
-        grad_down.accumulate_softmax_backprop(&g, &b_down, 0);
+        grad_down.accumulate_softmax_grad(&g, &b_down, 0);
         assert!(approx_eq_all(&grad_down.contiguous_data(), &[-2.0 / 9.0, -1.0 / 9.0, 1.0 / 3.0]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_unsqueeze_expand_transpose_batched() {
+    fn accumulate_softmax_unsqueeze_expand_transpose_batched() {
         let a = RawTensor::from_slice(&[3], &[0.0, 2.0f64.ln(), 3.0f64.ln()]).unsqueeze(0).expand(&[2, 3]).transpose(&[1, 0]);
         let b = a.softmax_axis(0);
         let g = RawTensor::from_slice(&[3, 2], &[1.0, 0.0, 2.0, 0.0, 3.0, 6.0]);
         let mut grad = RawTensor::zeros(&[3, 2]);
-        grad.accumulate_softmax_backprop(&g, &b, 0);
+        grad.accumulate_softmax_grad(&g, &b, 0);
         assert!(approx_eq_all(&grad.contiguous_data(), &[-2.0 / 9.0, -0.5, -1.0 / 9.0, -1.0, 1.0 / 3.0, 1.5]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_expanded_axis() {
+    fn accumulate_softmax_expanded_axis() {
         let a = RawTensor::from_slice(&[1], &[5.0]).expand(&[4]);
         let b = a.softmax_axis(0);
         let g = RawTensor::from_slice(&[4], &[1.0, 2.0, 3.0, 4.0]);
         let mut grad = RawTensor::zeros(&[4]);
-        grad.accumulate_softmax_backprop(&g, &b, 0);
+        grad.accumulate_softmax_grad(&g, &b, 0);
         assert!(approx_eq_all(&grad.contiguous_data(), &[-0.375, -0.125, 0.125, 0.375]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_expanded_axis_batched() {
+    fn accumulate_softmax_expanded_axis_batched() {
         let a = RawTensor::from_slice(&[2, 1], &[5.0, 9.0]).expand(&[2, 4]);
         let b = a.softmax_axis(1);
         let g = RawTensor::from_slice(&[2, 4], &[1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0]);
         let mut grad = RawTensor::zeros(&[2, 4]);
-        grad.accumulate_softmax_backprop(&g, &b, 1);
+        grad.accumulate_softmax_grad(&g, &b, 1);
         assert!(approx_eq_all(&grad.contiguous_data(), &[-0.375, -0.125, 0.125, 0.375, -3.75, -1.25, 1.25, 3.75]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_transposed_expanded() {
+    fn accumulate_softmax_transposed_expanded() {
         let a = RawTensor::from_slice(&[3, 2], &[0.0, 0.0, 2.0f64.ln(), 0.0, 3.0f64.ln(), 0.0]).transpose(&[1, 0]).expand(&[2, 2, 3]);
         let b = a.softmax_axis(2);
         let g = RawTensor::from_slice(&[2, 2, 3], &[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let mut grad = RawTensor::zeros(&[2, 2, 3]);
-        grad.accumulate_softmax_backprop(&g, &b, 2);
+        grad.accumulate_softmax_grad(&g, &b, 2);
         assert!(approx_eq_all(&grad.contiguous_data(),
             &[5.0 / 36.0, -1.0 / 18.0, -1.0 / 12.0, -1.0 / 9.0, 2.0 / 9.0, -1.0 / 9.0,
               5.0 / 36.0, -1.0 / 18.0, -1.0 / 12.0, -1.0 / 9.0, 2.0 / 9.0, -1.0 / 9.0]
@@ -278,23 +278,23 @@ mod tests {
     }
 
     #[test]
-    fn accumulate_softmax_backprop_transposed_squeeze() {
+    fn accumulate_softmax_transposed_squeeze() {
         let a = RawTensor::from_slice(&[3, 1, 2], &[0.0, 0.0, 2.0f64.ln(), 0.0, 3.0f64.ln(), 0.0]).transpose(&[2, 1, 0]).squeeze(1);
         let b = a.softmax_axis(1);
         let g = RawTensor::from_slice(&[2, 3], &[1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let mut grad = RawTensor::zeros(&[2, 3]);
-        grad.accumulate_softmax_backprop(&g, &b, 1);
+        grad.accumulate_softmax_grad(&g, &b, 1);
         assert!(approx_eq_all(&grad.contiguous_data(),&[5.0 / 36.0, -1.0 / 18.0, -1.0 / 12.0, -1.0 / 9.0, 2.0 / 9.0, -1.0 / 9.0]));
     }
 
     #[test]
-    fn accumulate_softmax_backprop_transposed_squeeze_expanded_accumulates() {
+    fn accumulate_softmax_transposed_squeeze_expanded_accumulates() {
         let a = RawTensor::from_slice(&[3, 1, 2], &[0.0, 0.0, 2.0f64.ln(), 0.0, 3.0f64.ln(), 0.0]).transpose(&[2, 1, 0]).squeeze(1).expand(&[2, 2, 3]);
         let b = a.softmax_axis(2);
         let g = RawTensor::from_slice(&[2, 2, 3], &[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let mut grad = RawTensor::zeros(&[2, 2, 3]);
-        grad.accumulate_softmax_backprop(&g, &b, 2);
-        grad.accumulate_softmax_backprop(&g, &b, 2);
+        grad.accumulate_softmax_grad(&g, &b, 2);
+        grad.accumulate_softmax_grad(&g, &b, 2);
         assert!(approx_eq_all(&grad.contiguous_data(),
             &[5.0 / 18.0, -1.0 / 9.0, -1.0 / 6.0, -2.0 / 9.0, 4.0 / 9.0, -2.0 / 9.0,
               5.0 / 18.0, -1.0 / 9.0, -1.0 / 6.0, -2.0 / 9.0, 4.0 / 9.0, -2.0 / 9.0]

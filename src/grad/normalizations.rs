@@ -2,7 +2,7 @@ use crate::Tensor;
 
 pub fn softmax_backprop(out: &Tensor, a: &Tensor, axis: usize) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
-        a_grad.accumulate_softmax_backprop(out_grad, &out.raw, axis);
+        a_grad.accumulate_softmax_grad(out_grad, &out.raw, axis);
     }
  }
 
