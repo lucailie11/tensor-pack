@@ -22,7 +22,8 @@ impl Tensor {
 
     // Returns a new Tensor with data in logical order
     pub fn contiguous(&self) -> Tensor {
-        Tensor::no_grad_tensor(self.raw.contiguous())
+        let raw = self.raw.contiguous();
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Contiguous)
     }
 
     // Returns a new Tensor with a new shape

@@ -16,6 +16,12 @@ fn inv_perm_by_shape_and_strides(a_shape: &[usize], a_strides: &[usize], out_sha
     inv_perm
 }
 
+pub fn contiguous_backprop(out: &Tensor, a: &Tensor) {
+    if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
+        a_grad.accumulate_1(out_grad, |g| g);
+    }
+}
+
 pub fn reshape_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
         let out_grad_reshaped = out_grad.reshape(a_grad.shape());
@@ -68,6 +74,16 @@ mod tests {
 
     fn grad_of(t: &Tensor) -> Vec<f64> {
         t.grad.borrow().as_ref().expect("no grad").contiguous_data().to_vec()
+    }
+
+    #[test]
+    fn contiguous_grad() {
+        let a = Tensor::linspace(1.0, 6.0, 6).reshape(&[2, 3]).requires_grad();
+        let b = Tensor::linspace(1.0, 12.0, 12).reshape(&[2, 3, 2]).requires_grad();
+        let c = a.transpose(&[1, 0]).unsqueeze(0).expand(&[2, 3, 2]).contiguous();
+        (&c * &b).backward();
+        assert_eq!(grad_of(&a), [8.0, 12.0, 16.0, 10.0, 14.0, 18.0]);
+        assert_eq!(grad_of(&b), [1.0, 4.0, 2.0, 5.0, 3.0, 6.0, 1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
     }
 
     #[test]
@@ -138,8 +154,6 @@ mod tests {
         (&a.expand(&[2, 4, 3]) * &b).backward();
         assert_eq!(grad_of(&a), [92.0, 100.0, 108.0]);
     }
-
- 
 
     #[test]
     fn squeeze_axis_mid() {

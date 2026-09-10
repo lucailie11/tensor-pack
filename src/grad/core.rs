@@ -3,10 +3,9 @@ use super::linalg::{dot_backprop, matmul_backprop};
 use super::normalizations::softmax_backprop;
 use super::reductions::{mean_backprop, sum_backprop};
 use super::scalar::{add_scalar_backprop, div_scalar_backprop, mul_scalar_backprop, sub_scalar_backprop};
-use super::structure::{expand_backprop, squeeze_backprop, transpose_backprop, unsqueeze_backprop};
+use super::structure::{contiguous_backprop, reshape_backprop, expand_backprop, squeeze_backprop, transpose_backprop, unsqueeze_backprop};
 use super::unary::{abs_backprop, exp_backprop, ln_backprop, relu_backprop, sigmoid_backprop, sqrt_backprop, tanh_backprop};
 use crate::Tensor;
-use crate::grad::structure::reshape_backprop;
 use crate::rawtensor::RawTensor;
 use crate::tensor::TensorInner;
 use std::cell::Cell;
@@ -42,6 +41,7 @@ pub enum BackpropOp {
 
     Softmax(usize),
 
+    Contiguous,
     Reshape,
     Transpose,
     Expand,
@@ -101,30 +101,31 @@ impl Tensor {
             BackpropOp::DivScalar(scalar) => { div_scalar_backprop(self, &inputs[0], scalar); }
 
             // Unary ops
-            BackpropOp::Exp     => { exp_backprop(self, &inputs[0]); }
-            BackpropOp::Ln      => { ln_backprop(self, &inputs[0]); }
-            BackpropOp::Sqrt    => { sqrt_backprop(self, &inputs[0]); }
-            BackpropOp::Abs     => { abs_backprop(self, &inputs[0]); }
-            BackpropOp::Tanh    => { tanh_backprop(self, &inputs[0]); }
+            BackpropOp::Exp     => { exp_backprop(self, &inputs[0]);     }
+            BackpropOp::Ln      => { ln_backprop(self, &inputs[0]);      }
+            BackpropOp::Sqrt    => { sqrt_backprop(self, &inputs[0]);    }
+            BackpropOp::Abs     => { abs_backprop(self, &inputs[0]);     }
+            BackpropOp::Tanh    => { tanh_backprop(self, &inputs[0]);    }
             BackpropOp::Sigmoid => { sigmoid_backprop(self, &inputs[0]); }
-            BackpropOp::Relu    => { relu_backprop(self, &inputs[0]); }
+            BackpropOp::Relu    => { relu_backprop(self, &inputs[0]);    }
 
             // Reduction ops
-            BackpropOp::Sum(axis)  => { sum_backprop(self, &inputs[0], axis); }
+            BackpropOp::Sum(axis)  => { sum_backprop(self, &inputs[0], axis);  }
             BackpropOp::Mean(axis) => { mean_backprop(self, &inputs[0], axis); }
 
             // Linalg ops
-            BackpropOp::Dot    => { dot_backprop(self, &inputs[0], &inputs[1]); }
+            BackpropOp::Dot    => { dot_backprop(self, &inputs[0], &inputs[1]);    }
             BackpropOp::Matmul => { matmul_backprop(self, &inputs[0], &inputs[1]); }
 
             // Normalization ops
             BackpropOp::Softmax(axis) => { softmax_backprop(self, &inputs[0], axis); }
             
             // Structure ops
-            BackpropOp::Reshape         => { reshape_backprop(self, &inputs[0]); }
-            BackpropOp::Transpose       => { transpose_backprop(self, &inputs[0]); }
-            BackpropOp::Expand          => { expand_backprop(self, &inputs[0]); }
-            BackpropOp::Squeeze(axis)   => { squeeze_backprop(self, &inputs[0], axis); }
+            BackpropOp::Contiguous      => { contiguous_backprop(self, &inputs[0]);      }
+            BackpropOp::Reshape         => { reshape_backprop(self, &inputs[0]);         }
+            BackpropOp::Transpose       => { transpose_backprop(self, &inputs[0]);       }
+            BackpropOp::Expand          => { expand_backprop(self, &inputs[0]);          }
+            BackpropOp::Squeeze(axis)   => { squeeze_backprop(self, &inputs[0], axis);   }
             BackpropOp::Unsqueeze(axis) => { unsqueeze_backprop(self, &inputs[0], axis); }
         }
     }
