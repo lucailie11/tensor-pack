@@ -20,9 +20,10 @@ impl RawTensor {
     pub fn is_empty(&self) -> bool     { self.shape.contains(&0) }
 }
 
+// TEST: no tests yet
 impl PartialEq for RawTensor {
     fn eq(&self, other: &RawTensor) -> bool {
         self.shape == other.shape && 
-        self.contiguous_data() == other.contiguous_data()
+        self.iter().zip(other.iter()).all(|(&x, &y)| x == y)
     }
 }
