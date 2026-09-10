@@ -1,4 +1,4 @@
-use super::structure::is_data_contiguous;
+use super::structure::are_strides_contiguous;
 use super::RawTensor;
 
 // Iterates elements in logical order in O(self.len())
@@ -54,7 +54,7 @@ impl LogicalIndices {
             done: shape.contains(&0),
             indices: vec![0; shape.len()].into_boxed_slice(),
             len: shape.iter().product(),
-            is_contiguous: is_data_contiguous(&strides),
+            is_contiguous: are_strides_contiguous(&strides),
             strides,
             shape,
             flat: 0,

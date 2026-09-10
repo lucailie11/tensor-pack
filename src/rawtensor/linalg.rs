@@ -1,5 +1,4 @@
 use super::RawTensor;
-
 use std::rc::Rc;
 
 // Both dot and matmul return a RawTensor with a fresh data allocation

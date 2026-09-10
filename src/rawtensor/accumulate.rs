@@ -2,7 +2,6 @@ use super::RawTensor;
 use super::iter::LogicalIndices;
 use super::structure::broadcast_shape;
 use super::structure::expanded_strides;
-
 use std::rc::Rc;
 
 // In-place accumulation used by grad/ to accumulate gradients

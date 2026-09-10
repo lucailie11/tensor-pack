@@ -1,5 +1,4 @@
 use super::RawTensor;
-
 use std::ops::Neg;
 use std::rc::Rc;
 
@@ -29,13 +28,13 @@ impl RawTensor {
         }
     }
 
-    pub fn exp(&self) -> RawTensor     { self.map(f64::exp)  }
-    pub fn ln(&self) -> RawTensor      { self.map(f64::ln)   }
-    pub fn sqrt(&self) -> RawTensor    { self.map(f64::sqrt) }
-    pub fn abs(&self) -> RawTensor     { self.map(f64::abs)  }
-    pub fn tanh(&self) -> RawTensor    { self.map(f64::tanh) }
+    pub fn exp(&self)     -> RawTensor { self.map(f64::exp)  }
+    pub fn ln(&self)      -> RawTensor { self.map(f64::ln)   }
+    pub fn sqrt(&self)    -> RawTensor { self.map(f64::sqrt) }
+    pub fn abs(&self)     -> RawTensor { self.map(f64::abs)  }
+    pub fn tanh(&self)    -> RawTensor { self.map(f64::tanh) }
     pub fn sigmoid(&self) -> RawTensor { self.map(sigmoid)   }
-    pub fn relu(&self) -> RawTensor    { self.map(relu)      }
+    pub fn relu(&self)    -> RawTensor { self.map(relu)      }
 }
 
 impl Neg for &RawTensor {

@@ -1,9 +1,7 @@
 use super::RawTensor;
 use super::structure::broadcast_shape;
-
 use std::ops::{Add, Sub, Mul, Div};
 use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
-
 use std::rc::Rc;
 
 // Binary elementwise operations on two RawTensors with broadcasting support

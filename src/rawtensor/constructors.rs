@@ -1,6 +1,5 @@
 use super::RawTensor;
 use super::structure::strides_contiguous;
-
 use std::rc::Rc;
 use std::cell::RefCell;
 use rand::rngs::StdRng;
@@ -14,7 +13,6 @@ thread_local! {
 // A set of basic tensor constructors
 // Constructors take desired shape as a parameter and return contiguous RawTensors
 // unless specified otherwise
-
 
 impl RawTensor {
     // Returns a contiguous RawTensor from an Rc (no copying)
@@ -118,7 +116,7 @@ impl RawTensor {
         assert!(std_dev > 0.0 && std_dev.is_finite(), "std_dev must be finite and greater than 0");
 
         let len: usize = shape.iter().product();
-        let normal = Normal::new(mean, std_dev).unwrap();
+        let normal = Normal::new(mean, std_dev).expect("invalid mean or std_dev");
         let data: Rc<[f64]> = RNG.with(|rng| {
             (0..len).map(|_| normal.sample(&mut *rng.borrow_mut())).collect()
         });

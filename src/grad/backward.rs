@@ -3,7 +3,7 @@ use crate::rawtensor::RawTensor;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-// Actual recursive topological sort function
+// Recursive topological sort function
 fn topo_sort_dfs(tensor: &Tensor, sorted: &mut Vec<Tensor>, visited: &mut HashSet<usize>) {
     let id: usize = Rc::as_ptr(&tensor.0) as usize;
     if visited.contains(&id) { return; };

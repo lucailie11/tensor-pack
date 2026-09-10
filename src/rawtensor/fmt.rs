@@ -1,5 +1,4 @@
 use super::RawTensor;
-
 use core::fmt;
 
 fn fmt_matrix(f: &mut fmt::Formatter, values: &[f64], cols: usize, indent: &str) -> fmt::Result {
