@@ -1,21 +1,5 @@
 use crate::Tensor;
 
-// Helper function for detecting the transposition permutation for a transpose_backprop
-fn inv_perm_by_shape_and_strides(a_shape: &[usize], a_strides: &[usize], out_shape: &[usize], out_strides: &[usize]) -> Box<[usize]> {
-    let ndim: usize = a_shape.len();
-    let mut used: Vec<bool> = vec![false; ndim];
-    let inv_perm: Box<[usize]> = a_shape.iter().zip(a_strides.iter())
-        .map(|(&a1, &a2)| {
-            let i = out_shape.iter().zip(out_strides.iter()).enumerate()
-                .find(|&(i, (&out1, &out2))| !used[i] && a1 == out1 && a2 == out2)
-                .map(|(i, _)| i)
-                .expect("no inverse permutation matched");
-            used[i] = true;
-            i
-        }).collect();
-    inv_perm
-}
-
 pub fn contiguous_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
         a_grad.accumulate_1(out_grad, |g| g);
@@ -31,25 +15,14 @@ pub fn reshape_backprop(out: &Tensor, a: &Tensor) {
 
 pub fn transpose_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
-        let inv_perm: Box<[usize]> = inv_perm_by_shape_and_strides(a.raw.shape(), a.raw.strides(), out.raw.shape(), out.raw.strides());
+        let inv_perm: Box<[usize]> = out.raw.compute_inv_perm(&a.raw);
         a_grad.accumulate_1(&out_grad.transpose(&inv_perm), |g| g);
     }
 }
 
 pub fn expand_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
-        let extra = out_grad.shape().len() - a_grad.shape().len();
-
-        let out_grad_reduced = out_grad.shape().iter().enumerate().rev()
-            .filter(|&(i, &dim_out)| {
-                let dim_a = if i < extra { 0 } else { a_grad.shape()[i - extra] };
-                dim_a != dim_out
-            })
-            .fold(out_grad.clone(), |acc, (axis, _)| {
-                if axis < extra { acc.sum_axis(axis) } 
-                else { acc.sum_axis(axis).unsqueeze(axis) }
-            });
-
+        let out_grad_reduced = out_grad.sum_to_shape(a.shape());
         a_grad.accumulate_1(&out_grad_reduced, |g| g);
     }
 }

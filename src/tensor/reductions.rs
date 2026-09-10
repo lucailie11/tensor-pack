@@ -31,5 +31,12 @@ impl Tensor {
         let raw = self.raw.std_dev_axis(axis);
         Tensor::no_grad_tensor(raw)
     }
+
+    pub fn sum_to_shape(&self, new_shape: &[usize]) -> Tensor {
+        let raw = self.raw.sum_to_shape(new_shape);
+        Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::SumToShape)
+    }
+
+
 }
 

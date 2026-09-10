@@ -32,7 +32,7 @@ impl Tensor {
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Reshape)
     }
 
-    // Returns a new RawTensor with dimensions permuted (new dim_i comes from old dim_perm[i])
+    // Returns a new Tensor with dimensions permuted (new shape[i] comes from old shape[perm[i]])
     pub fn transpose(&self, perm: &[usize]) -> Tensor {
         let raw = self.raw.transpose(perm);
         Tensor::autograd_tensor(raw, Box::from([self.clone()]), BackpropOp::Transpose)

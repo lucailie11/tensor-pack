@@ -3,6 +3,7 @@ use std::ops::Index;
 use std::rc::Rc;
 
 // Returns true if the given slice is a permuation of (0..n)
+// TEST: no tests yet
 fn is_perm(perm: &[usize]) -> bool {
     let mut v = perm.to_vec(); 
     v.sort();
@@ -14,7 +15,17 @@ fn are_dimensions_broadcastable(d1: usize, d2: usize) -> bool {
     (d1 == d2) || (d1 == 1) || (d2 == 1)
 }
 
-// Returns the shape resulting from broadcasting shape1 and shape2. Panics if incompatible
+// Returns true if shape1 is broadcastable into shape 2, false otherwise
+pub(super) fn is_broadcastable(shape1: &[usize], shape2: &[usize]) -> bool {
+    if shape1.len() > shape2.len() { return false; }
+    for i in 0..shape2.len() {
+        let d1 = if i < shape1.len() { shape1[shape1.len() - 1 - i] } else { 1 };
+        let d2 = if i < shape2.len() { shape2[shape2.len() - 1 - i] } else { 1 };
+        if !are_dimensions_broadcastable(d1, d2) { return false }
+    }
+    true
+}
+// Returns the shape resulting from broadcasting shape1 and shape2. Returns None if incompatible
 pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Box<[usize]>> {
     let len: usize = usize::max(shape1.len(), shape2.len());
     let mut out = vec![1; len].into_boxed_slice();
@@ -27,6 +38,11 @@ pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Box<
     Some(out)
 }
 
+// Returns true if a RawTensor with strides as given is has contiguous memory layout, false otherwise
+pub(super) fn are_strides_contiguous(strides: &[usize]) -> bool {
+    strides.iter().all(|&x| x > 0) && strides.windows(2).all(|w| w[0] >= w[1])
+}
+
 // Returns the strides for a contiguous tensor of the given shape
 pub(super) fn strides_contiguous(shape: &[usize]) -> Box<[usize]> {
     if shape.is_empty() { return Box::from([]); }
@@ -35,28 +51,42 @@ pub(super) fn strides_contiguous(shape: &[usize]) -> Box<[usize]> {
     strides
 }
 
-// Returns the strides t will have after being expanded to new_shape
-pub(super) fn expanded_strides(t: &RawTensor, new_shape: &[usize]) -> Option<Box<[usize]>> {
-    let broadcast_shape: Option<Box<[usize]>> = broadcast_shape(&t.shape, new_shape);
-    match broadcast_shape {
-        None => return None,
-        Some(s) => { if *s != *new_shape { return None } },
+impl RawTensor {
+    // Returns the strides self would have after being expanded to new_shape
+    pub(super) fn expanded_strides(&self, new_shape: &[usize]) -> Option<Box<[usize]>> {
+        if !is_broadcastable(&self.shape, new_shape) { return None; }
+
+        let new_strides: Box<[usize]> = (0..new_shape.len()).rev()
+            .map(|i| {
+                if i >= self.shape.len() || self.shape[self.shape.len() - 1 - i] == 1 
+                { 0 } else { self.strides[self.shape.len() - 1 - i] }
+            })
+            .collect();
+
+        Some(new_strides)
     }
 
-    let new_strides: Box<[usize]> = (0..new_shape.len()).rev()
-        .map(|i| {
-            if i >= t.shape.len() || t.shape[t.shape.len() - 1 - i] == 1 
-            { 0 } else { t.strides[t.shape.len() - 1 - i] }
-        })
-        .collect();
-
-    Some(new_strides)
+    // Assumes self is t transposed
+    // Computes the inverse of the permutation used to create self from t
+    // Panics if self and t are incompatible
+    // TEST: no tests yet
+    pub(crate) fn compute_inv_perm(&self, t: &RawTensor) -> Box<[usize]> {
+        let ndim: usize = t.shape.len();
+        let mut used: Vec<bool> = vec![false; ndim];
+        println!("{:?}{:?}{:?}{:?}", self.shape, self.strides, t.shape, t.strides);
+        let inv_perm: Box<[usize]> = t.shape.iter().zip(t.strides.iter())
+            .map(|(&a1, &a2)| {
+                let i = self.shape.iter().zip(self.strides.iter()).enumerate()
+                    .find(|&(i, (&self1, &self2))| !used[i] && a1 == self1 && a2 == self2)
+                    .map(|(i, _)| i).expect("no inv perm");
+                used[i] = true;
+                i
+            }).collect();
+        inv_perm
+    }
 }
 
-pub(super) fn are_strides_contiguous(strides: &[usize]) -> bool {
-    strides.iter().all(|&x| x > 0) && strides.windows(2).all(|w| w[0] >= w[1])
-}
-
+// Public api functions. Panic if parameters are incompatible
 impl RawTensor {
     // Returns true if the data in memory has the same order as the logical order
     pub fn is_contiguous(&self) -> bool {
@@ -81,7 +111,7 @@ impl RawTensor {
         RawTensor::from_rc(new_shape, Rc::clone(&self.data))
     }
 
-    // Returns a new RawTensor with dimensions permuted (new dim_i comes from old dim_perm[i])
+    // Returns a new RawTensor with dimensions permuted (new shape[i] comes from old shape[perm[i]])
     pub fn transpose(&self, perm: &[usize]) -> RawTensor {
         assert_eq!(perm.len(), self.ndim(), "permutation length doesn't match tensor ndim");
         assert!(is_perm(perm), "permutation is not valid");
@@ -96,7 +126,7 @@ impl RawTensor {
     pub fn expand(&self, new_shape: &[usize]) -> RawTensor {
         RawTensor {
             shape: Box::from(new_shape),
-            strides: expanded_strides(self, new_shape).expect("old shape not broadcastable into new shape"),
+            strides: self.expanded_strides(new_shape).expect("old shape not broadcastable into new shape"),
             data: Rc::clone(&self.data),
         }
     }
@@ -130,15 +160,13 @@ impl RawTensor {
                 if i == axis { 1 }
                 else if i < axis { self.shape[i] } 
                 else { self.shape[i - 1] }
-            })
-            .collect();
+            }).collect();
         let new_strides: Box<[usize]> = (0..=self.strides.len())
             .map(|i| {
                 if i == axis { new_stride } 
                 else if i < axis { self.strides[i] } 
                 else { self.strides[i - 1] }
-            })
-            .collect();
+            }).collect();
 
         RawTensor {
             shape: new_shape,
@@ -218,13 +246,13 @@ mod tests {
     #[test]
     fn expanded_strides_test() {
         let t = RawTensor::zeros(&[3]);
-        assert_eq!(*expanded_strides(&t, &[2, 3]).unwrap(), [0, 1]);
+        assert_eq!(*t.expanded_strides(&[2, 3]).unwrap(), [0, 1]);
         let t = RawTensor::zeros(&[1, 4]);
-        assert_eq!(*expanded_strides(&t, &[3, 2, 4]).unwrap(), [0, 0, 1]);
+        assert_eq!(*t.expanded_strides(&[3, 2, 4]).unwrap(), [0, 0, 1]);
         let t = RawTensor::zeros(&[3]);
-        assert!(expanded_strides(&t, &[3, 2]).is_none());
+        assert!(t.expanded_strides(&[3, 2]).is_none());
         let t = RawTensor::zeros(&[1, 2, 2]);
-        assert!(expanded_strides(&t, &[3, 2, 4]).is_none());
+        assert!(t.expanded_strides(&[3, 2, 4]).is_none());
     }
 
     #[test]

@@ -1,3 +1,5 @@
+use crate::rawtensor::structure::is_broadcastable;
+
 use super::RawTensor;
 use std::rc::Rc;
 
@@ -70,6 +72,27 @@ impl RawTensor {
             data: new_data,
         }
 
+    }
+
+    // Returns a new RawTensor with a fresh data allocation, 
+    // keeping the old strides structure (only removing the desired axes)
+    // reducing the rawtensor to a new_shape by summing the reduced elements
+    // WARN: allocates extra memory
+    // TEST: no tests yet
+    pub fn sum_to_shape(&self, new_shape: &[usize]) -> RawTensor {
+        assert!(is_broadcastable(new_shape, &self.shape));
+
+        let extra = self.shape.len() - new_shape.len();
+        self.shape.iter().enumerate().rev()
+            .filter(|&(i, &old_dim)| {
+                let new_dim = if i < extra { 0 } else { new_shape[i - extra] };
+                new_dim != old_dim
+            })
+            .fold(self.clone(), |acc, (axis, _)| {
+                println!("{}", acc);
+                if axis < extra { acc.sum_axis(axis) } 
+                else { acc.sum_axis(axis).unsqueeze(axis) }
+            })
     }
 
     pub fn sum_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, strided_sum)     }

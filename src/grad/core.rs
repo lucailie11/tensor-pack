@@ -1,7 +1,7 @@
 use super::binary::{add_tensor_backprop, div_tensor_backprop, mul_tensor_backprop, sub_tensor_backprop};
 use super::linalg::{dot_backprop, matmul_backprop};
 use super::normalizations::softmax_backprop;
-use super::reductions::{mean_backprop, sum_backprop};
+use super::reductions::{mean_backprop, sum_backprop, sum_to_shape_backprop};
 use super::scalar::{add_scalar_backprop, div_scalar_backprop, mul_scalar_backprop, sub_scalar_backprop};
 use super::structure::{contiguous_backprop, reshape_backprop, expand_backprop, squeeze_backprop, transpose_backprop, unsqueeze_backprop};
 use super::unary::{abs_backprop, exp_backprop, ln_backprop, relu_backprop, sigmoid_backprop, sqrt_backprop, tanh_backprop};
@@ -35,6 +35,7 @@ pub enum BackpropOp {
 
     Sum(usize),
     Mean(usize),
+    SumToShape,
 
     Dot,
     Matmul,
@@ -110,8 +111,9 @@ impl Tensor {
             BackpropOp::Relu    => { relu_backprop(self, &inputs[0]);    }
 
             // Reduction ops
-            BackpropOp::Sum(axis)  => { sum_backprop(self, &inputs[0], axis);  }
-            BackpropOp::Mean(axis) => { mean_backprop(self, &inputs[0], axis); }
+            BackpropOp::Sum(axis)  => { sum_backprop(self, &inputs[0], axis);    }
+            BackpropOp::Mean(axis) => { mean_backprop(self, &inputs[0], axis);   }
+            BackpropOp::SumToShape => { sum_to_shape_backprop(self, &inputs[0]); }
 
             // Linalg ops
             BackpropOp::Dot    => { dot_backprop(self, &inputs[0], &inputs[1]);    }

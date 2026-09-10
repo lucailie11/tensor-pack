@@ -15,6 +15,14 @@ pub fn mean_backprop(out: &Tensor, a: &Tensor, axis: usize) {
     }
 }
 
+// TEST: no tests yet
+pub fn sum_to_shape_backprop(out: &Tensor, a: &Tensor) {
+    if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
+        let out_grad_expanded = out_grad.expand(a.raw.shape());
+        a_grad.accumulate_1(&out_grad_expanded, |g| g);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::Tensor;

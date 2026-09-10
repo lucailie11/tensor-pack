@@ -1,7 +1,6 @@
 use super::RawTensor;
 use super::iter::LogicalIndices;
 use super::structure::broadcast_shape;
-use super::structure::expanded_strides;
 use std::rc::Rc;
 
 // In-place accumulation used by grad/ to accumulate gradients
@@ -34,9 +33,9 @@ impl RawTensor {
     fn accumulate_n(&mut self, inputs: &[&RawTensor], f: impl Fn(&[f64]) -> f64) {
         let out_shape = inputs.iter().fold(self.shape.clone(), |acc, t| broadcast_shape(&acc, &t.shape).expect("shapes not broadcastable"));
 
-        let self_strides = expanded_strides(self, &out_shape).expect("self strides not expandable");
+        let self_strides = self.expanded_strides(&out_shape).expect("self strides not expandable");
         let input_strides: Box<[Box<[usize]>]> = inputs.iter()
-            .map(|t| expanded_strides(t, &out_shape).expect("input strides not expandable"))
+            .map(|t| t.expanded_strides(&out_shape).expect("input strides not expandable"))
             .collect();
 
         let data = Rc::get_mut(&mut self.data).expect("couldn't borrow mutable data from the tensor");
