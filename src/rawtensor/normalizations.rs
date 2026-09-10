@@ -7,7 +7,7 @@ use std::rc::Rc;
 // Defined operations:
 //   - softmax_axis(axis)
 
-pub fn strided_softmax(old_data: &[f64], new_data: &mut [f64], step: usize, n: usize) {
+fn strided_softmax(old_data: &[f64], new_data: &mut [f64], step: usize, n: usize) {
     if n == 0 { return; }
 
     if step == 0 { 

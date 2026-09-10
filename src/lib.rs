@@ -1,5 +1,5 @@
-pub(crate) mod rawtensor;
-pub(crate) mod tensor;
-pub(crate) mod grad;
+mod rawtensor;
+mod tensor;
+mod grad;
 
 pub use tensor::Tensor;

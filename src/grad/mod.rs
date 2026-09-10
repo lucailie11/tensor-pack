@@ -8,4 +8,4 @@ mod scalar;
 mod structure;
 mod unary;
 
-pub(crate) use core::BackpropOp;
+pub use core::BackpropOp;
