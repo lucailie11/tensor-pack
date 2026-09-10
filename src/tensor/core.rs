@@ -11,7 +11,7 @@ pub struct TensorInner {
     pub(crate) raw: RawTensor,
     pub(crate) grad: RefCell<Option<RawTensor>>,
     pub(crate) inputs: RefCell<Box<[Tensor]>>,
-    pub(crate) op: Cell<BackpropOp>,
+    pub(crate) backprop_op: Cell<BackpropOp>,
     pub(crate) requires_grad: bool,
 }
 

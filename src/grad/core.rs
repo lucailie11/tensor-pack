@@ -52,7 +52,7 @@ pub enum BackpropOp {
 impl Tensor {
     // Checks if the Tensor needs to compute gradient
     pub(super) fn tracks_grad(&self) -> bool {
-        self.requires_grad || self.op.get() != BackpropOp::None
+        self.requires_grad || self.backprop_op.get() != BackpropOp::None
     }
 
     // Returns a new Tensor which requires gradient pointing to the same RawTensor as the old one
@@ -62,7 +62,7 @@ impl Tensor {
             grad: RefCell::new(None),
             requires_grad: true,
             inputs: RefCell::new(Box::from([])),
-            op: Cell::new(BackpropOp::None),
+            backprop_op: Cell::new(BackpropOp::None),
         })
     }
 
@@ -71,7 +71,7 @@ impl Tensor {
         Tensor::from_inner(TensorInner {
             raw,
             grad: RefCell::new(None),
-            op: Cell::new(if inputs.iter().any(|x| x.tracks_grad()) { op } else { BackpropOp::None }),
+            backprop_op: Cell::new(if inputs.iter().any(|x| x.tracks_grad()) { op } else { BackpropOp::None }),
             inputs: RefCell::new(inputs),
             requires_grad: false,
         })
@@ -85,7 +85,7 @@ impl Tensor {
     // Dispatches to the backprop function implementing the current op
     fn match_op(&self) {
         let inputs = self.inputs.borrow();
-        match self.op.get() {
+        match self.backprop_op.get() {
             BackpropOp::None => {}
 
             // Tensor Tensor ops
@@ -140,6 +140,6 @@ impl Tensor {
         self.match_op();
         if !self.requires_grad { self.zero_grad(); }
         *self.inputs.borrow_mut() = Box::from([]);
-        self.op.set(BackpropOp::None);
+        self.backprop_op.set(BackpropOp::None);
     }
 }

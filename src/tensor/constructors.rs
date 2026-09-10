@@ -24,7 +24,7 @@ impl Tensor {
                 raw,
                 grad: RefCell::new(None),
                 inputs: RefCell::new(Box::from([])),
-                op: Cell::new(BackpropOp::None),
+                backprop_op: Cell::new(BackpropOp::None),
                 requires_grad: false,
             }
         )

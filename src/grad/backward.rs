@@ -108,9 +108,9 @@ mod tests {
         let y = &x * 2.0;
         let z = y.relu();
         z.backward();
-        assert_eq!(z.op.get(), BackpropOp::None);
+        assert_eq!(z.backprop_op.get(), BackpropOp::None);
         assert!(z.inputs.borrow().is_empty());
-        assert_eq!(y.op.get(), BackpropOp::None);
+        assert_eq!(y.backprop_op.get(), BackpropOp::None);
         assert!(y.inputs.borrow().is_empty());
         assert_eq!(grad_of(&x), [2.0, 2.0]);
 
