@@ -1,5 +1,4 @@
 use super::RawTensor;
-
 use std::rc::Rc;
 
 // Reduction operations along a single axis
@@ -11,36 +10,36 @@ use std::rc::Rc;
 // - var (population, divides by n)
 // - std_dev (from population var)
 
-fn sum(data: &[f64], step: usize, n: usize) -> f64 {
+fn strided_sum(data: &[f64], step: usize, n: usize) -> f64 {
     if step == 0 { return data[0] * n as f64; }
     data.iter().step_by(step).take(n).sum()
 }
 
-fn mean(data: &[f64], step: usize, n: usize) -> f64 {
+fn strided_mean(data: &[f64], step: usize, n: usize) -> f64 {
     if n == 0 { return f64::NAN; }
-    sum(data, step, n) / n as f64
+    strided_sum(data, step, n) / n as f64
 }
 
-fn mean_and_var(data: &[f64], step: usize, n: usize) -> (f64, f64) {
+fn strided_mean_and_var(data: &[f64], step: usize, n: usize) -> (f64, f64) {
     if n == 0 { return (f64::NAN, f64::NAN); }
     if step == 0 { return (data[0], 0.0); }
 
     let mut mean: f64 = 0.0;
     let mut var: f64 = 0.0;
-    for (i, x) in data.iter().step_by(step).take(n).enumerate() {
+    data.iter().step_by(step).take(n).enumerate().for_each(|(i, x)| {
         let delta = x - mean;
         mean += delta / (i + 1) as f64;
         var += delta * (x - mean);
-    }
+    });
     (mean, var / n as f64)
 }
 
-fn var(data: &[f64], step: usize, n: usize) -> f64 {
-    mean_and_var(data, step, n).1
+fn strided_var(data: &[f64], step: usize, n: usize) -> f64 {
+    strided_mean_and_var(data, step, n).1
 }
 
-fn std_dev(data: &[f64], step: usize, n: usize) -> f64 {
-    f64::sqrt(var(data, step, n))
+fn strided_std_dev(data: &[f64], step: usize, n: usize) -> f64 {
+    f64::sqrt(strided_var(data, step, n))
 }
 
 impl RawTensor {
@@ -49,30 +48,21 @@ impl RawTensor {
     pub fn reduce_axis(&self, axis: usize, f: impl Fn(&[f64], usize, usize) -> f64) -> RawTensor {
         assert!(axis < self.shape.len(), "axis out of bounds");
 
-        let n = self.shape[axis];
+        let n: usize = self.shape[axis];
+        let step: usize = self.strides[axis];
         let new_shape: Box<[usize]> = self.shape.iter().enumerate()
             .filter(|(i, _)| *i != axis).map(|(_, x)| *x).collect();
 
         let new_strides: Box<[usize]> = self.strides.iter().enumerate()
             .filter(|(i, _)| *i != axis)
-            .map(|(_, &x)| 
-                if x > self.strides[axis] && self.strides[axis] != 0 { x / self.shape[axis] }
-                else { x }
-            ).collect();
-
-        if self.strides[axis] == 0 {
-            let new_data: Rc<[f64]> = self.data.iter().map(|&x| f(&[x], 0, n)).collect();
-
-            return RawTensor {
-                shape: new_shape,
-                strides: new_strides,
-                data: new_data,
-            }
-        }
+            .map(|(_, &x)| {
+                if x > step && step != 0 { x / n }
+                else { x } 
+            }).collect();
 
         let new_data: Rc<[f64]> = self.data.iter().enumerate()
-            .filter(|(i, _)| (i / self.strides[axis]).is_multiple_of(self.shape[axis]))
-            .map(|(i, _)| f(&self.data[i..], self.strides[axis], n)).collect();
+            .filter(|(i, _)| step == 0 || (i / step).is_multiple_of(n))
+            .map(|(i, _)| f(&self.data[i..], step, n)).collect();
 
         RawTensor {
             shape: new_shape,
@@ -82,10 +72,10 @@ impl RawTensor {
 
     }
 
-    pub fn sum_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, sum) }
-    pub fn mean_axis(&self, axis: usize)    -> RawTensor { self.reduce_axis(axis, mean) }
-    pub fn var_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, var) }
-    pub fn std_dev_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, std_dev) }
+    pub fn sum_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, strided_sum)     }
+    pub fn mean_axis(&self, axis: usize)    -> RawTensor { self.reduce_axis(axis, strided_mean)    }
+    pub fn var_axis(&self, axis: usize)     -> RawTensor { self.reduce_axis(axis, strided_var)     }
+    pub fn std_dev_axis(&self, axis: usize) -> RawTensor { self.reduce_axis(axis, strided_std_dev) }
 }
 
 #[cfg(test)]

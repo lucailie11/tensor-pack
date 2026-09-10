@@ -2,12 +2,12 @@ use super::RawTensor;
 use std::rc::Rc;
 
 // Normalization operations along a single axis
-// Core primitive is reduce_axis
+// Core primitive is normalize_axis
 //
 // Defined operations:
-//   - softmax(axis)
+//   - softmax_axis(axis)
 
-pub fn softmax(old_data: &[f64], new_data: &mut [f64], step: usize, n: usize) {
+pub fn strided_softmax(old_data: &[f64], new_data: &mut [f64], step: usize, n: usize) {
     if n == 0 { return; }
 
     if step == 0 { 
@@ -16,9 +16,14 @@ pub fn softmax(old_data: &[f64], new_data: &mut [f64], step: usize, n: usize) {
     }
 
     let max: f64 = old_data.iter().step_by(step).take(n).copied().fold(f64::NEG_INFINITY, f64::max);
-    let exps: Vec<f64> = old_data.iter().step_by(step).take(n).map(|&x| f64::exp(x - max)).collect();
-    let sum: f64 = exps.iter().sum();
-    new_data.iter_mut().step_by(step).take(n).zip(exps).for_each(|(x, e)| *x = e / sum);
+    let mut sum: f64 = 0.0;
+    new_data.iter_mut().step_by(step).take(n).zip(
+        old_data.iter().step_by(step).take(n))
+            .for_each(|(new, old)| {
+                *new = f64::exp(*old - max);
+                sum += *new
+            });
+    new_data.iter_mut().step_by(step).take(n).for_each(|x| *x /= sum);
 }
 
 impl RawTensor {
@@ -28,22 +33,10 @@ impl RawTensor {
 
         let n = self.shape[axis];
         let step = self.strides[axis];
+        let mut new_data: Vec<f64> = vec![0.0; self.data.len()];
 
-        if step == 0 {
-            let mut new_data: Box<[f64]> = vec![0.0; self.data.len()].into_boxed_slice();
-            self.data.iter().enumerate()
-                .for_each(|(i, _)| f(&self.data[i..], &mut new_data[i..], 0, n));
-
-            return RawTensor {
-                shape: self.shape.clone(),
-                strides: self.strides.clone(),
-                data: Rc::from(new_data),
-            };
-        }
-
-        let mut new_data: Box<[f64]> = vec![0.0; self.data.len()].into_boxed_slice();
         self.data.iter().enumerate()
-            .filter(|(i, _)| (i % (n * step)) < step)
+            .filter(|(i, _)| step == 0 || (i % (n * step)) < step)
             .for_each(|(i, _)| f(&self.data[i..], &mut new_data[i..], step, n));
 
         RawTensor {
@@ -54,7 +47,7 @@ impl RawTensor {
     }
 
     pub fn softmax_axis(&self, axis: usize) -> RawTensor {
-        self.normalize_axis(axis, softmax)
+        self.normalize_axis(axis, strided_softmax)
     }
 }
 
