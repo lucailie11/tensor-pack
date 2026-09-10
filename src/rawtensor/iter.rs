@@ -62,6 +62,7 @@ impl LogicalIndices {
     }
 }
 
+// TEST: no dedicated tests yet
 impl RawTensor {
     fn logical_indices(&self) -> LogicalIndices {
         LogicalIndices::new(self.shape.clone(), self.strides.clone())

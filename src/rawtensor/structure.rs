@@ -15,7 +15,7 @@ fn are_dimensions_broadcastable(d1: usize, d2: usize) -> bool {
     (d1 == d2) || (d1 == 1) || (d2 == 1)
 }
 
-// Returns true if shape1 is broadcastable into shape 2, false otherwise
+// Returns true if shape1 is broadcastable into shape2, false otherwise
 pub(super) fn is_broadcastable(shape1: &[usize], shape2: &[usize]) -> bool {
     if shape1.len() > shape2.len() { return false; }
     for i in 0..shape2.len() {
@@ -25,6 +25,7 @@ pub(super) fn is_broadcastable(shape1: &[usize], shape2: &[usize]) -> bool {
     }
     true
 }
+
 // Returns the shape resulting from broadcasting shape1 and shape2. Returns None if incompatible
 pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Box<[usize]>> {
     let len: usize = usize::max(shape1.len(), shape2.len());
@@ -86,7 +87,7 @@ impl RawTensor {
     }
 }
 
-// Public api functions. Panic if parameters are incompatible
+// Panic if parameters are incompatible
 impl RawTensor {
     // Returns true if the data in memory has the same order as the logical order
     pub fn is_contiguous(&self) -> bool {

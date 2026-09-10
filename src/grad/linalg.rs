@@ -11,6 +11,8 @@ pub fn dot_backprop(out: &Tensor, a: &Tensor, b: &Tensor) {
     }
 }
 
+// WARN: allocates extra memory for matmul result
+// TODO: implement a matmul function that accumulates directly into the grad
 pub fn matmul_backprop(out: &Tensor, a: &Tensor, b: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() {
         if let Some(a_grad) = a.grad.borrow_mut().as_mut() {

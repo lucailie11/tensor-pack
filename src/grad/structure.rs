@@ -20,6 +20,8 @@ pub fn transpose_backprop(out: &Tensor, a: &Tensor) {
     }
 }
 
+// WARN: sum_to_shape allocates extra memory
+// TODO: dedicated accumulate
 pub fn expand_backprop(out: &Tensor, a: &Tensor) {
     if let Some(out_grad) = out.grad.borrow().as_ref() && let Some(a_grad) = a.grad.borrow_mut().as_mut() {
         let out_grad_reduced = out_grad.sum_to_shape(a.shape());
