@@ -62,8 +62,8 @@ impl Tensor {
             raw: self.raw.clone(),
             grad: RefCell::new(None),
             requires_grad: true,
-            inputs: RefCell::new(Box::from([])),
-            backprop_op: Cell::new(BackpropOp::None),
+            inputs: RefCell::new(self.inputs.borrow().clone()),
+            backprop_op: Cell::new(self.backprop_op.get()),
         })
     }
 
