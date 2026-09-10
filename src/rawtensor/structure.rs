@@ -1,9 +1,13 @@
 use super::RawTensor;
-
 use std::ops::Index;
 use std::rc::Rc;
 
-// --- Helper Functions --- 
+// Returns true if the given slice is a permuation of (0..n)
+fn is_perm(perm: &[usize]) -> bool {
+    let mut v = perm.to_vec(); 
+    v.sort();
+    v.iter().enumerate().all(|(i, &x)| i == x)
+}
 
 // Broadcastable dimensions according to broadcasting rules
 fn are_dimensions_broadcastable(d1: usize, d2: usize) -> bool {
@@ -12,7 +16,7 @@ fn are_dimensions_broadcastable(d1: usize, d2: usize) -> bool {
 
 // Returns the shape resulting from broadcasting shape1 and shape2. Panics if incompatible
 pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Box<[usize]>> {
-    let len = usize::max(shape1.len(), shape2.len());
+    let len: usize = usize::max(shape1.len(), shape2.len());
     let mut out = vec![1; len].into_boxed_slice();
     for i in 0..len {
         let d1 = if i < shape1.len() { shape1[shape1.len() - 1 - i] } else { 1 };
@@ -23,7 +27,7 @@ pub(super) fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Box<
     Some(out)
 }
 
-// Returns the row-major strides for a contiguous tensor of the given shape
+// Returns the strides for a contiguous tensor of the given shape
 pub(super) fn strides_contiguous(shape: &[usize]) -> Box<[usize]> {
     if shape.is_empty() { return Box::from([]); }
     let mut strides: Box<[usize]> = vec![1; shape.len()].into_boxed_slice();
@@ -49,14 +53,14 @@ pub(super) fn expanded_strides(t: &RawTensor, new_shape: &[usize]) -> Option<Box
     Some(new_strides)
 }
 
-pub(super) fn is_data_contiguous(strides: &[usize]) -> bool {
+pub(super) fn are_strides_contiguous(strides: &[usize]) -> bool {
     strides.iter().all(|&x| x > 0) && strides.windows(2).all(|w| w[0] >= w[1])
 }
 
 impl RawTensor {
     // Returns true if the data in memory has the same order as the logical order
     pub fn is_contiguous(&self) -> bool {
-        is_data_contiguous(&self.strides)
+        are_strides_contiguous(&self.strides)
     }
 
     // Returns the data in logical order. Clones the Rc if already contiguous
@@ -70,7 +74,7 @@ impl RawTensor {
         RawTensor::from_rc(&self.shape, self.contiguous_data())
     }
 
-    // Returns a new RawTensor with a new shape. Panics if tensor is not contiguous
+    // Returns a new RawTensor with a new shape
     pub fn reshape(&self, new_shape: &[usize]) -> RawTensor {
         assert!(self.is_contiguous(), "cannot reshape a non-contiguous tensor. call .contiguous() first");
         assert_eq!(new_shape.iter().product::<usize>(), self.data.len(), "new shape must have the same number of elements");
@@ -80,10 +84,7 @@ impl RawTensor {
     // Returns a new RawTensor with dimensions permuted (new dim_i comes from old dim_perm[i])
     pub fn transpose(&self, perm: &[usize]) -> RawTensor {
         assert_eq!(perm.len(), self.ndim(), "permutation length doesn't match tensor ndim");
-        assert_eq!( { let mut v = perm.to_vec(); v.sort(); v },
-            (0..perm.len()).collect::<Vec<usize>>(),
-            "permutation is not valid"
-        );
+        assert!(is_perm(perm), "permutation is not valid");
         RawTensor {
             shape: perm.iter().map(|&i| self.shape[i]).collect(),
             strides: perm.iter().map(|&i| self.strides[i]).collect(),
@@ -91,7 +92,7 @@ impl RawTensor {
         }
     }
 
-    // Expands self to new_shape. Panics if self is not broadcastable to new_shape
+    // Expands self to new_shape
     pub fn expand(&self, new_shape: &[usize]) -> RawTensor {
         RawTensor {
             shape: Box::from(new_shape),
@@ -99,7 +100,7 @@ impl RawTensor {
             data: Rc::clone(&self.data),
         }
     }
-    //
+
     // Removes a single size-1 axis
     pub fn squeeze(&self, axis: usize) -> RawTensor {
         assert!(axis < self.shape.len(), "axis {axis} out of bounds");
@@ -117,7 +118,7 @@ impl RawTensor {
         }
     }
 
-    // Inserts a size-1 axis at the given position
+    // Inserts a size-1 axis at the given axis
     pub fn unsqueeze(&self, axis: usize) -> RawTensor {
         assert!(axis <= self.shape.len(), "axis {axis} out of bounds");
 
@@ -145,9 +146,7 @@ impl RawTensor {
             data: Rc::clone(&self.data),
         }
     }
-}
 
-impl RawTensor {
     // Returns None if indices are out of bounds or wrong number of dims.
     pub fn get(&self, indices: &[usize]) -> Option<f64> {
         if self.shape.len() != indices.len() { return None; }
@@ -163,7 +162,7 @@ impl Index<&[usize]> for RawTensor {
     fn index(&self, indices: &[usize]) -> &f64 {
         assert_eq!(indices.len(), self.ndim(), "wrong number of indices");
 
-        let physical: usize = indices .iter() .enumerate()
+        let physical: usize = indices.iter().enumerate()
             .map(|(i, &ind)| {
                 assert!(ind < self.shape[i], "index out of bounds");
                 ind * self.strides[i]
@@ -177,8 +176,6 @@ impl Index<&[usize]> for RawTensor {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // --- Helper Functions --- 
 
     #[test]
     fn are_dimensions_broadcastable_test() {
